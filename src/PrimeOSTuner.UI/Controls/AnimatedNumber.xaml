@@ -1,0 +1,11 @@
+<UserControl x:Class="PrimeOSTuner.UI.Controls.AnimatedNumber"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Root">
+    <TextBlock x:Name="Label"
+               Foreground="{Binding Foreground, ElementName=Root}"
+               FontSize="{Binding FontSize, ElementName=Root}"
+               FontWeight="{Binding FontWeight, ElementName=Root}"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"/>
+</UserControl>
