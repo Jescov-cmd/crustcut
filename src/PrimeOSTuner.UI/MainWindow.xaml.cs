@@ -4,11 +4,10 @@ using System.Windows.Media.Animation;
 using Microsoft.Extensions.DependencyInjection;
 using PrimeOSTuner.UI.ViewModels;
 using PrimeOSTuner.UI.Views;
-using Wpf.Ui.Controls;
 
 namespace PrimeOSTuner.UI;
 
-public partial class MainWindow : FluentWindow
+public partial class MainWindow : Window
 {
     private const double SlotHeight = 44;
     private const double IndicatorOffset = 4;
