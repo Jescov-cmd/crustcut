@@ -27,4 +27,6 @@
     <SolidColorBrush x:Key="AccentBrush"  Color="{StaticResource AccentColor}"/>
     <SolidColorBrush x:Key="Accent2Brush" Color="{StaticResource Accent2Color}"/>
     <SolidColorBrush x:Key="GoodBrush"   Color="{StaticResource GoodColor}"/>
+    <SolidColorBrush x:Key="WarnBrush"   Color="{StaticResource WarnColor}"/>
+    <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}"/>
 </ResourceDictionary>
