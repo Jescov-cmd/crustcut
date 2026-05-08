@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace PrimeOSTuner.Win;
 
-internal static class PInvoke
+public static class PInvoke
 {
     [DllImport("psapi.dll", SetLastError = true)]
     public static extern bool EmptyWorkingSet(IntPtr hProcess);
