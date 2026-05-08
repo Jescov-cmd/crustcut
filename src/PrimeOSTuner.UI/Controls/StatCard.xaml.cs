@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using LiveChartsCore;
@@ -16,7 +17,7 @@ public partial class StatCard : UserControl
 
     public static readonly DependencyProperty ValueTextProperty =
         DependencyProperty.Register(nameof(ValueText), typeof(string), typeof(StatCard),
-            new PropertyMetadata("", (d, e) => ((StatCard)d).ValueTextBlock.Text = (string)e.NewValue));
+            new PropertyMetadata("", (d, e) => ApplyValue((StatCard)d, (string)e.NewValue)));
 
     public static readonly DependencyProperty SubTextProperty =
         DependencyProperty.Register(nameof(SubText), typeof(string), typeof(StatCard),
@@ -36,6 +37,24 @@ public partial class StatCard : UserControl
         InitializeComponent();
         Spark.XAxes = new[] { new Axis { IsVisible = false } };
         Spark.YAxes = new[] { new Axis { IsVisible = false, MinLimit = 0, MaxLimit = 100 } };
+    }
+
+    private static void ApplyValue(StatCard card, string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            card.ValueAnimated.TargetValue = 0;
+            return;
+        }
+        var digits = new string(text.Where(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());
+        if (double.TryParse(digits,
+            System.Globalization.NumberStyles.Number,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out var num))
+        {
+            card.ValueAnimated.Format = digits.Contains('.') ? "0.0" : "0";
+            card.ValueAnimated.TargetValue = num;
+        }
     }
 
     private static void OnHistoryChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
