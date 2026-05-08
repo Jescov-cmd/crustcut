@@ -1,13 +1,15 @@
 using System.Windows;
 using System.Windows.Controls;
+using PrimeOSTuner.UI.ViewModels;
 
 namespace PrimeOSTuner.UI;
 
 public partial class MainWindow : Window
 {
-    public MainWindow()
+    public MainWindow(ShellViewModel vm)
     {
         InitializeComponent();
+        DataContext = vm;
         ShowPlaceholder("Dashboard");
     }
 
