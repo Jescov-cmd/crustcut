@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\PrimeOSTuner.Core\PrimeOSTuner.Core.csproj" />
     <ProjectReference Include="..\PrimeOSTuner.Win\PrimeOSTuner.Win.csproj" />
+    <ProjectReference Include="..\PrimeOSTuner.UI\PrimeOSTuner.UI.csproj" />
   </ItemGroup>
 
 </Project>
