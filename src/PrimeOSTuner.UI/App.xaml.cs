@@ -151,6 +151,8 @@ public partial class App : Application
                 s.AddTransient<Views.DashboardView>();
                 s.AddTransient<Views.OptimizeView>();
                 s.AddTransient<Views.HistoryView>();
+                s.AddSingleton<GameLibraryViewModel>();
+                s.AddTransient<Views.GameLibraryView>();
                 s.AddSingleton<MainWindow>();
             })
             .Build();

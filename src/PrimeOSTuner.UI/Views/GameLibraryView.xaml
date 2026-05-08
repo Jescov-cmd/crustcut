@@ -1,0 +1,47 @@
+<UserControl x:Class="PrimeOSTuner.UI.Views.GameLibraryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:PrimeOSTuner.UI.Controls">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,18">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="Game Library" Style="{StaticResource HeaderText}"/>
+            <Button Grid.Column="1" Content="+ Add Game" Click="AddGameClick"
+                    Padding="14,6" Background="{StaticResource Bg2Brush}" Foreground="{StaticResource Text0Brush}"
+                    BorderBrush="{StaticResource LineBrush}" BorderThickness="1"/>
+        </Grid>
+
+        <Border Grid.Row="1" Style="{StaticResource CardBorder}" Margin="0,0,0,12"
+                Visibility="{Binding ShowApiKeyPrompt, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel>
+                <TextBlock Text="Cover art disabled" Foreground="{StaticResource WarnBrush}" FontWeight="Bold"/>
+                <TextBlock Text="Add a SteamGridDB API key to %LOCALAPPDATA%\PrimeOSTuner\settings.json under SteamGridDbApiKey to enable cover art."
+                           Foreground="{StaticResource Text2Brush}" FontSize="12" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Tiles}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <c:GameCard Margin="6" ProfileChanged="GameCard_ProfileChanged"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
