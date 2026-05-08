@@ -1,0 +1,65 @@
+<UserControl x:Class="PrimeOSTuner.UI.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:PrimeOSTuner.UI.Controls">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Dashboard" Style="{StaticResource HeaderText}" Margin="0,0,0,18"/>
+
+        <!-- Hero row: score + optimize -->
+        <Grid Grid.Row="1" Margin="0,0,0,18">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Style="{StaticResource CardBorder}" Margin="0,0,12,0">
+                <StackPanel Orientation="Horizontal">
+                    <c:BoostScoreRing Score="87" Margin="0,0,16,0"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="BOOST SCORE" Style="{StaticResource SectionLabel}"/>
+                        <TextBlock Text="EXCELLENT" Foreground="{StaticResource AccentBrush}" FontWeight="Bold" FontSize="14"/>
+                        <TextBlock Text="↗ +12 since last scan" Foreground="{StaticResource Text2Brush}" FontSize="11" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource CardBorder}" BorderBrush="{StaticResource AccentBrush}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="One-Click Optimize" Style="{StaticResource HeaderText}" FontSize="20"/>
+                        <TextBlock Text="4 safe tweaks ready · auto-creates restore point" Foreground="{StaticResource Text2Brush}" FontSize="12"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" x:Name="OptimizeButton" Content="⚡ OPTIMIZE NOW" Click="OptimizeButton_Click"
+                            Padding="22,12" FontWeight="Bold" Foreground="#001b17" Background="{StaticResource AccentBrush}"
+                            BorderThickness="0" Cursor="Hand"/>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Stats row -->
+        <UniformGrid Grid.Row="2" Columns="4" Rows="1" Margin="0,0,0,18">
+            <c:StatCard Margin="0,0,6,0"  StatName="CPU"     ValueText="{Binding CpuPercent, StringFormat='{}{0:F0}%'}" SubText="" History="{Binding CpuHistory}"/>
+            <c:StatCard Margin="6,0"      StatName="MEMORY"  ValueText="{Binding RamPercent, StringFormat='{}{0:F0}%'}" SubText="" History="{Binding RamHistory}"/>
+            <c:StatCard Margin="6,0"      StatName="GPU"     ValueText="{Binding GpuPercent, StringFormat='{}{0:F0}%'}" SubText="" History="{Binding GpuHistory}"/>
+            <c:StatCard Margin="6,0,0,0"  StatName="NETWORK" ValueText="{Binding NetworkDownBps, StringFormat='{}{0:N0} Bps'}" SubText="" History="{Binding NetHistory}"/>
+        </UniformGrid>
+
+        <!-- Activity placeholder (real history view comes later) -->
+        <Border Grid.Row="3" Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock Text="RECENT ACTIVITY" Style="{StaticResource SectionLabel}"/>
+                <TextBlock x:Name="ActivityPlaceholder" Text="Run an optimization to see activity here." Foreground="{StaticResource Text3Brush}" FontSize="12"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

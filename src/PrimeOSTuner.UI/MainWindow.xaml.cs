@@ -1,6 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using PrimeOSTuner.UI.ViewModels;
+using PrimeOSTuner.UI.Views;
 
 namespace PrimeOSTuner.UI;
 
@@ -10,21 +12,26 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = vm;
-        ShowPlaceholder("Dashboard");
+        ShowTab("Dashboard");
     }
 
     private void NavButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { Tag: string tab }) ShowPlaceholder(tab);
+        if (sender is Button { Tag: string tab }) ShowTab(tab);
     }
 
-    private void ShowPlaceholder(string tab)
+    private void ShowTab(string tab)
     {
-        PageHost.Content = new TextBlock
+        var sp = ((App)Application.Current).Host.Services;
+        PageHost.Content = tab switch
         {
-            Text = $"{tab} (placeholder)",
-            FontSize = 22,
-            Foreground = (System.Windows.Media.Brush)FindResource("Text0Brush")
+            "Dashboard" => sp.GetRequiredService<DashboardView>(),
+            _ => new TextBlock
+            {
+                Text = $"{tab} (placeholder)",
+                FontSize = 22,
+                Foreground = (System.Windows.Media.Brush)FindResource("Text0Brush")
+            }
         };
     }
 }
