@@ -18,6 +18,7 @@
     <SolidColorBrush x:Key="Bg0Brush"   Color="{StaticResource Bg0Color}"/>
     <SolidColorBrush x:Key="Bg1Brush"   Color="{StaticResource Bg1Color}"/>
     <SolidColorBrush x:Key="Bg2Brush"   Color="{StaticResource Bg2Color}"/>
+    <SolidColorBrush x:Key="Bg3Brush"   Color="{StaticResource Bg3Color}"/>
     <SolidColorBrush x:Key="LineBrush"  Color="{StaticResource LineColor}"/>
     <SolidColorBrush x:Key="Text0Brush" Color="{StaticResource Text0Color}"/>
     <SolidColorBrush x:Key="Text1Brush" Color="{StaticResource Text1Color}"/>
