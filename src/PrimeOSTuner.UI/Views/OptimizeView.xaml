@@ -4,33 +4,68 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" Text="Optimize" Style="{StaticResource HeaderText}" Margin="0,0,0,18"/>
-        <ItemsControl Grid.Row="1" x:Name="TweakList">
+
+        <TextBlock Grid.Row="0" Text="Optimize" Style="{StaticResource HeaderText}" Margin="0,0,0,12"/>
+
+        <!-- Filter chip bar -->
+        <ItemsControl Grid.Row="1" x:Name="FilterChips" Margin="0,0,0,18">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Border Style="{StaticResource CardBorder}" Margin="0,0,0,8">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="{Binding DisplayName}" Foreground="{StaticResource Text0Brush}" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding Description}" Foreground="{StaticResource Text2Brush}" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"/>
-                            </StackPanel>
-                            <Button Grid.Column="1" Content="Preview" Tag="{Binding}" Click="PreviewClick"
-                                    Padding="14,6" Margin="8,0" Background="Transparent" Foreground="{StaticResource Text1Brush}"
-                                    BorderBrush="{StaticResource LineBrush}" BorderThickness="1"/>
-                            <Button Grid.Column="2" Content="Apply" Tag="{Binding}" Click="ApplyClick"
-                                    Padding="14,6" Background="{StaticResource AccentBrush}" Foreground="#001b17"
-                                    BorderThickness="0" FontWeight="Bold"/>
-                        </Grid>
-                    </Border>
+                    <ToggleButton Style="{StaticResource FilterChip}"
+                                  Content="{Binding Label}"
+                                  IsChecked="{Binding IsActive, Mode=TwoWay}"
+                                  Tag="{Binding Key}"
+                                  Click="ChipClick"/>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="TweakList">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource CardBorder}" Padding="22,16" Margin="0,0,0,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding DisplayName}"
+                                               Foreground="{StaticResource Text0Brush}"
+                                               FontWeight="SemiBold" FontSize="15"
+                                               VerticalAlignment="Center"/>
+                                    <Border Style="{StaticResource InfoBadge}"
+                                            ToolTip="{Binding Description}">
+                                        <TextBlock Text="i" FontStyle="Italic" FontWeight="Bold"
+                                                   Foreground="{StaticResource Text1Brush}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   FontSize="11"/>
+                                    </Border>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Content="Preview" Tag="{Binding}" Click="PreviewClick"
+                                            Padding="14,8" Margin="0,0,8,0"
+                                            Background="Transparent"
+                                            Foreground="{StaticResource Text1Brush}"
+                                            BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                            FontSize="12" Cursor="Hand"/>
+                                    <Button Style="{StaticResource PrimaryActionButton}"
+                                            Content="Apply" Tag="{Binding}" Click="ApplyClick"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
     </Grid>
 </UserControl>

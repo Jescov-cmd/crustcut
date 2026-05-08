@@ -112,12 +112,12 @@
         </Setter>
     </Style>
 
+    <!-- Win11-style primary action button: subtle gradient, thin top highlight, light pulse glow -->
     <Style x:Key="PrimaryActionButton" TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource AccentGradientBrush}"/>
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="FontSize" Value="13"/>
-        <Setter Property="Padding" Value="18,8"/>
+        <Setter Property="Padding" Value="20,10"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
@@ -126,12 +126,23 @@
                     <Grid>
                         <Border x:Name="OuterGlow" CornerRadius="10" Background="Transparent">
                             <Border.Effect>
-                                <DropShadowEffect Color="#FF4D6D" BlurRadius="0" ShadowDepth="0" Opacity="0.7"/>
+                                <DropShadowEffect Color="#FF4D6D" BlurRadius="0" ShadowDepth="0" Opacity="0.6"/>
                             </Border.Effect>
                         </Border>
-                        <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="bg" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#FF6079" Offset="0"/>
+                                    <GradientStop Color="#E03050" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Border.Effect>
+                                <DropShadowEffect Color="#FF4D6D" BlurRadius="10" ShadowDepth="2" Opacity="0.35"/>
+                            </Border.Effect>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
+                        <Border CornerRadius="10,10,0,0" Height="1" VerticalAlignment="Top" IsHitTestVisible="False"
+                                Margin="3,1,3,0" Background="#50FFFFFF"/>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <EventTrigger RoutedEvent="Loaded">
@@ -139,18 +150,35 @@
                                 <Storyboard RepeatBehavior="Forever">
                                     <DoubleAnimation Storyboard.TargetName="OuterGlow"
                                                      Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
-                                                     From="0" To="22" Duration="0:0:1.0"/>
+                                                     From="0" To="20" Duration="0:0:1.2"/>
                                     <DoubleAnimation Storyboard.TargetName="OuterGlow"
                                                      Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
-                                                     From="0.7" To="0" Duration="0:0:1.0"/>
+                                                     From="0.6" To="0" Duration="0:0:1.2"/>
                                     <DoubleAnimation Storyboard.TargetName="OuterGlow"
                                                      Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
-                                                     BeginTime="0:0:1.0" From="22" To="0" Duration="0:0:1.0"/>
+                                                     BeginTime="0:0:1.2" From="20" To="0" Duration="0:0:1.2"/>
                                 </Storyboard>
                             </BeginStoryboard>
                         </EventTrigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bg" Property="Background" Value="{StaticResource AccentBrush}"/>
+                            <Setter TargetName="bg" Property="Background">
+                                <Setter.Value>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Color="#FF7A8F" Offset="0"/>
+                                        <GradientStop Color="#FF4D6D" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="bg" Property="Background">
+                                <Setter.Value>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                        <GradientStop Color="#D11A3E" Offset="0"/>
+                                        <GradientStop Color="#B00030" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Setter.Value>
+                            </Setter>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.5"/>
@@ -160,6 +188,58 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!-- Filter chip toggle: small rounded pill that highlights crimson when checked -->
+    <Style x:Key="FilterChip" TargetType="ToggleButton">
+        <Setter Property="Foreground" Value="{StaticResource Text2Brush}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Padding" Value="14,7"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="bg" CornerRadius="999"
+                            Background="{StaticResource Bg2Brush}"
+                            BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="bg" Property="Background" Value="{StaticResource AccentBrush}"/>
+                            <Setter TargetName="bg" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bg" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            <Setter Property="Foreground" Value="{StaticResource Text0Brush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Info badge: small circular i icon for hover-to-explain pattern -->
+    <Style x:Key="InfoBadge" TargetType="Border">
+        <Setter Property="Width" Value="18"/>
+        <Setter Property="Height" Value="18"/>
+        <Setter Property="CornerRadius" Value="9"/>
+        <Setter Property="Background" Value="{StaticResource Bg3Brush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="10,0,0,0"/>
+        <Setter Property="Cursor" Value="Help"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
 </ResourceDictionary>

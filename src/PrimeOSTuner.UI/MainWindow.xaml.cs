@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Microsoft.Extensions.DependencyInjection;
 using PrimeOSTuner.UI.ViewModels;
@@ -10,7 +11,7 @@ namespace PrimeOSTuner.UI;
 public partial class MainWindow : Window
 {
     private const double SlotHeight = 44;
-    private const double IndicatorOffset = 4;
+    private const double IndicatorOffset = 24;
 
     private readonly ShellViewModel _shellVm;
 
@@ -51,6 +52,25 @@ public partial class MainWindow : Window
                 Foreground = (System.Windows.Media.Brush)FindResource("Text0Brush")
             }
         };
+
+        // Win11-style page fade + subtle slide-up on content swap
+        var slide = new TranslateTransform(0, 10);
+        PageHost.RenderTransform = slide;
+        PageHost.Opacity = 0;
+        var fadeIn = new DoubleAnimation
+        {
+            From = 0, To = 1,
+            Duration = TimeSpan.FromMilliseconds(220),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        var slideIn = new DoubleAnimation
+        {
+            From = 10, To = 0,
+            Duration = TimeSpan.FromMilliseconds(220),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        PageHost.BeginAnimation(OpacityProperty, fadeIn);
+        slide.BeginAnimation(TranslateTransform.YProperty, slideIn);
 
         var idx = _shellVm.SelectedTabIndex;
         var targetTop = idx * SlotHeight + IndicatorOffset;
