@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Animation;
 using Microsoft.Extensions.DependencyInjection;
 using PrimeOSTuner.UI.ViewModels;
 using PrimeOSTuner.UI.Views;
@@ -9,6 +10,9 @@ namespace PrimeOSTuner.UI;
 
 public partial class MainWindow : FluentWindow
 {
+    private const double SlotHeight = 44;
+    private const double IndicatorOffset = 4;
+
     private readonly ShellViewModel _shellVm;
 
     public MainWindow(ShellViewModel vm, WatcherStatusViewModel watcherVm)
@@ -31,6 +35,7 @@ public partial class MainWindow : FluentWindow
     private void ShowTab(string tab)
     {
         _shellVm.NavigateCommand.Execute(tab);
+
         var sp = ((App)Application.Current).Host.Services;
         PageHost.Content = tab switch
         {
@@ -47,5 +52,22 @@ public partial class MainWindow : FluentWindow
                 Foreground = (System.Windows.Media.Brush)FindResource("Text0Brush")
             }
         };
+
+        var idx = _shellVm.SelectedTabIndex;
+        var targetTop = idx * SlotHeight + IndicatorOffset;
+
+        NavIndicator.Visibility = Visibility.Visible;
+        var anim = new DoubleAnimation
+        {
+            To = targetTop,
+            Duration = TimeSpan.FromMilliseconds(280),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            FillBehavior = FillBehavior.HoldEnd
+        };
+        Storyboard.SetTarget(anim, NavIndicator);
+        Storyboard.SetTargetProperty(anim, new PropertyPath("(Canvas.Top)"));
+        var sb = new Storyboard();
+        sb.Children.Add(anim);
+        sb.Begin();
     }
 }
