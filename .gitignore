@@ -1,0 +1,54 @@
+# Claude Code per-user settings
+.claude/settings.local.json
+
+# Brainstorming workspace (visual companion files)
+.superpowers/
+
+# Visual Studio / .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+.vscode/
+*.pdb
+*.dll.config
+
+# Build output
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+[Ll]og/
+[Ll]ogs/
+[Bb]in/
+[Oo]bj/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+!**/[Pp]ackages/build/
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Velopack
+[Rr]eleases/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editor / temp
+*.swp
+*~
+*.bak
+*.tmp
