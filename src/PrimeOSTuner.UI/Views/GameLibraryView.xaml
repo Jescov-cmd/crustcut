@@ -15,9 +15,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Text="Game Library" Style="{StaticResource HeaderText}"/>
-            <Button Grid.Column="1" Content="+ Add Game" Click="AddGameClick"
-                    Padding="14,6" Background="{StaticResource Bg2Brush}" Foreground="{StaticResource Text0Brush}"
-                    BorderBrush="{StaticResource LineBrush}" BorderThickness="1"/>
+            <Button Style="{StaticResource PrimaryActionButton}" Grid.Column="1" Content="+ Add Game" Click="AddGameClick"/>
         </Grid>
 
         <Border Grid.Row="1" Style="{StaticResource CardBorder}" Margin="0,0,0,12"
