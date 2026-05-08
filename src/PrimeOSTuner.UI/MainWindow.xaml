@@ -1,14 +1,27 @@
 <Window x:Class="PrimeOSTuner.UI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="PrimeOS Tuner — Skeleton"
-        Height="600" Width="900"
-        Background="#06080c">
+        Title="PrimeOS Tuner"
+        Height="780" Width="1240"
+        WindowStartupLocation="CenterScreen">
     <Grid>
-        <TextBlock Text="PrimeOS Tuner skeleton boot OK"
-                   Foreground="#00e5c5"
-                   FontSize="24"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Sidebar -->
+        <Border Grid.Column="0" Background="{StaticResource Bg1Brush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0">
+            <StackPanel Margin="12,20">
+                <TextBlock Text="PRIMEOS TUNER" Style="{StaticResource SectionLabel}" Foreground="{StaticResource AccentBrush}" Margin="6,0,0,16"/>
+                <TextBlock Text="NAVIGATION" Style="{StaticResource SectionLabel}" Margin="6,0,0,8"/>
+                <Button Content="&#x2302;  Dashboard" Tag="Dashboard" Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
+                <Button Content="&#x26A1;  Optimize"  Tag="Optimize"  Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
+                <Button Content="&#x26E8;  History"   Tag="History"   Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Page host -->
+        <ContentControl Grid.Column="1" x:Name="PageHost" Margin="32,28"/>
     </Grid>
 </Window>

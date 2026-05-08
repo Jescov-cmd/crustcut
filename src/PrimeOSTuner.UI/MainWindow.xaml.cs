@@ -1,23 +1,28 @@
-﻿using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace PrimeOSTuner.UI;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
 public partial class MainWindow : Window
 {
     public MainWindow()
     {
         InitializeComponent();
+        ShowPlaceholder("Dashboard");
+    }
+
+    private void NavButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string tab }) ShowPlaceholder(tab);
+    }
+
+    private void ShowPlaceholder(string tab)
+    {
+        PageHost.Content = new TextBlock
+        {
+            Text = $"{tab} (placeholder)",
+            FontSize = 22,
+            Foreground = (System.Windows.Media.Brush)FindResource("Text0Brush")
+        };
     }
 }
