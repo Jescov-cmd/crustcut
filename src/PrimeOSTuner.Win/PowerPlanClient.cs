@@ -44,6 +44,25 @@ public sealed class PowerPlanClient : IPowerPlanClient
         return Guid.Parse(m.Value);
     }
 
+    public void SetActiveAcValueIndex(string subgroup, string setting, int value)
+    {
+        RunPowerCfg($"/setacvalueindex SCHEME_CURRENT {subgroup} {setting} {value}");
+        RunPowerCfg("/setactive SCHEME_CURRENT");
+    }
+
+    public int? GetActiveAcValueIndex(string subgroup, string setting)
+    {
+        try
+        {
+            var output = RunPowerCfg($"/query SCHEME_CURRENT {subgroup} {setting}");
+            var rx = new Regex(@"Current AC Power Setting Index:\s*0x([0-9a-fA-F]+)");
+            var m = rx.Match(output);
+            if (!m.Success) return null;
+            return int.Parse(m.Groups[1].Value, System.Globalization.NumberStyles.HexNumber);
+        }
+        catch { return null; }
+    }
+
     private static string RunPowerCfg(string args)
     {
         var psi = new ProcessStartInfo("powercfg.exe", args)
