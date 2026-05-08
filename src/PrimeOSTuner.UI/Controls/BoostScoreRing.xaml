@@ -1,0 +1,19 @@
+<UserControl x:Class="PrimeOSTuner.UI.Controls.BoostScoreRing"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="120" Height="120">
+    <Grid>
+        <Ellipse Width="120" Height="120" Stroke="{StaticResource LineBrush}" StrokeThickness="10"/>
+        <Path x:Name="Arc" StrokeThickness="10" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+            <Path.Stroke>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="{StaticResource AccentColor}" Offset="0"/>
+                    <GradientStop Color="{StaticResource Accent2Color}" Offset="1"/>
+                </LinearGradientBrush>
+            </Path.Stroke>
+        </Path>
+        <TextBlock x:Name="ScoreText" Text="0" FontSize="34" FontWeight="Bold"
+                   Foreground="{StaticResource Text0Brush}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Grid>
+</UserControl>
