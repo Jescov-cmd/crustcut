@@ -57,8 +57,10 @@ public partial class App : Application
                 // ViewModels & MainWindow
                 s.AddSingleton<ShellViewModel>();
                 s.AddSingleton<DashboardViewModel>();
+                s.AddTransient<HistoryViewModel>();
                 s.AddTransient<Views.DashboardView>();
                 s.AddTransient<Views.OptimizeView>();
+                s.AddTransient<Views.HistoryView>();
                 s.AddSingleton<MainWindow>();
             })
             .Build();

@@ -27,6 +27,7 @@ public partial class MainWindow : Window
         {
             "Dashboard" => sp.GetRequiredService<DashboardView>(),
             "Optimize" => sp.GetRequiredService<OptimizeView>(),
+            "History" => sp.GetRequiredService<HistoryView>(),
             _ => new TextBlock
             {
                 Text = $"{tab} (placeholder)",
