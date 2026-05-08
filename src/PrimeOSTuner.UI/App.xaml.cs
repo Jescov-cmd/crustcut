@@ -153,6 +153,7 @@ public partial class App : Application
                 s.AddTransient<Views.HistoryView>();
                 s.AddSingleton<GameLibraryViewModel>();
                 s.AddTransient<Views.GameLibraryView>();
+                s.AddTransient<Dialogs.AddGameDialog>();
                 s.AddSingleton<MainWindow>();
             })
             .Build();
