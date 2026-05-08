@@ -14,7 +14,7 @@
 
     <Style x:Key="HeaderText" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{StaticResource Text0Brush}"/>
-        <Setter Property="FontSize" Value="20"/>
+        <Setter Property="FontSize" Value="24"/>
         <Setter Property="FontWeight" Value="Bold"/>
     </Style>
 
@@ -26,12 +26,66 @@
         <Setter Property="Margin" Value="0,0,0,6"/>
     </Style>
 
-    <Style x:Key="CardBorder" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource Bg2Brush}"/>
+    <Style x:Key="FlatCardBorder" TargetType="Border">
         <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="14"/>
         <Setter Property="Padding" Value="18"/>
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="{StaticResource Bg2Color}" Offset="0"/>
+                    <GradientStop Color="{StaticResource Bg1Color}" Offset="1"/>
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="4" Opacity="0.35"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="CardBorder" TargetType="Border" BasedOn="{StaticResource FlatCardBorder}">
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+        <Setter Property="RenderTransform">
+            <Setter.Value>
+                <TranslateTransform Y="0"/>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                <Trigger.EnterActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                             To="-3" Duration="0:0:0.18"/>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                                             To="32" Duration="0:0:0.18"/>
+                            <ColorAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)"
+                                            To="#FF4D6D" Duration="0:0:0.18"/>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                             To="0.45" Duration="0:0:0.18"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.EnterActions>
+                <Trigger.ExitActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                             To="0" Duration="0:0:0.18"/>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                                             To="20" Duration="0:0:0.18"/>
+                            <ColorAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)"
+                                            To="Black" Duration="0:0:0.18"/>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                             To="0.35" Duration="0:0:0.18"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.ExitActions>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <Style x:Key="NavButtonStyle" TargetType="Button">
@@ -51,6 +105,56 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="bg" Property="Background" Value="#10FFFFFF"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="PrimaryActionButton" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource AccentGradientBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Padding" Value="18,8"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="OuterGlow" CornerRadius="10" Background="Transparent">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#FF4D6D" BlurRadius="0" ShadowDepth="0" Opacity="0.7"/>
+                            </Border.Effect>
+                        </Border>
+                        <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <EventTrigger RoutedEvent="Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever">
+                                    <DoubleAnimation Storyboard.TargetName="OuterGlow"
+                                                     Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                                                     From="0" To="22" Duration="0:0:1.0"/>
+                                    <DoubleAnimation Storyboard.TargetName="OuterGlow"
+                                                     Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                     From="0.7" To="0" Duration="0:0:1.0"/>
+                                    <DoubleAnimation Storyboard.TargetName="OuterGlow"
+                                                     Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                                                     BeginTime="0:0:1.0" From="22" To="0" Duration="0:0:1.0"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bg" Property="Background" Value="{StaticResource AccentBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                            <Setter TargetName="OuterGlow" Property="Visibility" Value="Collapsed"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
