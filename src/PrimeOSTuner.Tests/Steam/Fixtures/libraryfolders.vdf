@@ -1,0 +1,25 @@
+"libraryfolders"
+{
+    "0"
+    {
+        "path"        "C:\\Program Files (x86)\\Steam"
+        "label"       ""
+        "contentid"   "1234567890"
+        "totalsize"   "0"
+        "apps"
+        {
+            "440"     "1024000"
+        }
+    }
+    "1"
+    {
+        "path"        "D:\\SteamLibrary"
+        "label"       ""
+        "contentid"   "9876543210"
+        "totalsize"   "500000000000"
+        "apps"
+        {
+            "730"     "20000000"
+        }
+    }
+}

@@ -28,4 +28,13 @@
     <ProjectReference Include="..\PrimeOSTuner.UI\PrimeOSTuner.UI.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Steam\Fixtures\libraryfolders.vdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Steam\Fixtures\appmanifest_440.acf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
