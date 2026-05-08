@@ -156,6 +156,8 @@ public partial class App : Application
                 s.AddTransient<Dialogs.AddGameDialog>();
                 s.AddTransient<CustomModeViewModel>();
                 s.AddTransient<Views.CustomModeView>();
+                s.AddSingleton<GameBoostViewModel>();
+                s.AddTransient<Views.GameBoostView>();
                 s.AddSingleton<MainWindow>();
             })
             .Build();
