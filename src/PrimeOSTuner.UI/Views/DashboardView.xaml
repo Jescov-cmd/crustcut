@@ -7,6 +7,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -46,8 +47,22 @@
             </Border>
         </Grid>
 
+        <!-- Active profile panel (visible only when a profile is currently applied) -->
+        <Border Grid.Row="2" Style="{StaticResource CardBorder}" Margin="0,0,0,18"
+                Visibility="{Binding HasActiveProfile, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel>
+                <TextBlock Text="ACTIVE PROFILE" Style="{StaticResource SectionLabel}" Foreground="{StaticResource AccentBrush}"/>
+                <TextBlock Foreground="{StaticResource Text0Brush}" FontSize="14" FontWeight="Bold">
+                    <Run Text="{Binding ActiveProfileName}"/>
+                    <Run Text=" applied for "/>
+                    <Run Text="{Binding ActiveGameName}"/>
+                </TextBlock>
+                <TextBlock Text="Tweaks will revert automatically when the game closes." Foreground="{StaticResource Text2Brush}" FontSize="11" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
+
         <!-- Stats row -->
-        <UniformGrid Grid.Row="2" Columns="4" Rows="1" Margin="0,0,0,18">
+        <UniformGrid Grid.Row="3" Columns="4" Rows="1" Margin="0,0,0,18">
             <c:StatCard Margin="0,0,6,0"  StatName="CPU"     ValueText="{Binding CpuPercent, StringFormat='{}{0:F0}%'}" SubText="" History="{Binding CpuHistory}"/>
             <c:StatCard Margin="6,0"      StatName="MEMORY"  ValueText="{Binding RamPercent, StringFormat='{}{0:F0}%'}" SubText="" History="{Binding RamHistory}"/>
             <c:StatCard Margin="6,0"      StatName="GPU"     ValueText="{Binding GpuPercent, StringFormat='{}{0:F0}%'}" SubText="" History="{Binding GpuHistory}"/>
@@ -55,7 +70,7 @@
         </UniformGrid>
 
         <!-- Activity placeholder (real history view comes later) -->
-        <Border Grid.Row="3" Style="{StaticResource CardBorder}">
+        <Border Grid.Row="4" Style="{StaticResource CardBorder}">
             <StackPanel>
                 <TextBlock Text="RECENT ACTIVITY" Style="{StaticResource SectionLabel}"/>
                 <TextBlock x:Name="ActivityPlaceholder" Text="Run an optimization to see activity here." Foreground="{StaticResource Text3Brush}" FontSize="12"/>

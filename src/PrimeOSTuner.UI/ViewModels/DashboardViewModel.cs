@@ -2,12 +2,15 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PrimeOSTuner.Core.Monitoring;
+using PrimeOSTuner.Core.Profiles;
 
 namespace PrimeOSTuner.UI.ViewModels;
 
 public partial class DashboardViewModel : ObservableObject, IDisposable
 {
     private readonly SystemSampler _sampler;
+    private readonly ActiveTweaksStore _activeStore;
+    private readonly System.Timers.Timer _refreshTimer = new(2000) { AutoReset = true };
 
     [ObservableProperty] private double _cpuPercent;
     [ObservableProperty] private double _ramPercent;
@@ -18,16 +21,37 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     [ObservableProperty] private long _networkDownBps;
     [ObservableProperty] private long _networkUpBps;
 
+    [ObservableProperty] private string? _activeProfileName;
+    [ObservableProperty] private string? _activeGameName;
+    [ObservableProperty] private bool _hasActiveProfile;
+
     public ObservableCollection<double> CpuHistory { get; } = new();
     public ObservableCollection<double> RamHistory { get; } = new();
     public ObservableCollection<double> GpuHistory { get; } = new();
     public ObservableCollection<double> NetHistory { get; } = new();
 
-    public DashboardViewModel(SystemSampler sampler)
+    public DashboardViewModel(SystemSampler sampler, ActiveTweaksStore activeStore)
     {
         _sampler = sampler;
+        _activeStore = activeStore;
         _sampler.Sampled += OnSampled;
         _sampler.Start();
+        _refreshTimer.Elapsed += async (_, _) => await RefreshActiveAsync();
+        _refreshTimer.Start();
+    }
+
+    private async Task RefreshActiveAsync()
+    {
+        var rec = await _activeStore.LoadAsync();
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        Action update = () =>
+        {
+            HasActiveProfile = rec is not null;
+            ActiveProfileName = rec?.ProfileId;
+            ActiveGameName = rec?.GameId;
+        };
+        if (dispatcher is null || dispatcher.CheckAccess()) update();
+        else dispatcher.Invoke(update);
     }
 
     private void OnSampled(object? sender, SystemSample s)
@@ -63,5 +87,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     {
         _sampler.Sampled -= OnSampled;
         _sampler.Stop();
+        _refreshTimer.Stop();
+        _refreshTimer.Dispose();
     }
 }
