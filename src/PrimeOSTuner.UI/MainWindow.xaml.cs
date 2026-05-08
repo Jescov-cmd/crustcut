@@ -26,6 +26,7 @@ public partial class MainWindow : Window
         PageHost.Content = tab switch
         {
             "Dashboard" => sp.GetRequiredService<DashboardView>(),
+            "Optimize" => sp.GetRequiredService<OptimizeView>(),
             _ => new TextBlock
             {
                 Text = $"{tab} (placeholder)",
