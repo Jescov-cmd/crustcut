@@ -6,66 +6,75 @@
                  Height="780" Width="1240"
                  WindowStartupLocation="CenterScreen"
                  WindowBackdropType="Mica"
-                 ExtendsContentIntoTitleBar="False"
+                 ExtendsContentIntoTitleBar="True"
                  Background="Transparent">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-        <!-- Sidebar -->
-        <Grid Grid.Column="0">
-            <Border Background="{StaticResource Bg1Brush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0"/>
-            <!-- Soft radial accent glow at top of sidebar -->
-            <Border IsHitTestVisible="False">
-                <Border.Background>
-                    <RadialGradientBrush Center="0.5,0.0" GradientOrigin="0.5,0.0" RadiusX="0.9" RadiusY="0.6">
-                        <GradientStop Color="#22FF4D6D" Offset="0"/>
-                        <GradientStop Color="#00FFFFFF" Offset="1"/>
-                    </RadialGradientBrush>
-                </Border.Background>
-            </Border>
+        <ui:TitleBar Grid.Row="0" Title="PrimeOS Tuner"/>
 
-            <DockPanel Margin="12,20" LastChildFill="True">
-                <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
-                    <Border Background="{StaticResource Bg2Brush}" CornerRadius="10" Padding="12">
-                        <StackPanel>
-                            <TextBlock x:Name="WatcherStatusText" Text="{Binding StatusText}" Foreground="{StaticResource Text1Brush}" FontSize="11" FontWeight="Bold"/>
-                            <ToggleButton x:Name="WatcherToggle" IsChecked="{Binding IsWatching, Mode=TwoWay}" Margin="0,6,0,0" Content="Toggle"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                <Grid>
-                    <!-- Sliding indicator (positioned in Task 7) -->
-                    <Canvas x:Name="NavIndicatorHost" Width="3" HorizontalAlignment="Left" Margin="0,32,0,0" Panel.ZIndex="1">
-                        <Border x:Name="NavIndicator" Width="3" Height="30"
-                                Canvas.Top="0"
-                                CornerRadius="2"
-                                Background="{StaticResource AccentGradientBrush}"
-                                Visibility="Collapsed">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#FF4D6D" BlurRadius="10" ShadowDepth="0" Opacity="0.7"/>
-                            </Border.Effect>
+            <!-- Sidebar -->
+            <Grid Grid.Column="0">
+                <Border Background="{StaticResource Bg1Brush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0"/>
+                <!-- Soft radial accent glow at top of sidebar -->
+                <Border IsHitTestVisible="False">
+                    <Border.Background>
+                        <RadialGradientBrush Center="0.5,0.0" GradientOrigin="0.5,0.0" RadiusX="0.9" RadiusY="0.6">
+                            <GradientStop Color="#22FF4D6D" Offset="0"/>
+                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Border.Background>
+                </Border>
+
+                <DockPanel Margin="12,20" LastChildFill="True">
+                    <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+                        <Border Background="{StaticResource Bg2Brush}" CornerRadius="10" Padding="12">
+                            <StackPanel>
+                                <TextBlock x:Name="WatcherStatusText" Text="{Binding StatusText}" Foreground="{StaticResource Text1Brush}" FontSize="11" FontWeight="Bold"/>
+                                <ToggleButton x:Name="WatcherToggle" IsChecked="{Binding IsWatching, Mode=TwoWay}" Margin="0,6,0,0" Content="Toggle"/>
+                            </StackPanel>
                         </Border>
-                    </Canvas>
-
-                    <StackPanel Margin="8,0,0,0">
-                        <TextBlock Text="PRIMEOS TUNER" Style="{StaticResource SectionLabel}" Foreground="{StaticResource AccentBrush}" Margin="6,0,0,16"/>
-                        <TextBlock Text="NAVIGATION" Style="{StaticResource SectionLabel}" Margin="6,0,0,8"/>
-                        <Button Content="&#x2302;  Dashboard"   Tag="Dashboard"   Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
-                        <Button Content="&#x26A1;  Optimize"    Tag="Optimize"    Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
-                        <Button Content="&#x1F3AE;  Game Boost" Tag="GameBoost"   Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
-                        <Button Content="&#x1F4DA;  Library"    Tag="GameLibrary" Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
-                        <Button Content="&#x2699;  Custom"      Tag="CustomMode"  Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
-                        <Button Content="&#x26E8;  History"     Tag="History"     Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
                     </StackPanel>
-                </Grid>
-            </DockPanel>
-        </Grid>
 
-        <!-- Page host -->
-        <ContentControl Grid.Column="1" x:Name="PageHost" Margin="32,28"/>
+                    <Grid>
+                        <!-- Sliding indicator (positioned in Task 7) -->
+                        <Canvas x:Name="NavIndicatorHost" Width="3" HorizontalAlignment="Left" Margin="0,32,0,0" Panel.ZIndex="1">
+                            <Border x:Name="NavIndicator" Width="3" Height="30"
+                                    Canvas.Top="0"
+                                    CornerRadius="2"
+                                    Background="{StaticResource AccentGradientBrush}"
+                                    Visibility="Collapsed">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#FF4D6D" BlurRadius="10" ShadowDepth="0" Opacity="0.7"/>
+                                </Border.Effect>
+                            </Border>
+                        </Canvas>
+
+                        <StackPanel Margin="8,0,0,0">
+                            <TextBlock Text="PRIMEOS TUNER" Style="{StaticResource SectionLabel}" Foreground="{StaticResource AccentBrush}" Margin="6,0,0,16"/>
+                            <TextBlock Text="NAVIGATION" Style="{StaticResource SectionLabel}" Margin="6,0,0,8"/>
+                            <Button Content="&#x2302;  Dashboard"   Tag="Dashboard"   Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
+                            <Button Content="&#x26A1;  Optimize"    Tag="Optimize"    Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
+                            <Button Content="&#x1F3AE;  Game Boost" Tag="GameBoost"   Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
+                            <Button Content="&#x1F4DA;  Library"    Tag="GameLibrary" Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
+                            <Button Content="&#x2699;  Custom"      Tag="CustomMode"  Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
+                            <Button Content="&#x26E8;  History"     Tag="History"     Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
+                        </StackPanel>
+                    </Grid>
+                </DockPanel>
+            </Grid>
+
+            <!-- Page host -->
+            <ContentControl Grid.Column="1" x:Name="PageHost" Margin="32,28"/>
+        </Grid>
     </Grid>
 </ui:FluentWindow>
