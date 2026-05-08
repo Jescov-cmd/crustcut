@@ -12,13 +12,27 @@
 
         <!-- Sidebar -->
         <Border Grid.Column="0" Background="{StaticResource Bg1Brush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0">
-            <StackPanel Margin="12,20">
-                <TextBlock Text="PRIMEOS TUNER" Style="{StaticResource SectionLabel}" Foreground="{StaticResource AccentBrush}" Margin="6,0,0,16"/>
-                <TextBlock Text="NAVIGATION" Style="{StaticResource SectionLabel}" Margin="6,0,0,8"/>
-                <Button Content="&#x2302;  Dashboard" Tag="Dashboard" Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
-                <Button Content="&#x26A1;  Optimize"  Tag="Optimize"  Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
-                <Button Content="&#x26E8;  History"   Tag="History"   Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
-            </StackPanel>
+            <DockPanel Margin="12,20" LastChildFill="True">
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+                    <Border Background="{StaticResource Bg2Brush}" CornerRadius="10" Padding="12">
+                        <StackPanel>
+                            <TextBlock x:Name="WatcherStatusText" Text="{Binding StatusText}" Foreground="{StaticResource Text1Brush}" FontSize="11" FontWeight="Bold"/>
+                            <ToggleButton x:Name="WatcherToggle" IsChecked="{Binding IsWatching, Mode=TwoWay}" Margin="0,6,0,0" Content="Toggle"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel>
+                    <TextBlock Text="PRIMEOS TUNER" Style="{StaticResource SectionLabel}" Foreground="{StaticResource AccentBrush}" Margin="6,0,0,16"/>
+                    <TextBlock Text="NAVIGATION" Style="{StaticResource SectionLabel}" Margin="6,0,0,8"/>
+                    <Button Content="&#x2302;  Dashboard"  Tag="Dashboard"   Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
+                    <Button Content="&#x26A1;  Optimize"   Tag="Optimize"    Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
+                    <Button Content="&#x1F3AE;  Game Boost" Tag="GameBoost"  Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
+                    <Button Content="&#x1F4DA;  Library"    Tag="GameLibrary" Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
+                    <Button Content="&#x2699;  Custom"     Tag="CustomMode"  Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
+                    <Button Content="&#x26E8;  History"    Tag="History"     Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
+                </StackPanel>
+            </DockPanel>
         </Border>
 
         <!-- Page host -->

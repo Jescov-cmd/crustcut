@@ -158,6 +158,7 @@ public partial class App : Application
                 s.AddTransient<Views.CustomModeView>();
                 s.AddSingleton<GameBoostViewModel>();
                 s.AddTransient<Views.GameBoostView>();
+                s.AddSingleton<WatcherStatusViewModel>();
                 s.AddSingleton<MainWindow>();
             })
             .Build();

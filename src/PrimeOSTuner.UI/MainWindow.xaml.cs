@@ -8,10 +8,14 @@ namespace PrimeOSTuner.UI;
 
 public partial class MainWindow : Window
 {
-    public MainWindow(ShellViewModel vm)
+    public MainWindow(ShellViewModel vm, WatcherStatusViewModel watcherVm)
     {
         InitializeComponent();
         DataContext = vm;
+        var bottomBlock = (FrameworkElement)FindName("WatcherStatusText");
+        if (bottomBlock?.Parent is FrameworkElement parent)
+            parent.DataContext = watcherVm;
+
         ShowTab("Dashboard");
     }
 
@@ -25,9 +29,12 @@ public partial class MainWindow : Window
         var sp = ((App)Application.Current).Host.Services;
         PageHost.Content = tab switch
         {
-            "Dashboard" => sp.GetRequiredService<DashboardView>(),
-            "Optimize" => sp.GetRequiredService<OptimizeView>(),
-            "History" => sp.GetRequiredService<HistoryView>(),
+            "Dashboard"    => sp.GetRequiredService<DashboardView>(),
+            "Optimize"     => sp.GetRequiredService<OptimizeView>(),
+            "GameBoost"    => sp.GetRequiredService<GameBoostView>(),
+            "GameLibrary"  => sp.GetRequiredService<GameLibraryView>(),
+            "CustomMode"   => sp.GetRequiredService<CustomModeView>(),
+            "History"      => sp.GetRequiredService<HistoryView>(),
             _ => new TextBlock
             {
                 Text = $"{tab} (placeholder)",
