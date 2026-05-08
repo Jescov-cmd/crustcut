@@ -154,6 +154,8 @@ public partial class App : Application
                 s.AddSingleton<GameLibraryViewModel>();
                 s.AddTransient<Views.GameLibraryView>();
                 s.AddTransient<Dialogs.AddGameDialog>();
+                s.AddTransient<CustomModeViewModel>();
+                s.AddTransient<Views.CustomModeView>();
                 s.AddSingleton<MainWindow>();
             })
             .Build();
