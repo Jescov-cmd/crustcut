@@ -1,0 +1,29 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Color x:Key="Bg0Color">#06080c</Color>
+    <Color x:Key="Bg1Color">#0b0f17</Color>
+    <Color x:Key="Bg2Color">#11161f</Color>
+    <Color x:Key="Bg3Color">#1a2030</Color>
+    <Color x:Key="LineColor">#1c2333</Color>
+    <Color x:Key="Text0Color">#f1f5fb</Color>
+    <Color x:Key="Text1Color">#c7cfde</Color>
+    <Color x:Key="Text2Color">#8b95a8</Color>
+    <Color x:Key="Text3Color">#5a6478</Color>
+    <Color x:Key="AccentColor">#00e5c5</Color>
+    <Color x:Key="Accent2Color">#6ad7ff</Color>
+    <Color x:Key="GoodColor">#43d27a</Color>
+    <Color x:Key="WarnColor">#ffb84d</Color>
+    <Color x:Key="DangerColor">#ff6b6b</Color>
+
+    <SolidColorBrush x:Key="Bg0Brush"   Color="{StaticResource Bg0Color}"/>
+    <SolidColorBrush x:Key="Bg1Brush"   Color="{StaticResource Bg1Color}"/>
+    <SolidColorBrush x:Key="Bg2Brush"   Color="{StaticResource Bg2Color}"/>
+    <SolidColorBrush x:Key="LineBrush"  Color="{StaticResource LineColor}"/>
+    <SolidColorBrush x:Key="Text0Brush" Color="{StaticResource Text0Color}"/>
+    <SolidColorBrush x:Key="Text1Brush" Color="{StaticResource Text1Color}"/>
+    <SolidColorBrush x:Key="Text2Brush" Color="{StaticResource Text2Color}"/>
+    <SolidColorBrush x:Key="Text3Brush" Color="{StaticResource Text3Color}"/>
+    <SolidColorBrush x:Key="AccentBrush"  Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="Accent2Brush" Color="{StaticResource Accent2Color}"/>
+    <SolidColorBrush x:Key="GoodBrush"   Color="{StaticResource GoodColor}"/>
+</ResourceDictionary>
