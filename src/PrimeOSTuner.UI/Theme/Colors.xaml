@@ -9,8 +9,9 @@
     <Color x:Key="Text1Color">#c7cfde</Color>
     <Color x:Key="Text2Color">#8b95a8</Color>
     <Color x:Key="Text3Color">#5a6478</Color>
-    <Color x:Key="AccentColor">#00e5c5</Color>
-    <Color x:Key="Accent2Color">#6ad7ff</Color>
+    <Color x:Key="AccentColor">#ff4d6d</Color>
+    <Color x:Key="Accent2Color">#ff8095</Color>
+    <Color x:Key="AccentDeepColor">#d11a3e</Color>
     <Color x:Key="GoodColor">#43d27a</Color>
     <Color x:Key="WarnColor">#ffb84d</Color>
     <Color x:Key="DangerColor">#ff6b6b</Color>
@@ -24,9 +25,15 @@
     <SolidColorBrush x:Key="Text1Brush" Color="{StaticResource Text1Color}"/>
     <SolidColorBrush x:Key="Text2Brush" Color="{StaticResource Text2Color}"/>
     <SolidColorBrush x:Key="Text3Brush" Color="{StaticResource Text3Color}"/>
-    <SolidColorBrush x:Key="AccentBrush"  Color="{StaticResource AccentColor}"/>
-    <SolidColorBrush x:Key="Accent2Brush" Color="{StaticResource Accent2Color}"/>
+    <SolidColorBrush x:Key="AccentBrush"      Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="Accent2Brush"     Color="{StaticResource Accent2Color}"/>
+    <SolidColorBrush x:Key="AccentDeepBrush"  Color="{StaticResource AccentDeepColor}"/>
     <SolidColorBrush x:Key="GoodBrush"   Color="{StaticResource GoodColor}"/>
     <SolidColorBrush x:Key="WarnBrush"   Color="{StaticResource WarnColor}"/>
     <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}"/>
+
+    <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource AccentColor}"     Offset="0"/>
+        <GradientStop Color="{StaticResource AccentDeepColor}" Offset="1"/>
+    </LinearGradientBrush>
 </ResourceDictionary>
