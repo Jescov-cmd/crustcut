@@ -22,6 +22,7 @@ public sealed class SafeRegistryCleanupTweak : ITweak
     public string Description => "Removes dead startup entries and broken file associations.";
     public bool RequiresElevation => true; // HKLM Run requires admin
     public bool IsDestructive => true;
+    public bool RequiresReboot => false;
 
     public Task<TweakState> ProbeAsync(CancellationToken ct = default)
     {

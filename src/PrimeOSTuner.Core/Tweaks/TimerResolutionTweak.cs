@@ -12,6 +12,7 @@ public sealed class TimerResolutionTweak : ITweak
     public string Description => "Lowers input latency. Slight CPU cost.";
     public bool RequiresElevation => false;
     public bool IsDestructive => false;
+    public bool RequiresReboot => false;
 
     public TimerResolutionTweak(ITimerResolutionClient client) { _client = client; }
 

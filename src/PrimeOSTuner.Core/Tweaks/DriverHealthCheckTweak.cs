@@ -16,6 +16,7 @@ public sealed class DriverHealthCheckTweak : ITweak
     public string Description => "Lists devices with driver errors.";
     public bool RequiresElevation => false;
     public bool IsDestructive => false;
+    public bool RequiresReboot => false;
 
     public Task<TweakState> ProbeAsync(CancellationToken ct = default)
         => Task.FromResult(TweakState.NotApplied); // always actionable as a check

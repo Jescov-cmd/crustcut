@@ -18,6 +18,7 @@ public sealed class NagleAlgorithmTweak : ITweak
     public string Description => "Sends small packets immediately. Lower lag online.";
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
+    public bool RequiresReboot => false;
 
     public NagleAlgorithmTweak(IRegistryClient registry, INetworkInterfaceClient nics)
     {

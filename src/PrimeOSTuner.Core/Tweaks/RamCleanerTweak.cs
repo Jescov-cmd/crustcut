@@ -11,6 +11,7 @@ public sealed class RamCleanerTweak : ITweak
     public string Description => "Returns unused memory to the available pool.";
     public bool RequiresElevation => false;
     public bool IsDestructive => false;
+    public bool RequiresReboot => false;
 
     public RamCleanerTweak(IProcessClient processes) { _processes = processes; }
 

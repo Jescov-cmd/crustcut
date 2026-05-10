@@ -21,6 +21,7 @@ public sealed class MouseAccelTweak : ITweak
     public string Description => "Makes mouse movement 1:1 with cursor.";
     public bool RequiresElevation => false;
     public bool IsDestructive => false;
+    public bool RequiresReboot => false;
 
     public MouseAccelTweak(IRegistryClient registry) { _registry = registry; }
 

@@ -13,6 +13,7 @@ public sealed class DnsFlushTweak : ITweak
     public string Description => "Clears stale DNS lookups.";
     public bool RequiresElevation => false;
     public bool IsDestructive => false;
+    public bool RequiresReboot => false;
 
     public Task<TweakState> ProbeAsync(CancellationToken ct = default)
         => Task.FromResult(TweakState.NotApplied); // always actionable

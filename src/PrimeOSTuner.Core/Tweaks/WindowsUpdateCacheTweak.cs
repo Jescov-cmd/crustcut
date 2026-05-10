@@ -20,6 +20,7 @@ public sealed class WindowsUpdateCacheTweak : ITweak
     public string Description => "Frees disk space and unsticks Windows Update.";
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
+    public bool RequiresReboot => false;
 
     public Task<TweakState> ProbeAsync(CancellationToken ct = default)
     {

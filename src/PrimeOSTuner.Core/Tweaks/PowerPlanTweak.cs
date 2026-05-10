@@ -12,6 +12,7 @@ public sealed class PowerPlanTweak : ITweak
     public string Description => "Tells Windows to prioritize speed over battery.";
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
+    public bool RequiresReboot => false;
 
     public PowerPlanTweak(IPowerPlanClient client) { _client = client; }
 

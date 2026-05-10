@@ -16,6 +16,7 @@ public sealed class GameModeTweak : ITweak
     public string Description => "Lets Windows prioritize games automatically.";
     public bool RequiresElevation => false;
     public bool IsDestructive => false;
+    public bool RequiresReboot => false;
 
     public GameModeTweak(IRegistryClient registry) { _registry = registry; }
 

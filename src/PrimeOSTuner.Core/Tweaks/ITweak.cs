@@ -10,8 +10,9 @@ public interface ITweak
     string Description { get; }        // plain-language explanation
     bool RequiresElevation { get; }    // does Apply need admin?
     bool IsDestructive { get; }        // requires manual opt-in (never auto-run)
-    bool RequiresReboot              // change doesn't fully take effect until next restart
-        => false;
+    // Every concrete tweak must declare this. Default interface members don't bind
+    // reliably in WPF — when a class skips this, the REBOOT pill shows on every tile.
+    bool RequiresReboot { get; }
 
     Task<TweakState> ProbeAsync(CancellationToken ct = default);
     Task<TweakResult> ApplyAsync(IProgress<int>? progress = null, CancellationToken ct = default);

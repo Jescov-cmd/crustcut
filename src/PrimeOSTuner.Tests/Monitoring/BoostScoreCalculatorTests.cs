@@ -99,6 +99,7 @@ public class BoostScoreCalculatorTests
         public string Description => "";
         public bool RequiresElevation => false;
         public bool IsDestructive { get; }
+        public bool RequiresReboot => false;
         public Task<TweakState> ProbeAsync(CancellationToken ct = default) => Task.FromResult(_state);
         public Task<TweakResult> ApplyAsync(IProgress<int>? p = null, CancellationToken ct = default) => Task.FromResult(TweakResult.Success());
         public Task<TweakResult> RevertAsync(string undoData, CancellationToken ct = default) => Task.FromResult(TweakResult.Success());

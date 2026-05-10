@@ -17,6 +17,7 @@ public sealed class PerAppGpuPreferenceTweak : ITweak
     public string Description => "Forces high-performance GPU on detected games.";
     public bool RequiresElevation => false;
     public bool IsDestructive => false;
+    public bool RequiresReboot => false;
 
     public PerAppGpuPreferenceTweak(IRegistryClient registry, IEnumerable<string> exePaths)
     {
