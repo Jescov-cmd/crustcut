@@ -158,6 +158,7 @@ public partial class App : Application
                     {
                         ["basic"] = BuiltInProfiles.Basic,
                         ["performance"] = BuiltInProfiles.Performance,
+                        ["aggressive"] = BuiltInProfiles.Aggressive,
                         ["custom"] = customProfile,
                     };
                     return new ProfileLifecycleService(
