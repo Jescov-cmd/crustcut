@@ -34,9 +34,13 @@
                             ToolTip="Add any newly-running user apps to the list."
                             Margin="0,0,8,0"/>
                     <Button Content="+ Add App" Click="AddAppClick" Margin="0,0,8,0"/>
-                    <Button Content="&#x26A1; Apply Recommended to All Games"
-                            Click="ApplyRecommendedClick"
-                            Style="{StaticResource PrimaryActionButton}"/>
+                    <Button Click="ApplyRecommendedClick"
+                            Style="{StaticResource PrimaryActionButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{StaticResource IconLightning}" Width="16" Height="16" Margin="0,0,8,0"/>
+                            <TextBlock Text="Apply Recommended to All Games" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
 
@@ -51,12 +55,14 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <TextBlock Grid.Column="0" Text="&#x1F3AE;"
-                                           FontSize="22" Margin="0,0,12,0" VerticalAlignment="Center"
-                                           Visibility="{Binding IsGame, Converter={StaticResource BoolToVisibility}}"/>
-                                <TextBlock Grid.Column="0" Text="&#x1F4E6;"
-                                           FontSize="22" Margin="0,0,12,0" VerticalAlignment="Center"
-                                           Visibility="{Binding IsGame, Converter={StaticResource InverseBoolToVisibility}, FallbackValue=Collapsed}"/>
+                                <Image Grid.Column="0"
+                                       Source="{StaticResource IconGameLibrary}"
+                                       Width="36" Height="36" Margin="0,0,12,0" VerticalAlignment="Center"
+                                       Visibility="{Binding IsGame, Converter={StaticResource BoolToVisibility}}"/>
+                                <Image Grid.Column="0"
+                                       Source="{StaticResource IconOptimize}"
+                                       Width="36" Height="36" Margin="0,0,12,0" VerticalAlignment="Center"
+                                       Visibility="{Binding IsGame, Converter={StaticResource InverseBoolToVisibility}, FallbackValue=Collapsed}"/>
 
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding DisplayName}"

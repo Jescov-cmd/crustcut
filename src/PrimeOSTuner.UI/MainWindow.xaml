@@ -137,20 +137,56 @@
                                VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- Tabs -->
+                <!-- Tabs (icon + label) -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
-                    <Button x:Name="NavDashboard"   Tag="Dashboard"   Click="NavButton_Click" Content="Dashboard" Style="{StaticResource TopTabActive}"/>
-                    <Button x:Name="NavOptimize"    Tag="Optimize"    Click="NavButton_Click" Content="Optimize"  Style="{StaticResource TopTab}"/>
-                    <Button x:Name="NavGameBoost"   Tag="GameBoost"   Click="NavButton_Click" Content="Game Boost" Style="{StaticResource TopTab}"/>
-                    <Button x:Name="NavGameLibrary" Tag="GameLibrary" Click="NavButton_Click" Content="Library"   Style="{StaticResource TopTab}"/>
-                    <Button x:Name="NavBloatware"   Content="Bloatware"
-                            Style="{StaticResource TopTab}" Tag="Bloatware"
-                            Click="NavButton_Click"/>
-                    <Button x:Name="NavMemoryPriority" Content="Memory Priority"
-                            Style="{StaticResource TopTab}" Tag="MemoryPriority"
-                            Click="NavButton_Click"/>
-                    <Button x:Name="NavHistory"     Tag="History"     Click="NavButton_Click" Content="History"   Style="{StaticResource TopTab}"/>
-                    <Button x:Name="NavSettings"    Tag="Settings"    Click="NavButton_Click" Content="Settings"  Style="{StaticResource TopTab}"/>
+                    <Button x:Name="NavDashboard" Tag="Dashboard" Click="NavButton_Click" Style="{StaticResource TopTabActive}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{StaticResource IconDashboard}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavOptimize" Tag="Optimize" Click="NavButton_Click" Style="{StaticResource TopTab}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{StaticResource IconOptimize}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <TextBlock Text="Optimize" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavGameBoost" Tag="GameBoost" Click="NavButton_Click" Style="{StaticResource TopTab}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{StaticResource IconGameBoost}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <TextBlock Text="Game Boost" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavGameLibrary" Tag="GameLibrary" Click="NavButton_Click" Style="{StaticResource TopTab}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{StaticResource IconGameLibrary}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <TextBlock Text="Library" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavBloatware" Tag="Bloatware" Click="NavButton_Click" Style="{StaticResource TopTab}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{StaticResource IconBloatware}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <TextBlock Text="Bloatware" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavMemoryPriority" Tag="MemoryPriority" Click="NavButton_Click" Style="{StaticResource TopTab}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{StaticResource IconMemoryPriority}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <TextBlock Text="Memory Priority" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavHistory" Tag="History" Click="NavButton_Click" Style="{StaticResource TopTab}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{StaticResource IconHistory}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <TextBlock Text="History" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="NavSettings" Tag="Settings" Click="NavButton_Click" Style="{StaticResource TopTab}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{StaticResource IconSettings}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <TextBlock Text="Settings" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
                 <!-- Watcher status + toggle -->
