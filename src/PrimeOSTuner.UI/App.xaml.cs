@@ -262,6 +262,8 @@ public partial class App : Application
                     PrimeOSTuner.Core.Settings.AppSettingsStore.DefaultPath()));
                 s.AddSingleton<SettingsViewModel>();
                 s.AddTransient<Views.SettingsView>();
+                s.AddSingleton<BloatwareViewModel>();
+                s.AddTransient<Views.BloatwareView>();
 
                 s.AddSingleton<Services.TrayIconService>();
                 s.AddSingleton<MainWindow>();
