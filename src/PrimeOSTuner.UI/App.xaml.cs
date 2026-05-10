@@ -45,6 +45,7 @@ public partial class App : Application
                 s.AddSingleton<IPowerPlanClient, PowerPlanClient>();
                 s.AddSingleton<IRestorePointClient, RestorePointClient>();
                 s.AddSingleton<IHardwareClient, HardwareClient>();
+                s.AddSingleton<IServiceClient, ServiceClient>();
 
                 // Core
                 s.AddSingleton(_ => new TweakHistory(TweakHistory.DefaultPath()));
