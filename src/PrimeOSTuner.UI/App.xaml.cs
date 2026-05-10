@@ -77,6 +77,7 @@ public partial class App : Application
 
                 // Core additions — new tweaks
                 s.AddSingleton<MouseAccelTweak>();
+                s.AddSingleton<TelemetryDisableTweak>();
                 s.AddSingleton<TimerResolutionTweak>();
                 s.AddSingleton<GameModeTweak>();
                 s.AddSingleton<HwGpuSchedulingTweak>();
@@ -186,6 +187,7 @@ public partial class App : Application
                         sp.GetRequiredService<HwGpuSchedulingTweak>(),
                         sp.GetRequiredService<NagleAlgorithmTweak>(),
                         sp.GetRequiredService<CpuCoreParkingTweak>(),
+                        sp.GetRequiredService<TelemetryDisableTweak>(),
                         perAppFactory(gamePaths),
                     };
                     var catalog = sp.GetRequiredService<IReadOnlyList<RegistryTweak>>();
