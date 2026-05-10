@@ -93,6 +93,39 @@ public partial class App : Application
                     return defs.Select(d => new RegistryTweak(d, registry)).ToList();
                 });
 
+                // Service-disable tweaks for the System category.
+                s.AddSingleton<IEnumerable<ServiceDisableTweak>>(sp =>
+                {
+                    var client = sp.GetRequiredService<IServiceClient>();
+                    return new[]
+                    {
+                        new ServiceDisableTweak(
+                            id: "core.sysmain-disable",
+                            displayName: "Disable Superfetch / SysMain",
+                            description: "Recommended for SSDs. Stops Windows pre-loading apps into memory.",
+                            category: "system",
+                            serviceName: "SysMain",
+                            riskNote: null,
+                            client: client),
+                        new ServiceDisableTweak(
+                            id: "core.search-indexing-tune",
+                            displayName: "Disable Windows Search indexing service",
+                            description: "Reduces background disk activity. Slows Start menu search.",
+                            category: "system",
+                            serviceName: "WSearch",
+                            riskNote: "Reduces Start menu search speed.",
+                            client: client),
+                        new ServiceDisableTweak(
+                            id: "core.connected-user-experiences",
+                            displayName: "Disable Connected User Experiences telemetry service",
+                            description: "Stops the DiagTrack-related Connected User Experiences and Telemetry service.",
+                            category: "system",
+                            serviceName: "DiagTrack",
+                            riskNote: null,
+                            client: client),
+                    };
+                });
+
                 // Profiles
                 s.AddSingleton(_ => new CustomProfileStore(CustomProfileStore.DefaultPath()));
                 s.AddSingleton(_ => new ActiveTweaksStore(ActiveTweaksStore.DefaultPath()));
@@ -156,7 +189,8 @@ public partial class App : Application
                         perAppFactory(gamePaths),
                     };
                     var catalog = sp.GetRequiredService<IReadOnlyList<RegistryTweak>>();
-                    return custom.Concat(catalog).ToArray();
+                    var services = sp.GetRequiredService<IEnumerable<ServiceDisableTweak>>();
+                    return custom.Concat(catalog).Concat(services).ToArray();
                 });
                 s.AddSingleton<OneClickOptimizer>();
 

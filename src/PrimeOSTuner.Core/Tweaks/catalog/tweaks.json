@@ -125,6 +125,48 @@
       "valueKind": "DWord",
       "appliedData": "255",
       "riskNote": "May break some apps and VPNs that require IPv6."
+    },
+    {
+      "id": "core.werror-reporting",
+      "displayName": "Disable Windows Error Reporting",
+      "description": "Stops Windows from sending crash reports to Microsoft.",
+      "category": "system",
+      "requiresElevation": true,
+      "requiresReboot": false,
+      "hive": "LocalMachine",
+      "key": "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting",
+      "valueName": "Disabled",
+      "valueKind": "DWord",
+      "appliedData": "1",
+      "riskNote": null
+    },
+    {
+      "id": "core.game-dvr-disable",
+      "displayName": "Disable Game DVR / background recording",
+      "description": "Stops Windows from background-recording games. Frees CPU/disk.",
+      "category": "system",
+      "requiresElevation": false,
+      "requiresReboot": false,
+      "hive": "CurrentUser",
+      "key": "System\\GameConfigStore",
+      "valueName": "GameDVR_Enabled",
+      "valueKind": "DWord",
+      "appliedData": "0",
+      "riskNote": null
+    },
+    {
+      "id": "core.fullscreen-optimizations",
+      "displayName": "Disable fullscreen optimizations (system-wide)",
+      "description": "Forces classic exclusive fullscreen for all games.",
+      "category": "system",
+      "requiresElevation": false,
+      "requiresReboot": false,
+      "hive": "CurrentUser",
+      "key": "System\\GameConfigStore",
+      "valueName": "GameDVR_FSEBehaviorMode",
+      "valueKind": "DWord",
+      "appliedData": "2",
+      "riskNote": null
     }
   ]
 }
