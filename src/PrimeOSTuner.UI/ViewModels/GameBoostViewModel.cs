@@ -6,15 +6,13 @@ namespace PrimeOSTuner.UI.ViewModels;
 public partial class GameBoostViewModel : ObservableObject
 {
     private readonly ProfileApplier _applier;
-    private readonly CustomProfileStore _customStore;
 
     [ObservableProperty] private string _statusMessage = "";
     [ObservableProperty] private bool _isWorking;
 
-    public GameBoostViewModel(ProfileApplier applier, CustomProfileStore customStore)
+    public GameBoostViewModel(ProfileApplier applier)
     {
         _applier = applier;
-        _customStore = customStore;
     }
 
     public async Task ApplyBasicAsync()
@@ -27,15 +25,9 @@ public partial class GameBoostViewModel : ObservableObject
         await ApplyAsync(BuiltInProfiles.Performance);
     }
 
-    public async Task ApplyCustomAsync()
+    public async Task ApplyAggressiveAsync()
     {
-        var profile = await _customStore.LoadAsync();
-        if (profile.TweakIds.Count == 0)
-        {
-            StatusMessage = "Custom Mode is empty — pick tweaks in the Custom Mode tab first.";
-            return;
-        }
-        await ApplyAsync(profile);
+        await ApplyAsync(BuiltInProfiles.Aggressive);
     }
 
     private async Task ApplyAsync(ModeProfile profile)

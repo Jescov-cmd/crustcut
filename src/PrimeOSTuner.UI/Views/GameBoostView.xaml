@@ -11,6 +11,8 @@
                 <!-- Basic -->
                 <Border Style="{StaticResource CardBorder}" Margin="0,0,8,0">
                     <StackPanel>
+                        <Image Source="{StaticResource IconModeBasic}" Width="64" Height="64"
+                               HorizontalAlignment="Left" Margin="0,0,0,8"/>
                         <TextBlock Text="BASIC MODE" Style="{StaticResource SectionLabel}" Foreground="{StaticResource AccentBrush}"/>
                         <TextBlock Text="Lightweight gaming preset"
                                    FontFamily="Segoe UI Variable Display, Segoe UI"
@@ -18,7 +20,7 @@
                         <TextBlock TextWrapping="Wrap"
                                    Foreground="{StaticResource Text2Brush}"
                                    FontSize="12" Margin="0,0,0,18">
-                            Game Mode + mouse acceleration off + High-Performance power plan + visual effects optimized.
+                            Game Mode + mouse acceleration off + High-Performance power plan. Safe for most systems.
                         </TextBlock>
                         <Border Background="{StaticResource StrokeBrush}" Height="1" Margin="0,0,0,14"/>
                         <Grid>
@@ -37,6 +39,8 @@
                 <!-- Performance -->
                 <Border Style="{StaticResource CardBorder}" Margin="4,0">
                     <StackPanel>
+                        <Image Source="{StaticResource IconModePerformance}" Width="64" Height="64"
+                               HorizontalAlignment="Left" Margin="0,0,0,8"/>
                         <TextBlock Text="PERFORMANCE MODE" Style="{StaticResource SectionLabel}" Foreground="{StaticResource AccentBrush}"/>
                         <TextBlock Text="Maximum tuning preset"
                                    FontFamily="Segoe UI Variable Display, Segoe UI"
@@ -44,7 +48,7 @@
                         <TextBlock TextWrapping="Wrap"
                                    Foreground="{StaticResource Text2Brush}"
                                    FontSize="12" Margin="0,0,0,18">
-                            Everything in Basic + 0.5 ms timer + HwGPU scheduling + Nagle off + network throttling off + multimedia priority maxed.
+                            Everything in Basic + timer resolution + HwGPU scheduling + Nagle off + network throttling off + multimedia priority maxed + telemetry trimmed.
                         </TextBlock>
                         <Border Background="{StaticResource StrokeBrush}" Height="1" Margin="0,0,0,14"/>
                         <Grid>
@@ -60,17 +64,19 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Custom -->
+                <!-- Aggressive -->
                 <Border Style="{StaticResource CardBorder}" Margin="8,0,0,0">
                     <StackPanel>
-                        <TextBlock Text="CUSTOM MODE" Style="{StaticResource SectionLabel}" Foreground="{StaticResource AccentBrush}"/>
-                        <TextBlock Text="Your hand-picked tweaks"
+                        <Image Source="{StaticResource IconModeAggressive}" Width="64" Height="64"
+                               HorizontalAlignment="Left" Margin="0,0,0,8"/>
+                        <TextBlock Text="AGGRESSIVE MODE" Style="{StaticResource SectionLabel}" Foreground="{StaticResource AccentBrush}"/>
+                        <TextBlock Text="All-out tuning preset"
                                    FontFamily="Segoe UI Variable Display, Segoe UI"
                                    FontSize="18" FontWeight="SemiBold" Margin="0,4,0,8"/>
                         <TextBlock TextWrapping="Wrap"
                                    Foreground="{StaticResource Text2Brush}"
                                    FontSize="12" Margin="0,0,0,18">
-                            Select exactly which tweaks to apply on the Custom Mode tab.
+                            Everything in Performance + IPv6 off + Cortana off + search indexing off + modern standby off + hibernation off. May break some apps.
                         </TextBlock>
                         <Border Background="{StaticResource StrokeBrush}" Height="1" Margin="0,0,0,14"/>
                         <Grid>
@@ -79,9 +85,9 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Enable" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                            <ToggleButton Grid.Column="1" x:Name="CustomToggle"
+                            <ToggleButton Grid.Column="1" x:Name="AggressiveToggle"
                                           Style="{StaticResource ToggleSwitchStyle}"
-                                          Click="CustomToggleClick"/>
+                                          Click="AggressiveToggleClick"/>
                         </Grid>
                     </StackPanel>
                 </Border>

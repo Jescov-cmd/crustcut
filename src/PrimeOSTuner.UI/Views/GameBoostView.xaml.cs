@@ -34,18 +34,18 @@ public partial class GameBoostView : UserControl
         }
     }
 
-    private async void CustomToggleClick(object sender, RoutedEventArgs e)
+    private async void AggressiveToggleClick(object sender, RoutedEventArgs e)
     {
         if (sender is ToggleButton { IsChecked: true })
         {
-            ClearOtherToggles(CustomToggle);
-            await _vm.ApplyCustomAsync();
+            ClearOtherToggles(AggressiveToggle);
+            await _vm.ApplyAggressiveAsync();
         }
     }
 
     private void ClearOtherToggles(ToggleButton keep)
     {
-        foreach (var t in new[] { BasicToggle, PerformanceToggle, CustomToggle })
+        foreach (var t in new[] { BasicToggle, PerformanceToggle, AggressiveToggle })
             if (t != keep) t.IsChecked = false;
     }
 }
