@@ -80,7 +80,6 @@ public partial class App : Application
                 s.AddSingleton(_ => new TweakHistory(TweakHistory.DefaultPath()));
                 s.AddSingleton<SystemSampler>();
                 s.AddSingleton<PowerPlanTweak>();
-                s.AddSingleton<IRamCleanerProtectList, EmptyRamCleanerProtectList>();
                 s.AddSingleton<RamCleanerTweak>();
 
                 // System cleanup tweaks (replaces the old junk-files / visual-effects pair)
@@ -169,6 +168,17 @@ public partial class App : Application
                 s.AddSingleton<BloatwareDisableService>();
                 s.AddSingleton<BloatwareUninstallService>();
 
+                // Memory Priority
+                s.AddSingleton<IPriorityClient, PriorityClient>();
+                s.AddSingleton<IProcessWatcher, WmiProcessWatcher>();
+                s.AddSingleton<IWorkingSetTrimmer, WorkingSetTrimmer>();
+                s.AddSingleton<SafeRamCleaner>();
+                s.AddSingleton<IGameBooster, GameBooster>();
+                s.AddSingleton<PriorityRuleStore>(_ => new PriorityRuleStore(PriorityRuleStore.DefaultPath()));
+                s.AddSingleton<PriorityRuleEngine>();
+                s.AddSingleton<IRamCleanerProtectList>(sp =>
+                    new PrimeOSTuner.UI.Services.StoreBackedProtectList(sp.GetRequiredService<PriorityRuleStore>()));
+
                 // Profiles
                 s.AddSingleton(_ => new CustomProfileStore(CustomProfileStore.DefaultPath()));
                 s.AddSingleton(_ => new ActiveTweaksStore(ActiveTweaksStore.DefaultPath()));
@@ -253,8 +263,7 @@ public partial class App : Application
                 s.AddSingleton<GameLibraryViewModel>();
                 s.AddTransient<Views.GameLibraryView>();
                 s.AddTransient<Dialogs.AddGameDialog>();
-                s.AddTransient<CustomModeViewModel>();
-                s.AddTransient<Views.CustomModeView>();
+
                 s.AddSingleton<GameBoostViewModel>();
                 s.AddTransient<Views.GameBoostView>();
                 s.AddSingleton<WatcherStatusViewModel>();
@@ -266,6 +275,8 @@ public partial class App : Application
                 s.AddTransient<Views.SettingsView>();
                 s.AddSingleton<BloatwareViewModel>();
                 s.AddTransient<Views.BloatwareView>();
+                s.AddSingleton<MemoryPriorityViewModel>();
+                s.AddTransient<Views.MemoryPriorityView>();
 
                 s.AddSingleton<Services.TrayIconService>();
                 s.AddSingleton<MainWindow>();
@@ -273,6 +284,11 @@ public partial class App : Application
             .Build();
 
         Host.Start();
+
+        var priorityEngine = Host.Services.GetRequiredService<PriorityRuleEngine>();
+        var priorityVm = Host.Services.GetRequiredService<MemoryPriorityViewModel>();
+        await priorityVm.LoadAsync();   // populates rules + reloads engine
+        priorityEngine.Start();
 
         var lifecycle = Host.Services.GetRequiredService<ProfileLifecycleService>();
         await lifecycle.RecoverFromCrashAsync();

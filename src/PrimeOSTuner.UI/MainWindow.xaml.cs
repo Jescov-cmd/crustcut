@@ -42,7 +42,7 @@ public partial class MainWindow : Window
             ["GameBoost"]   = NavGameBoost,
             ["GameLibrary"] = NavGameLibrary,
             ["Bloatware"]   = NavBloatware,
-            ["CustomMode"]  = NavCustomMode,
+            ["MemoryPriority"] = NavMemoryPriority,
             ["History"]     = NavHistory,
             ["Settings"]    = NavSettings,
         };
@@ -99,7 +99,7 @@ public partial class MainWindow : Window
             "GameBoost"    => sp.GetRequiredService<GameBoostView>(),
             "GameLibrary"  => sp.GetRequiredService<GameLibraryView>(),
             "Bloatware"    => sp.GetRequiredService<BloatwareView>(),
-            "CustomMode"   => sp.GetRequiredService<CustomModeView>(),
+            "MemoryPriority" => sp.GetRequiredService<MemoryPriorityView>(),
             "History"      => sp.GetRequiredService<HistoryView>(),
             "Settings"     => sp.GetRequiredService<SettingsView>(),
             _ => new TextBlock

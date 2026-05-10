@@ -146,7 +146,9 @@
                     <Button x:Name="NavBloatware"   Content="Bloatware"
                             Style="{StaticResource TopTab}" Tag="Bloatware"
                             Click="NavButton_Click"/>
-                    <Button x:Name="NavCustomMode"  Tag="CustomMode"  Click="NavButton_Click" Content="Custom"    Style="{StaticResource TopTab}"/>
+                    <Button x:Name="NavMemoryPriority" Content="Memory Priority"
+                            Style="{StaticResource TopTab}" Tag="MemoryPriority"
+                            Click="NavButton_Click"/>
                     <Button x:Name="NavHistory"     Tag="History"     Click="NavButton_Click" Content="History"   Style="{StaticResource TopTab}"/>
                     <Button x:Name="NavSettings"    Tag="Settings"    Click="NavButton_Click" Content="Settings"  Style="{StaticResource TopTab}"/>
                 </StackPanel>
