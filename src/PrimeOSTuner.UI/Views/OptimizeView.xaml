@@ -134,7 +134,7 @@
                                             Background="{StaticResource Bg2Brush}"
                                             BorderBrush="{StaticResource StrokeBrush}" BorderThickness="1">
                                         <Border.Style>
-                                            <Style TargetType="Border" BasedOn="{StaticResource {x:Type Border}}">
+                                            <Style TargetType="Border">
                                                 <Setter Property="ToolTip" Value="This tweak is not currently applied. Toggle the switch on to apply it."/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsApplied}" Value="True">
