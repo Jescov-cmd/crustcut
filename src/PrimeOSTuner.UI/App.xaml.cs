@@ -80,8 +80,6 @@ public partial class App : Application
                 s.AddSingleton<GameModeTweak>();
                 s.AddSingleton<HwGpuSchedulingTweak>();
                 s.AddSingleton<NagleAlgorithmTweak>();
-                s.AddSingleton<NetworkThrottlingIndexTweak>();
-                s.AddSingleton<SystemResponsivenessTweak>();
                 s.AddSingleton<CpuCoreParkingTweak>();
                 s.AddSingleton<Func<IEnumerable<string>, PerAppGpuPreferenceTweak>>(sp =>
                     paths => new PerAppGpuPreferenceTweak(sp.GetRequiredService<IRegistryClient>(), paths));
@@ -153,8 +151,6 @@ public partial class App : Application
                         sp.GetRequiredService<GameModeTweak>(),
                         sp.GetRequiredService<HwGpuSchedulingTweak>(),
                         sp.GetRequiredService<NagleAlgorithmTweak>(),
-                        sp.GetRequiredService<NetworkThrottlingIndexTweak>(),
-                        sp.GetRequiredService<SystemResponsivenessTweak>(),
                         sp.GetRequiredService<CpuCoreParkingTweak>(),
                         perAppFactory(gamePaths),
                     };

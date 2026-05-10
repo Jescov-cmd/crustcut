@@ -27,6 +27,34 @@
       "valueKind": "DWord",
       "appliedData": "0",
       "riskNote": null
+    },
+    {
+      "id": "game.system-responsiveness",
+      "displayName": "Maximize game CPU priority",
+      "description": "Stops Windows from reserving 20% for background tasks.",
+      "category": "fps",
+      "requiresElevation": true,
+      "requiresReboot": false,
+      "hive": "LocalMachine",
+      "key": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile",
+      "valueName": "SystemResponsiveness",
+      "valueKind": "DWord",
+      "appliedData": "0",
+      "riskNote": null
+    },
+    {
+      "id": "game.network-throttling",
+      "displayName": "Remove network throttling",
+      "description": "Lets games use the full network all the time.",
+      "category": "network",
+      "requiresElevation": true,
+      "requiresReboot": false,
+      "hive": "LocalMachine",
+      "key": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile",
+      "valueName": "NetworkThrottlingIndex",
+      "valueKind": "DWord",
+      "appliedData": "-1",
+      "riskNote": null
     }
   ]
 }
