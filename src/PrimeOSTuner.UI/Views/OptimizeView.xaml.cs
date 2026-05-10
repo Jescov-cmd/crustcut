@@ -34,6 +34,9 @@ public partial class OptimizeView : UserControl
         _chips.Add(new FilterChipVm("all", "All", true));
         _chips.Add(new FilterChipVm("fps", "FPS & Latency"));
         _chips.Add(new FilterChipVm("network", "Network"));
+        _chips.Add(new FilterChipVm("system", "System"));
+        _chips.Add(new FilterChipVm("privacy", "Privacy"));
+        _chips.Add(new FilterChipVm("power", "Power"));
         FilterChips.ItemsSource = _chips;
         Refilter();
     }
@@ -163,14 +166,32 @@ public sealed class TweakRowVm : INotifyPropertyChanged
     public TweakRowVm(ITweak tweak)
     {
         Tweak = tweak;
-        var (key, label) = CategoryFor(tweak.Id);
+        var (key, label) = CategoryFor(tweak);
         CategoryKey = key;
         Category = label;
+        RiskNote = (tweak as ICategorizedTweak)?.RiskNote;
     }
 
-    private static (string Key, string Label) CategoryFor(string id)
+    public string? RiskNote { get; }
+    public bool HasRisk => !string.IsNullOrEmpty(RiskNote);
+
+    private static (string Key, string Label) CategoryFor(ITweak tweak)
     {
-        if (id.StartsWith("game.nagle") || id.StartsWith("game.network"))
+        if (tweak is ICategorizedTweak cat)
+        {
+            return cat.Category switch
+            {
+                "fps" => ("fps", "FPS & Latency"),
+                "network" => ("network", "Network"),
+                "system" => ("system", "System"),
+                "privacy" => ("privacy", "Privacy"),
+                "power" => ("power", "Power"),
+                _ => ("fps", "FPS & Latency")
+            };
+        }
+
+        // Fallback for legacy tweaks (no Category property).
+        if (tweak.Id.StartsWith("game.nagle") || tweak.Id.StartsWith("game.network"))
             return ("network", "Network");
         return ("fps", "FPS & Latency");
     }

@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class ServiceDisableTweak : ITweak
+public sealed class ServiceDisableTweak : ITweak, ICategorizedTweak
 {
     private readonly string _serviceName;
     private readonly IServiceClient _client;

@@ -4,7 +4,7 @@ using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class CortanaDisableTweak : ITweak
+public sealed class CortanaDisableTweak : ITweak, ICategorizedTweak
 {
     private const string PolicyKey = "SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search";
     private readonly IRegistryClient _registry;

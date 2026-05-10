@@ -4,7 +4,7 @@ using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class UltimatePerformanceTweak : ITweak
+public sealed class UltimatePerformanceTweak : ITweak, ICategorizedTweak
 {
     private const string UltimateGuid = "e9a42b02-d5df-448d-aa00-03f14749eb61";
     private static readonly Regex GuidRx = new("(?<guid>[0-9a-f-]{36})", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -16,6 +16,8 @@ public sealed class UltimatePerformanceTweak : ITweak
     public string Id => "core.ultimate-performance";
     public string DisplayName => "Enable Ultimate Performance power plan";
     public string Description => "Adds Microsoft's hidden Ultimate Performance power plan (does not switch to it).";
+    public string Category => "power";
+    public string? RiskNote => null;
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
     public bool RequiresReboot => false;

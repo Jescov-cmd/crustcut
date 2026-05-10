@@ -4,7 +4,7 @@ using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class NicPowerManagementTweak : ITweak
+public sealed class NicPowerManagementTweak : ITweak, ICategorizedTweak
 {
     private const string ClassRoot = @"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}";
     private const int DisablePowerDownBit = 0x100;

@@ -4,7 +4,7 @@ using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class RegistryTweak : ITweak
+public sealed class RegistryTweak : ITweak, ICategorizedTweak
 {
     private readonly RegistryTweakDefinition _def;
     private readonly IRegistryClient _registry;

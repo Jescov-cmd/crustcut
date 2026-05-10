@@ -3,7 +3,7 @@ using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class HibernationTweak : ITweak
+public sealed class HibernationTweak : ITweak, ICategorizedTweak
 {
     private readonly IRegistryClient _registry;
     private readonly IPowerPlanClient _power;

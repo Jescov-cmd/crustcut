@@ -4,7 +4,7 @@ using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class TelemetryDisableTweak : ITweak
+public sealed class TelemetryDisableTweak : ITweak, ICategorizedTweak
 {
     private readonly IRegistryClient _registry;
     private readonly IServiceClient _service;
