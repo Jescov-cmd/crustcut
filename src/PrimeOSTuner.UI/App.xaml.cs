@@ -283,6 +283,7 @@ public partial class App : Application
             })
             .Build();
 
+        CustomModeMigration.RunIfNeeded();
         Host.Start();
 
         var priorityEngine = Host.Services.GetRequiredService<PriorityRuleEngine>();
