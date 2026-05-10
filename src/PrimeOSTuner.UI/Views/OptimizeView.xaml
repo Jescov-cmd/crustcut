@@ -127,12 +127,22 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <!-- Status pills row: Active/Off + (optional) Reboot -->
+                                <!-- Status pills row: Active/Off + (optional) Reboot + (optional) Caution -->
                                 <StackPanel Grid.Row="0" Orientation="Horizontal">
                                     <Border HorizontalAlignment="Left"
                                             CornerRadius="6" Padding="8,3"
                                             Background="{StaticResource Bg2Brush}"
                                             BorderBrush="{StaticResource StrokeBrush}" BorderThickness="1">
+                                        <Border.Style>
+                                            <Style TargetType="Border" BasedOn="{StaticResource {x:Type Border}}">
+                                                <Setter Property="ToolTip" Value="This tweak is not currently applied. Toggle the switch on to apply it."/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsApplied}" Value="True">
+                                                        <Setter Property="ToolTip" Value="This tweak is currently applied. Toggle the switch off to revert it."/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
                                         <TextBlock FontSize="10" FontWeight="SemiBold">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
@@ -154,7 +164,8 @@
                                             BorderThickness="1"
                                             BorderBrush="{StaticResource AccentBrush}"
                                             Background="#1F1916"
-                                            Visibility="{Binding Tweak.RequiresReboot, Converter={StaticResource BoolToVisibility}}">
+                                            Visibility="{Binding Tweak.RequiresReboot, Converter={StaticResource BoolToVisibility}}"
+                                            ToolTip="Windows needs to restart for this change to fully take effect.">
                                         <TextBlock Text="REBOOT" FontSize="10" FontWeight="SemiBold"
                                                    Foreground="{StaticResource AccentBrush}"/>
                                     </Border>
@@ -179,6 +190,7 @@
                                                FontSize="15" FontWeight="SemiBold"
                                                TextWrapping="Wrap"/>
                                     <TextBlock Text="{Binding Tweak.Description}"
+                                               ToolTip="{Binding Tweak.Description}"
                                                Foreground="{StaticResource Text2Brush}"
                                                FontSize="11" Margin="0,4,0,0"
                                                TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
