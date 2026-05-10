@@ -1,0 +1,43 @@
+<Window x:Class="PrimeOSTuner.UI.Dialogs.BulkApplyGamesDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Apply Recommended"
+        Width="480" Height="320"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{StaticResource Bg1Brush}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Apply Recommended to All Games"
+                   FontSize="18" FontWeight="Bold"
+                   Foreground="{StaticResource Text0Brush}"/>
+
+        <StackPanel Grid.Row="1" Margin="0,16,0,0">
+            <TextBlock x:Name="GameCountText" Text="This will add 7 detected games to Memory Priority with these settings:"
+                       Foreground="{StaticResource Text2Brush}" TextWrapping="Wrap"
+                       Margin="0,0,0,12"/>
+            <Border Padding="16,12" CornerRadius="8" Background="{StaticResource Bg2Brush}">
+                <StackPanel>
+                    <TextBlock Text="• Priority: High" Margin="0,0,0,4"/>
+                    <TextBlock Text="• Protect from RAM cleanups: ON" Margin="0,0,0,4"/>
+                    <TextBlock Text="• Game Booster: ON"/>
+                </StackPanel>
+            </Border>
+            <TextBlock Margin="0,12,0,0" FontSize="11"
+                       Foreground="{StaticResource Text3Brush}"
+                       TextWrapping="Wrap"
+                       Text="Existing rules won't be overwritten. After this, you can still edit each game individually."/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Cancel" Click="CancelClick" MinWidth="100" Margin="0,0,8,0"/>
+            <Button Content="Apply" Click="ApplyClick" MinWidth="100"
+                    Style="{StaticResource PrimaryActionButton}"/>
+        </StackPanel>
+    </Grid>
+</Window>
