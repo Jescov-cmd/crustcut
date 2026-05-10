@@ -1,0 +1,179 @@
+{
+  "items": [
+    {
+      "appxName": "king.com.CandyCrushSaga",
+      "displayName": "Candy Crush Saga",
+      "category": "preinstalled",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.MicrosoftSolitaireCollection",
+      "displayName": "Microsoft Solitaire Collection",
+      "category": "preinstalled",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.GetHelp",
+      "displayName": "Get Help",
+      "category": "microsoft-extra",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.Getstarted",
+      "displayName": "Microsoft Tips",
+      "category": "microsoft-extra",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.WindowsFeedbackHub",
+      "displayName": "Feedback Hub",
+      "category": "microsoft-extra",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.ZuneVideo",
+      "displayName": "Movies & TV",
+      "category": "microsoft-extra",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.WindowsMaps",
+      "displayName": "Maps",
+      "category": "microsoft-extra",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.MixedReality.Portal",
+      "displayName": "Mixed Reality Portal",
+      "category": "microsoft-extra",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.SkypeApp",
+      "displayName": "Skype",
+      "category": "preinstalled",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.YourPhone",
+      "displayName": "Phone Link / Your Phone",
+      "category": "microsoft-extra",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.People",
+      "displayName": "People",
+      "category": "microsoft-extra",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.WindowsAlarms",
+      "displayName": "Alarms & Clock",
+      "category": "microsoft-extra",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.WindowsSoundRecorder",
+      "displayName": "Voice Recorder",
+      "category": "microsoft-extra",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.XboxGamingOverlay",
+      "displayName": "Xbox Game Bar",
+      "category": "gaming",
+      "tier": "Risky",
+      "riskNote": "Xbox Game Bar provides the in-game overlay for some games and Game Mode integration. Disabling is reversible — uninstalling is not."
+    },
+    {
+      "appxName": "Microsoft.XboxApp",
+      "displayName": "Xbox Console Companion",
+      "category": "gaming",
+      "tier": "Risky",
+      "riskNote": "Required by some Xbox Live games for sign-in and party chat."
+    },
+    {
+      "appxName": "Microsoft.XboxIdentityProvider",
+      "displayName": "Xbox Identity Provider",
+      "category": "gaming",
+      "tier": "Risky",
+      "riskNote": "Required by Xbox Live games to authenticate. Uninstalling will break those games."
+    },
+    {
+      "appxName": "Microsoft.549981C3F5F10",
+      "displayName": "Cortana",
+      "category": "microsoft-extra",
+      "tier": "Risky",
+      "riskNote": "Removing Cortana may affect Start menu search on older builds of Windows 10."
+    },
+    {
+      "appxName": "Microsoft.Windows.Photos",
+      "displayName": "Photos",
+      "category": "microsoft-extra",
+      "tier": "Risky",
+      "riskNote": "Default image viewer. Removing will leave you with no built-in viewer until you install another."
+    },
+    {
+      "appxName": "Microsoft.WindowsCamera",
+      "displayName": "Camera",
+      "category": "microsoft-extra",
+      "tier": "Risky",
+      "riskNote": "Default camera app. Some apps invoke it via Windows.Media.Capture; removing may break camera capture in those apps."
+    },
+    {
+      "appxName": "Microsoft.WindowsStore",
+      "displayName": "Microsoft Store",
+      "category": "system",
+      "tier": "Blocked",
+      "riskNote": "Microsoft Store is required by other Windows apps and can't be cleanly reinstalled."
+    },
+    {
+      "appxName": "Microsoft.MicrosoftEdge.Stable",
+      "displayName": "Microsoft Edge",
+      "category": "system",
+      "tier": "Blocked",
+      "riskNote": "Edge is the default web view on Windows; removing breaks parts of the OS."
+    },
+    {
+      "appxName": "Microsoft.WindowsCalculator",
+      "displayName": "Calculator",
+      "category": "microsoft-extra",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.BingNews",
+      "displayName": "News",
+      "category": "microsoft-extra",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.BingWeather",
+      "displayName": "Weather",
+      "category": "microsoft-extra",
+      "tier": "Safe",
+      "riskNote": null
+    },
+    {
+      "appxName": "Microsoft.MicrosoftStickyNotes",
+      "displayName": "Sticky Notes",
+      "category": "microsoft-extra",
+      "tier": "Safe",
+      "riskNote": null
+    }
+  ]
+}
