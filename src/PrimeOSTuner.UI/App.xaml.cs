@@ -23,6 +23,7 @@ public partial class App : Application
 {
     public IHost Host { get; private set; } = null!;
 
+
     protected override async void OnStartup(StartupEventArgs e)
     {
         var logsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PrimeOSTuner", "logs");
@@ -48,10 +49,15 @@ public partial class App : Application
                 // Core
                 s.AddSingleton(_ => new TweakHistory(TweakHistory.DefaultPath()));
                 s.AddSingleton<SystemSampler>();
-                s.AddSingleton<JunkFileTweak>();
                 s.AddSingleton<PowerPlanTweak>();
                 s.AddSingleton<RamCleanerTweak>();
-                s.AddSingleton<VisualEffectsTweak>();
+
+                // System cleanup tweaks (replaces the old junk-files / visual-effects pair)
+                s.AddSingleton<DnsFlushTweak>();
+                s.AddSingleton<WindowsUpdateCacheTweak>();
+                s.AddSingleton<DriverHealthCheckTweak>();
+                s.AddSingleton<DriverStoreCleanupTweak>();
+                s.AddSingleton<SafeRegistryCleanupTweak>();
 
                 // Win-layer additions
                 s.AddSingleton<INetworkInterfaceClient, NetworkInterfaceClient>();
@@ -79,6 +85,14 @@ public partial class App : Application
                 s.AddSingleton<CpuCoreParkingTweak>();
                 s.AddSingleton<Func<IEnumerable<string>, PerAppGpuPreferenceTweak>>(sp =>
                     paths => new PerAppGpuPreferenceTweak(sp.GetRequiredService<IRegistryClient>(), paths));
+
+                // Registry-driven tweak catalog (data file → many ITweak instances)
+                s.AddSingleton<IReadOnlyList<RegistryTweak>>(sp =>
+                {
+                    var registry = sp.GetRequiredService<IRegistryClient>();
+                    var defs = RegistryTweakCatalog.LoadFromFile(RegistryTweakCatalog.DefaultPath());
+                    return defs.Select(d => new RegistryTweak(d, registry)).ToList();
+                });
 
                 // Profiles
                 s.AddSingleton(_ => new CustomProfileStore(CustomProfileStore.DefaultPath()));
@@ -125,12 +139,15 @@ public partial class App : Application
                         .Where(g => g.InstallPath is not null)
                         .Select(g => g.InstallPath!)
                         .ToList();
-                    return new ITweak[]
+                    var custom = new ITweak[]
                     {
-                        sp.GetRequiredService<JunkFileTweak>(),
                         sp.GetRequiredService<PowerPlanTweak>(),
                         sp.GetRequiredService<RamCleanerTweak>(),
-                        sp.GetRequiredService<VisualEffectsTweak>(),
+                        sp.GetRequiredService<DnsFlushTweak>(),
+                        sp.GetRequiredService<WindowsUpdateCacheTweak>(),
+                        sp.GetRequiredService<DriverHealthCheckTweak>(),
+                        sp.GetRequiredService<DriverStoreCleanupTweak>(),
+                        sp.GetRequiredService<SafeRegistryCleanupTweak>(),
                         sp.GetRequiredService<MouseAccelTweak>(),
                         sp.GetRequiredService<TimerResolutionTweak>(),
                         sp.GetRequiredService<GameModeTweak>(),
@@ -141,6 +158,8 @@ public partial class App : Application
                         sp.GetRequiredService<CpuCoreParkingTweak>(),
                         perAppFactory(gamePaths),
                     };
+                    var catalog = sp.GetRequiredService<IReadOnlyList<RegistryTweak>>();
+                    return custom.Concat(catalog).ToArray();
                 });
                 s.AddSingleton<OneClickOptimizer>();
 
@@ -159,6 +178,14 @@ public partial class App : Application
                 s.AddSingleton<GameBoostViewModel>();
                 s.AddTransient<Views.GameBoostView>();
                 s.AddSingleton<WatcherStatusViewModel>();
+
+                // Settings
+                s.AddSingleton(_ => new PrimeOSTuner.Core.Settings.AppSettingsStore(
+                    PrimeOSTuner.Core.Settings.AppSettingsStore.DefaultPath()));
+                s.AddSingleton<SettingsViewModel>();
+                s.AddTransient<Views.SettingsView>();
+
+                s.AddSingleton<Services.TrayIconService>();
                 s.AddSingleton<MainWindow>();
             })
             .Build();
@@ -169,11 +196,49 @@ public partial class App : Application
         await lifecycle.RecoverFromCrashAsync();
         lifecycle.Start();
 
+        // Tray icon — eager-init so the icon is in the system tray immediately.
+        var tray = Host.Services.GetRequiredService<Services.TrayIconService>();
         var window = Host.Services.GetRequiredService<MainWindow>();
-        window.Show();
+        var settings = Host.Services.GetRequiredService<SettingsViewModel>();
+
+        tray.ShowRequested += (_, _) =>
+        {
+            window.Show();
+            window.WindowState = WindowState.Normal;
+            window.Activate();
+        };
+        tray.OptimizeRequested += async (_, _) =>
+        {
+            try
+            {
+                var report = await Host.Services.GetRequiredService<PrimeOSTuner.Core.Pipeline.OneClickOptimizer>().RunAsync();
+                if (settings.NotificationsEnabled)
+                    tray.ShowNotification("PrimeOS Tuner",
+                        $"Optimization complete — {report.SuccessCount} succeeded, {report.FailureCount} failed.");
+            }
+            catch (Exception ex) { Log.Error(ex, "Tray Optimize Now failed"); }
+        };
+        tray.ExitRequested += (_, _) =>
+        {
+            _exitingForReal = true;
+            Shutdown();
+        };
+
+        if (settings.StartMinimized)
+        {
+            // Don't Show() — only the tray icon is visible until the user clicks Show.
+        }
+        else
+        {
+            window.Show();
+        }
 
         base.OnStartup(e);
     }
+
+    private bool _exitingForReal;
+    public bool IsExitingForReal => _exitingForReal;
+    public void RequestRealExit() { _exitingForReal = true; Shutdown(); }
 
     protected override void OnExit(ExitEventArgs e)
     {

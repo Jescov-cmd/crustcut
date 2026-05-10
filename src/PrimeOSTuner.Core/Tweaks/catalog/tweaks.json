@@ -1,3 +1,32 @@
 {
-  "tweaks": []
+  "tweaks": [
+    {
+      "id": "core.win32-priority-separation",
+      "displayName": "Favor foreground apps (Win32 Priority Separation)",
+      "description": "Boosts CPU priority for the active window. Helps responsiveness in games.",
+      "category": "fps",
+      "requiresElevation": true,
+      "requiresReboot": true,
+      "hive": "LocalMachine",
+      "key": "SYSTEM\\CurrentControlSet\\Control\\PriorityControl",
+      "valueName": "Win32PrioritySeparation",
+      "valueKind": "DWord",
+      "appliedData": "26",
+      "riskNote": null
+    },
+    {
+      "id": "core.startup-delay",
+      "displayName": "Disable explorer startup delay",
+      "description": "Removes Windows' artificial startup delay so apps can launch sooner after login.",
+      "category": "fps",
+      "requiresElevation": false,
+      "requiresReboot": true,
+      "hive": "CurrentUser",
+      "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Serialize",
+      "valueName": "StartupDelayInMSec",
+      "valueKind": "DWord",
+      "appliedData": "0",
+      "riskNote": null
+    }
+  ]
 }
