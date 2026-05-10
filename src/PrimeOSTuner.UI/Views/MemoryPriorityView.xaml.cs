@@ -73,6 +73,15 @@ public partial class MemoryPriorityView : UserControl
         MessageBox.Show($"Added {added} game(s).", "Apply Recommended");
     }
 
+    private async void RescanClick(object _, RoutedEventArgs __)
+    {
+        var added = await _vm.RescanRunningAppsAsync();
+        ApplyFilter();
+        MessageBox.Show(
+            added == 0 ? "No new running apps found." : $"Added {added} new app(s).",
+            "Re-scan apps");
+    }
+
     private async void RemoveClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button btn || btn.Tag is not PriorityRuleVm vm) return;

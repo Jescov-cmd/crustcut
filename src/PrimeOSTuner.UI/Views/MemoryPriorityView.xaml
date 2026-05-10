@@ -29,6 +29,10 @@
                     <Button Content="Apps"  Click="FilterAppsClick"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="Re-scan apps"
+                            Click="RescanClick"
+                            ToolTip="Add any newly-running user apps to the list."
+                            Margin="0,0,8,0"/>
                     <Button Content="+ Add App" Click="AddAppClick" Margin="0,0,8,0"/>
                     <Button Content="&#x26A1; Apply Recommended to All Games"
                             Click="ApplyRecommendedClick"
