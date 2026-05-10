@@ -4,6 +4,7 @@ using PrimeOSTuner.Core.Bloatware;
 using PrimeOSTuner.Core.Games;
 using PrimeOSTuner.Core.History;
 using PrimeOSTuner.Core.Lifecycle;
+using PrimeOSTuner.Core.Memory;
 using PrimeOSTuner.Core.Monitoring;
 using PrimeOSTuner.Core.Pipeline;
 using PrimeOSTuner.Core.Profiles;
@@ -79,6 +80,7 @@ public partial class App : Application
                 s.AddSingleton(_ => new TweakHistory(TweakHistory.DefaultPath()));
                 s.AddSingleton<SystemSampler>();
                 s.AddSingleton<PowerPlanTweak>();
+                s.AddSingleton<IRamCleanerProtectList, EmptyRamCleanerProtectList>();
                 s.AddSingleton<RamCleanerTweak>();
 
                 // System cleanup tweaks (replaces the old junk-files / visual-effects pair)

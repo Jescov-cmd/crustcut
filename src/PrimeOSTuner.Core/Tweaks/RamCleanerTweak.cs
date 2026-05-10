@@ -1,3 +1,4 @@
+using PrimeOSTuner.Core.Memory;
 using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Tweaks;
@@ -5,6 +6,7 @@ namespace PrimeOSTuner.Core.Tweaks;
 public sealed class RamCleanerTweak : ITweak
 {
     private readonly IProcessClient _processes;
+    private readonly IRamCleanerProtectList _protectList;
 
     public string Id => "core.ram-cleaner";
     public string DisplayName => "Free idle RAM";
@@ -13,14 +15,21 @@ public sealed class RamCleanerTweak : ITweak
     public bool IsDestructive => false;
     public bool RequiresReboot => false;
 
-    public RamCleanerTweak(IProcessClient processes) { _processes = processes; }
+    public RamCleanerTweak(IProcessClient processes, IRamCleanerProtectList protectList)
+    {
+        _processes = processes;
+        _protectList = protectList;
+    }
 
     public Task<TweakState> ProbeAsync(CancellationToken ct = default)
         => Task.FromResult(TweakState.NotApplied);
 
     public Task<TweakResult> ApplyAsync(IProgress<int>? progress = null, CancellationToken ct = default)
     {
-        var attempted = _processes.TrimAllUserProcesses();
+        var protectList = _protectList.Get();
+        var attempted = protectList.Count == 0
+            ? _processes.TrimAllUserProcesses()
+            : _processes.TrimUserProcessesExcept(protectList);
         return Task.FromResult(TweakResult.Success($"{{\"attempted\":{attempted}}}"));
     }
 
