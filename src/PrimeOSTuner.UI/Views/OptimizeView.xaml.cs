@@ -103,11 +103,36 @@ public partial class OptimizeView : UserControl
                 }
             }
         }
+        catch (Exception ex) when (IsAdminRequired(ex))
+        {
+            row.IsApplied = !row.IsApplied;  // revert the toggle visually
+            MessageBox.Show(
+                "This tweak needs administrator rights, but PrimeOS Tuner isn't running as admin.\n\n" +
+                "Close the app, then right-click PrimeOSTuner.UI.exe and choose 'Run as administrator' (or run it from an admin terminal).",
+                row.Tweak.DisplayName,
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        catch (Exception ex)
+        {
+            row.IsApplied = !row.IsApplied;
+            MessageBox.Show(
+                $"{ex.GetType().Name}: {ex.Message}",
+                $"{row.Tweak.DisplayName} — error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
         finally
         {
             tb.IsEnabled = true;
         }
     }
+
+    // Detects "you need admin" errors regardless of the specific exception type.
+    // UnauthorizedAccessException is the registry path; InvalidOperationException with
+    // "requires administrator" text is the powercfg path.
+    private static bool IsAdminRequired(Exception ex)
+        => ex is UnauthorizedAccessException
+        || (ex.Message?.Contains("requires administrator", StringComparison.OrdinalIgnoreCase) ?? false)
+        || (ex.Message?.Contains("Access is denied", StringComparison.OrdinalIgnoreCase) ?? false);
 
     private void MarkPendingReboot(ITweak tweak)
     {
