@@ -49,4 +49,107 @@ public class RegistryClientTests : IDisposable
 
         client.ReadString(RegistryHive.CurrentUser, SubKey, "Speed").Should().Be("1");
     }
+
+    // ── DWORD integration tests ─────────────────────────────────────────────
+
+    [Fact]
+    public void WriteDword_then_ReadDword_returns_the_value()
+    {
+        const string testSubKey = SubKey + @"\WriteDword_then_ReadDword_returns_the_value";
+        Registry.CurrentUser.DeleteSubKeyTree(testSubKey, throwOnMissingSubKey: false);
+        try
+        {
+            var client = new RegistryClient();
+            client.WriteDword(RegistryHive.CurrentUser, testSubKey, "Counter", 42);
+
+            client.ReadDword(RegistryHive.CurrentUser, testSubKey, "Counter").Should().Be(42);
+        }
+        finally
+        {
+            Registry.CurrentUser.DeleteSubKeyTree(testSubKey, throwOnMissingSubKey: false);
+        }
+    }
+
+    [Fact]
+    public void WriteDword_returns_backup_with_PreviousDword_when_value_existed_as_dword()
+    {
+        const string testSubKey = SubKey + @"\WriteDword_returns_backup_with_PreviousDword_when_value_existed_as_dword";
+        Registry.CurrentUser.DeleteSubKeyTree(testSubKey, throwOnMissingSubKey: false);
+        try
+        {
+            using (var key = Registry.CurrentUser.CreateSubKey(testSubKey)!)
+                key.SetValue("Throttle", 100, RegistryValueKind.DWord);
+
+            var client = new RegistryClient();
+            var backup = client.WriteDword(RegistryHive.CurrentUser, testSubKey, "Throttle", 0);
+
+            backup.PreviousDword.Should().Be(100);
+            backup.PreviousKind.Should().Be(RegistryValueKind.DWord);
+        }
+        finally
+        {
+            Registry.CurrentUser.DeleteSubKeyTree(testSubKey, throwOnMissingSubKey: false);
+        }
+    }
+
+    [Fact]
+    public void WriteDword_returns_backup_with_Unknown_kind_when_value_did_not_exist()
+    {
+        const string testSubKey = SubKey + @"\WriteDword_returns_backup_with_Unknown_kind_when_value_did_not_exist";
+        Registry.CurrentUser.DeleteSubKeyTree(testSubKey, throwOnMissingSubKey: false);
+        try
+        {
+            var client = new RegistryClient();
+            var backup = client.WriteDword(RegistryHive.CurrentUser, testSubKey, "Brand New", 7);
+
+            backup.PreviousString.Should().BeNull();
+            backup.PreviousDword.Should().BeNull();
+            backup.PreviousKind.Should().Be(RegistryValueKind.Unknown);
+        }
+        finally
+        {
+            Registry.CurrentUser.DeleteSubKeyTree(testSubKey, throwOnMissingSubKey: false);
+        }
+    }
+
+    [Fact]
+    public void RestoreFromBackup_restores_dword()
+    {
+        const string testSubKey = SubKey + @"\RestoreFromBackup_restores_dword";
+        Registry.CurrentUser.DeleteSubKeyTree(testSubKey, throwOnMissingSubKey: false);
+        try
+        {
+            using (var key = Registry.CurrentUser.CreateSubKey(testSubKey)!)
+                key.SetValue("Volume", 80, RegistryValueKind.DWord);
+
+            var client = new RegistryClient();
+            var backup = client.WriteDword(RegistryHive.CurrentUser, testSubKey, "Volume", 0);
+            client.RestoreFromBackup(backup);
+
+            client.ReadDword(RegistryHive.CurrentUser, testSubKey, "Volume").Should().Be(80);
+        }
+        finally
+        {
+            Registry.CurrentUser.DeleteSubKeyTree(testSubKey, throwOnMissingSubKey: false);
+        }
+    }
+
+    [Fact]
+    public void RestoreFromBackup_deletes_value_when_it_did_not_previously_exist()
+    {
+        const string testSubKey = SubKey + @"\RestoreFromBackup_deletes_value_when_it_did_not_previously_exist";
+        Registry.CurrentUser.DeleteSubKeyTree(testSubKey, throwOnMissingSubKey: false);
+        try
+        {
+            var client = new RegistryClient();
+            var backup = client.WriteDword(RegistryHive.CurrentUser, testSubKey, "Ephemeral", 99);
+            client.RestoreFromBackup(backup);
+
+            client.ReadDword(RegistryHive.CurrentUser, testSubKey, "Ephemeral").Should().BeNull();
+        }
+        finally
+        {
+            Registry.CurrentUser.DeleteSubKeyTree(testSubKey, throwOnMissingSubKey: false);
+        }
+    }
 }

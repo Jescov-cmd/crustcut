@@ -28,12 +28,14 @@ public sealed class RegistryClient : IRegistryClient
 
     public RegistryBackup WriteString(RegistryHive hive, string subKey, string valueName, string newValue)
     {
-        var previous = ReadString(hive, subKey, valueName);
         using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Default);
         using var key = baseKey.CreateSubKey(subKey, writable: true)
-            ?? throw new InvalidOperationException($"Cannot open or create {subKey}");
+            ?? throw new InvalidOperationException($"Could not open or create {hive}\\{subKey}");
+        var rawPrev = key.GetValue(valueName);
+        var prevKind = rawPrev is null ? RegistryValueKind.Unknown : key.GetValueKind(valueName);
+        var prev = rawPrev?.ToString();
         key.SetValue(valueName, newValue, RegistryValueKind.String);
-        return new RegistryBackup(hive, subKey, valueName, previous);
+        return new RegistryBackup(hive, subKey, valueName, prev, null, prevKind);
     }
 
     public RegistryBackup WriteDword(RegistryHive hive, string subKey, string valueName, int newValue)
@@ -46,6 +48,7 @@ public sealed class RegistryClient : IRegistryClient
         string? prevString = null;
         int? prevDword = null;
         if (prev is int i) prevDword = i;
+        else if (prev is long l) prevDword = unchecked((int)l);  // QWord truncation matches ReadDword
         else if (prev is not null) prevString = prev.ToString();
         key.SetValue(valueName, newValue, RegistryValueKind.DWord);
         return new RegistryBackup(hive, subKey, valueName, prevString, prevDword, prevKind);
@@ -62,8 +65,7 @@ public sealed class RegistryClient : IRegistryClient
             && backup.PreviousDword is null)
         {
             // Value didn't exist before — delete it.
-            if (key.GetValue(backup.ValueName) is not null)
-                key.DeleteValue(backup.ValueName, throwOnMissingValue: false);
+            key.DeleteValue(backup.ValueName, throwOnMissingValue: false);
             return;
         }
 
