@@ -35,6 +35,33 @@ public partial class App : Application
             .WriteTo.File(Path.Combine(logsDir, "primeos-.log"), rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
+        // Catch crashes so they end up in the log file (and the user gets a friendly popup
+        // instead of the app vanishing). Without these handlers, the runtime kills the
+        // process before Serilog gets a chance to write anything.
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            if (args.ExceptionObject is Exception ex)
+                Log.Fatal(ex, "AppDomain unhandled exception (terminating={Term})", args.IsTerminating);
+            else
+                Log.Fatal("AppDomain unhandled non-Exception: {Obj}", args.ExceptionObject);
+            Log.CloseAndFlush();
+        };
+        DispatcherUnhandledException += (_, args) =>
+        {
+            Log.Fatal(args.Exception, "Dispatcher unhandled exception");
+            MessageBox.Show(
+                $"Something went wrong:\n\n{args.Exception.GetType().Name}: {args.Exception.Message}\n\n" +
+                $"The full error has been logged. Click OK to keep the app running.",
+                "PrimeOS Tuner — Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            args.Handled = true;
+        };
+        System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            Log.Error(args.Exception, "Unobserved task exception");
+            args.SetObserved();
+        };
+
         Host = Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder()
             .UseSerilog()
             .ConfigureServices(s =>
