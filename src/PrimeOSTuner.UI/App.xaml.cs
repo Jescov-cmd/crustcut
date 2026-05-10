@@ -84,6 +84,7 @@ public partial class App : Application
                 s.AddSingleton<NagleAlgorithmTweak>();
                 s.AddSingleton<CpuCoreParkingTweak>();
                 s.AddSingleton<CortanaDisableTweak>();
+                s.AddSingleton<UltimatePerformanceTweak>();
                 s.AddSingleton<Func<IEnumerable<string>, PerAppGpuPreferenceTweak>>(sp =>
                     paths => new PerAppGpuPreferenceTweak(sp.GetRequiredService<IRegistryClient>(), paths));
 
@@ -190,6 +191,7 @@ public partial class App : Application
                         sp.GetRequiredService<CpuCoreParkingTweak>(),
                         sp.GetRequiredService<TelemetryDisableTweak>(),
                         sp.GetRequiredService<CortanaDisableTweak>(),
+                        sp.GetRequiredService<UltimatePerformanceTweak>(),
                         perAppFactory(gamePaths),
                     };
                     var catalog = sp.GetRequiredService<IReadOnlyList<RegistryTweak>>();

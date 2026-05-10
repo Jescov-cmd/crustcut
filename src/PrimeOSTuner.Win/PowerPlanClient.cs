@@ -63,6 +63,24 @@ public sealed class PowerPlanClient : IPowerPlanClient
         catch { return null; }
     }
 
+    public string RunPowercfg(string args)
+    {
+        var psi = new ProcessStartInfo("powercfg.exe", args)
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+        using var p = Process.Start(psi)!;
+        var stdout = p.StandardOutput.ReadToEnd();
+        var stderr = p.StandardError.ReadToEnd();
+        p.WaitForExit();
+        if (p.ExitCode != 0)
+            throw new InvalidOperationException($"powercfg {args} failed: {stderr.Trim()}");
+        return stdout;
+    }
+
     private static string RunPowerCfg(string args)
     {
         var psi = new ProcessStartInfo("powercfg.exe", args)
