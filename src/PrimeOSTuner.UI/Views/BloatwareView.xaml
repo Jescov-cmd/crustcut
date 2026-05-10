@@ -1,0 +1,73 @@
+<UserControl x:Class="PrimeOSTuner.UI.Views.BloatwareView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,16,0">
+        <StackPanel Margin="0,0,0,32">
+            <TextBlock Text="Bloatware" Style="{StaticResource HeaderText}" Margin="0,0,0,8"/>
+            <TextBlock Text="Detected pre-installed apps you can disable or uninstall."
+                       Style="{StaticResource SubHeaderText}" Margin="0,0,0,18"/>
+
+            <!-- Status row + refresh button -->
+            <Grid Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding DetectedCount, StringFormat={}{0} bloatware item(s) detected}"
+                               FontWeight="SemiBold" FontSize="14"
+                               Foreground="{StaticResource Text0Brush}"/>
+                    <TextBlock Text="{Binding Status}"
+                               Foreground="{StaticResource Text2Brush}"
+                               FontSize="12" Margin="0,2,0,0"/>
+                </StackPanel>
+                <Button Grid.Column="1" Content="Refresh scan"
+                        Click="RefreshClick"
+                        IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBoolConverter}, FallbackValue=True}"
+                        VerticalAlignment="Center"/>
+            </Grid>
+
+            <!-- Items -->
+            <ItemsControl ItemsSource="{Binding Items}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10" Padding="16,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="{Binding TierIcon}"
+                                           FontSize="22" Margin="0,0,12,0" VerticalAlignment="Center"
+                                           ToolTip="{Binding TierLabel}"/>
+
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding DisplayName}"
+                                               FontWeight="SemiBold" FontSize="14"
+                                               Foreground="{StaticResource Text0Brush}"/>
+                                    <TextBlock Text="{Binding AppxName}"
+                                               Foreground="{StaticResource Text3Brush}"
+                                               FontSize="11" Margin="0,2,0,0"/>
+                                    <TextBlock Text="{Binding StatusText}"
+                                               FontSize="11" Margin="0,4,0,0"
+                                               Foreground="{StaticResource Text2Brush}"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="Disable" Click="DisableClick" Tag="{Binding}"
+                                            MinWidth="80" Margin="0,0,8,0"/>
+                                    <Button Content="Uninstall" Click="UninstallClick" Tag="{Binding}"
+                                            IsEnabled="{Binding CanUninstall}"
+                                            ToolTip="{Binding RiskNote}"
+                                            MinWidth="80"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -10,6 +10,7 @@
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
             <conv:StringEqualsBoolConverter x:Key="StringEqualsBool"/>
+            <conv:InverseBoolConverter x:Key="InverseBoolConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
