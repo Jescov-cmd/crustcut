@@ -1,0 +1,98 @@
+<UserControl x:Class="PrimeOSTuner.UI.Views.MemoryPriorityView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mem="clr-namespace:PrimeOSTuner.Core.Memory;assembly=PrimeOSTuner.Core"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <UserControl.Resources>
+        <ObjectDataProvider x:Key="PriorityValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="mem:PriorityLevel"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,16,0">
+        <StackPanel Margin="0,0,0,32">
+            <TextBlock Text="Memory Priority" Style="{StaticResource HeaderText}" Margin="0,0,0,8"/>
+            <TextBlock Text="Pin per-app CPU priority and protect important apps from RAM cleanups."
+                       Style="{StaticResource SubHeaderText}" Margin="0,0,0,18"/>
+
+            <!-- Filter chips + actions -->
+            <Grid Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button Content="All"   Click="FilterAllClick"   Margin="0,0,8,0"/>
+                    <Button Content="Games" Click="FilterGamesClick" Margin="0,0,8,0"/>
+                    <Button Content="Apps"  Click="FilterAppsClick"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="+ Add App" Click="AddAppClick" Margin="0,0,8,0"/>
+                    <Button Content="&#x26A1; Apply Recommended to All Games"
+                            Click="ApplyRecommendedClick"
+                            Style="{StaticResource PrimaryActionButton}"/>
+                </StackPanel>
+            </Grid>
+
+            <ItemsControl x:Name="RuleList">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10" Padding="16,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="&#x1F3AE;"
+                                           FontSize="22" Margin="0,0,12,0" VerticalAlignment="Center"
+                                           Visibility="{Binding IsGame, Converter={StaticResource BoolToVisibility}}"/>
+                                <TextBlock Grid.Column="0" Text="&#x1F4E6;"
+                                           FontSize="22" Margin="0,0,12,0" VerticalAlignment="Center"
+                                           Visibility="{Binding IsGame, Converter={StaticResource InverseBoolToVisibility}, FallbackValue=Collapsed}"/>
+
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding DisplayName}"
+                                               FontWeight="SemiBold" FontSize="14"
+                                               Foreground="{StaticResource Text0Brush}"/>
+                                    <TextBlock Text="{Binding ExeName}"
+                                               Foreground="{StaticResource Text3Brush}"
+                                               FontSize="11" Margin="0,2,0,0"/>
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Priority:"
+                                                   VerticalAlignment="Center" Margin="0,0,8,0"
+                                                   Foreground="{StaticResource Text2Brush}"/>
+                                        <ComboBox Grid.Column="1"
+                                                  ItemsSource="{Binding Source={StaticResource PriorityValues}}"
+                                                  SelectedItem="{Binding Priority, Mode=TwoWay}"
+                                                  SelectionChanged="RuleChanged"/>
+                                    </Grid>
+                                    <CheckBox Margin="0,8,0,0"
+                                              Content="Protect from RAM cleanups"
+                                              IsChecked="{Binding ProtectFromRamCleanup, Mode=TwoWay}"
+                                              Click="RuleChanged"/>
+                                    <CheckBox Margin="0,4,0,0"
+                                              Content="Game Booster (run safe RAM cleanup ~2s after launch)"
+                                              IsChecked="{Binding GameBooster, Mode=TwoWay}"
+                                              Click="RuleChanged"/>
+                                </StackPanel>
+
+                                <Button Grid.Column="2" Content="Remove"
+                                        Click="RemoveClick" Tag="{Binding}"
+                                        VerticalAlignment="Top" Margin="8,0,0,0"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
