@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using PrimeOSTuner.Core.Bloatware;
 using PrimeOSTuner.Core.Games;
 using PrimeOSTuner.Core.History;
 using PrimeOSTuner.Core.Lifecycle;
@@ -157,6 +158,14 @@ public partial class App : Application
                             client: client),
                     };
                 });
+
+                // Bloatware
+                s.AddSingleton<IAppxClient, AppxClient>();
+                s.AddSingleton<IReadOnlyList<BloatwareCatalogEntry>>(_ =>
+                    BloatwareCatalog.LoadFromFile(BloatwareCatalog.DefaultPath()));
+                s.AddSingleton<BloatwareDetector>();
+                s.AddSingleton<BloatwareDisableService>();
+                s.AddSingleton<BloatwareUninstallService>();
 
                 // Profiles
                 s.AddSingleton(_ => new CustomProfileStore(CustomProfileStore.DefaultPath()));
