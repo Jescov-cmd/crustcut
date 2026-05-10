@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using PrimeOSTuner.Core.History;
 using PrimeOSTuner.Core.Tweaks;
+using Serilog;
 
 namespace PrimeOSTuner.UI.Views;
 
@@ -93,10 +94,10 @@ public partial class OptimizeView : UserControl
                 if (result.Succeeded)
                 {
                     row.UndoData = result.UndoData;
-                    await _history.AppendAsync(new HistoryEntry(
-                        Guid.NewGuid(), row.Tweak.Id, row.Tweak.DisplayName,
-                        DateTime.UtcNow, result.UndoData, false));
+                    // Mark reboot BEFORE writing history so a history-write failure can't
+                    // swallow the reboot indication.
                     if (row.Tweak.RequiresReboot) MarkPendingReboot(row.Tweak);
+                    await TryAppendHistoryAsync(row.Tweak, result.UndoData);
                 }
                 else
                 {
@@ -150,8 +151,24 @@ public partial class OptimizeView : UserControl
         || (ex.Message?.Contains("requires administrator", StringComparison.OrdinalIgnoreCase) ?? false)
         || (ex.Message?.Contains("Access is denied", StringComparison.OrdinalIgnoreCase) ?? false);
 
+    private async Task TryAppendHistoryAsync(ITweak tweak, string? undoData)
+    {
+        try
+        {
+            await _history.AppendAsync(new HistoryEntry(
+                Guid.NewGuid(), tweak.Id, tweak.DisplayName,
+                DateTime.UtcNow, undoData, false));
+        }
+        catch (Exception ex)
+        {
+            // Logging is best-effort; never let a history write failure cancel the apply.
+            Log.Warning(ex, "Failed to append history for tweak {Id}", tweak.Id);
+        }
+    }
+
     private void MarkPendingReboot(ITweak tweak)
     {
+        Log.Information("Marking pending reboot for {Id} ({Name})", tweak.Id, tweak.DisplayName);
         _pendingReboot.Add(tweak.DisplayName);
         var names = string.Join(", ", _pendingReboot);
         RebootBannerDetail.Text = _pendingReboot.Count == 1
