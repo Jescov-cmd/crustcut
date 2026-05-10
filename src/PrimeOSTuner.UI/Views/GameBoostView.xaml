@@ -31,6 +31,7 @@
                             <TextBlock Grid.Column="0" Text="Enable" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             <ToggleButton Grid.Column="1" x:Name="BasicToggle"
                                           Style="{StaticResource ToggleSwitchStyle}"
+                                          IsChecked="{Binding IsBasicActive, Mode=TwoWay}"
                                           Click="BasicToggleClick"/>
                         </Grid>
                     </StackPanel>
@@ -59,6 +60,7 @@
                             <TextBlock Grid.Column="0" Text="Enable" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             <ToggleButton Grid.Column="1" x:Name="PerformanceToggle"
                                           Style="{StaticResource ToggleSwitchStyle}"
+                                          IsChecked="{Binding IsPerformanceActive, Mode=TwoWay}"
                                           Click="PerformanceToggleClick"/>
                         </Grid>
                     </StackPanel>
@@ -87,6 +89,7 @@
                             <TextBlock Grid.Column="0" Text="Enable" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             <ToggleButton Grid.Column="1" x:Name="AggressiveToggle"
                                           Style="{StaticResource ToggleSwitchStyle}"
+                                          IsChecked="{Binding IsAggressiveActive, Mode=TwoWay}"
                                           Click="AggressiveToggleClick"/>
                         </Grid>
                     </StackPanel>

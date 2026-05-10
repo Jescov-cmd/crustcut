@@ -16,36 +16,22 @@ public partial class GameBoostView : UserControl
         DataContext = vm;
     }
 
+    // Toggle state is bound to GameBoostViewModel.IsBasicActive/IsPerformanceActive/IsAggressiveActive.
+    // The VM is a singleton, so the active profile survives tab navigation.
+    // Click handlers only need to fire the apply action when the user just turned a toggle ON.
+
     private async void BasicToggleClick(object sender, RoutedEventArgs e)
     {
-        if (sender is ToggleButton { IsChecked: true })
-        {
-            ClearOtherToggles(BasicToggle);
-            await _vm.ApplyBasicAsync();
-        }
+        if (sender is ToggleButton { IsChecked: true }) await _vm.ApplyBasicAsync();
     }
 
     private async void PerformanceToggleClick(object sender, RoutedEventArgs e)
     {
-        if (sender is ToggleButton { IsChecked: true })
-        {
-            ClearOtherToggles(PerformanceToggle);
-            await _vm.ApplyPerformanceAsync();
-        }
+        if (sender is ToggleButton { IsChecked: true }) await _vm.ApplyPerformanceAsync();
     }
 
     private async void AggressiveToggleClick(object sender, RoutedEventArgs e)
     {
-        if (sender is ToggleButton { IsChecked: true })
-        {
-            ClearOtherToggles(AggressiveToggle);
-            await _vm.ApplyAggressiveAsync();
-        }
-    }
-
-    private void ClearOtherToggles(ToggleButton keep)
-    {
-        foreach (var t in new[] { BasicToggle, PerformanceToggle, AggressiveToggle })
-            if (t != keep) t.IsChecked = false;
+        if (sender is ToggleButton { IsChecked: true }) await _vm.ApplyAggressiveAsync();
     }
 }

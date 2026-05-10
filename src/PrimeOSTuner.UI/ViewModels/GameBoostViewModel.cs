@@ -10,6 +10,11 @@ public partial class GameBoostViewModel : ObservableObject
     [ObservableProperty] private string _statusMessage = "";
     [ObservableProperty] private bool _isWorking;
 
+    // Persisted toggle state — survives navigation because the VM is a singleton.
+    [ObservableProperty] private bool _isBasicActive;
+    [ObservableProperty] private bool _isPerformanceActive;
+    [ObservableProperty] private bool _isAggressiveActive;
+
     public GameBoostViewModel(ProfileApplier applier)
     {
         _applier = applier;
@@ -17,16 +22,19 @@ public partial class GameBoostViewModel : ObservableObject
 
     public async Task ApplyBasicAsync()
     {
+        IsBasicActive = true; IsPerformanceActive = false; IsAggressiveActive = false;
         await ApplyAsync(BuiltInProfiles.Basic);
     }
 
     public async Task ApplyPerformanceAsync()
     {
+        IsPerformanceActive = true; IsBasicActive = false; IsAggressiveActive = false;
         await ApplyAsync(BuiltInProfiles.Performance);
     }
 
     public async Task ApplyAggressiveAsync()
     {
+        IsAggressiveActive = true; IsBasicActive = false; IsPerformanceActive = false;
         await ApplyAsync(BuiltInProfiles.Aggressive);
     }
 
