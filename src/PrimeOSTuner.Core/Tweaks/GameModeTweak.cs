@@ -12,8 +12,8 @@ public sealed class GameModeTweak : ITweak
     private readonly IRegistryClient _registry;
 
     public string Id => "game.game-mode";
-    public string DisplayName => "Enable Windows Game Mode";
-    public string Description => "Turns on Windows Game Mode and auto-detection so Windows prioritizes the foreground game.";
+    public string DisplayName => "Turn on Game Mode";
+    public string Description => "Lets Windows prioritize games automatically.";
     public bool RequiresElevation => false;
     public bool IsDestructive => false;
 

@@ -7,7 +7,7 @@
         <TextBlock Text="Display name" Style="{StaticResource SectionLabel}"/>
         <TextBox x:Name="NameBox" Margin="0,0,0,12" Padding="8,6"
                  Background="{StaticResource Bg2Brush}" Foreground="{StaticResource Text0Brush}"
-                 BorderBrush="{StaticResource LineBrush}"/>
+                 BorderBrush="{StaticResource StrokeBrush}"/>
 
         <TextBlock Text="Executable path" Style="{StaticResource SectionLabel}"/>
         <Grid Margin="0,0,0,12">
@@ -17,19 +17,19 @@
             </Grid.ColumnDefinitions>
             <TextBox Grid.Column="0" x:Name="ExeBox" Padding="8,6"
                      Background="{StaticResource Bg2Brush}" Foreground="{StaticResource Text0Brush}"
-                     BorderBrush="{StaticResource LineBrush}"/>
+                     BorderBrush="{StaticResource StrokeBrush}"/>
             <Button Grid.Column="1" Content="Browse..." Click="BrowseClick" Margin="6,0,0,0" Padding="10,4"/>
         </Grid>
 
         <TextBlock Text="Steam app ID (optional)" Style="{StaticResource SectionLabel}"/>
         <TextBox x:Name="AppIdBox" Margin="0,0,0,18" Padding="8,6"
                  Background="{StaticResource Bg2Brush}" Foreground="{StaticResource Text0Brush}"
-                 BorderBrush="{StaticResource LineBrush}"/>
+                 BorderBrush="{StaticResource StrokeBrush}"/>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="Cancel" Click="CancelClick" Margin="0,0,8,0" Padding="14,6"/>
             <Button Content="Add" Click="OkClick" Padding="14,6"
-                    Background="{StaticResource AccentBrush}" Foreground="#001b17" FontWeight="Bold"/>
+                    Background="{StaticResource AccentBrush}" Foreground="White" FontWeight="Bold"/>
         </StackPanel>
     </StackPanel>
 </Window>

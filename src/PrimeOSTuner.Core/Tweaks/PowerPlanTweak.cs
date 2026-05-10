@@ -8,8 +8,8 @@ public sealed class PowerPlanTweak : ITweak
     private static readonly Guid UltimateGuid = new("e9a42b02-d5df-448d-aa00-03f14749eb61");
 
     public string Id => "core.power-plan";
-    public string DisplayName => "Switch to Ultimate Performance power plan";
-    public string Description => "Sets Windows to the Ultimate Performance power plan, prioritizing speed over efficiency.";
+    public string DisplayName => "Use the fastest power plan";
+    public string Description => "Tells Windows to prioritize speed over battery.";
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
 

@@ -1,5 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,31 +15,80 @@ namespace PrimeOSTuner.UI;
 
 public partial class MainWindow : Window
 {
-    private const double SlotHeight = 44;
-    private const double IndicatorOffset = 24;
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
 
     private readonly ShellViewModel _shellVm;
+    private readonly SettingsViewModel _settingsVm;
+    private Dictionary<string, Button>? _tabs;
 
-    public MainWindow(ShellViewModel vm, WatcherStatusViewModel watcherVm)
+    public MainWindow(ShellViewModel vm, WatcherStatusViewModel watcherVm, SettingsViewModel settingsVm)
     {
         InitializeComponent();
         _shellVm = vm;
+        _settingsVm = settingsVm;
         DataContext = vm;
-        var bottomBlock = (FrameworkElement)FindName("WatcherStatusText");
-        if (bottomBlock?.Parent is FrameworkElement parent)
+        var watcher = (FrameworkElement)FindName("WatcherStatusText");
+        if (watcher?.Parent is FrameworkElement parent)
             parent.DataContext = watcherVm;
+
+        Closing += OnClosing;
+
+        _tabs = new Dictionary<string, Button>
+        {
+            ["Dashboard"]   = NavDashboard,
+            ["Optimize"]    = NavOptimize,
+            ["GameBoost"]   = NavGameBoost,
+            ["GameLibrary"] = NavGameLibrary,
+            ["CustomMode"]  = NavCustomMode,
+            ["History"]     = NavHistory,
+            ["Settings"]    = NavSettings,
+        };
 
         ShowTab("Dashboard");
     }
 
+    private void OnClosing(object? sender, CancelEventArgs e)
+    {
+        // Real exit (tray menu Exit) sets a flag on App; honor it.
+        if (Application.Current is App app && app.IsExitingForReal) return;
+
+        if (_settingsVm.MinimizeToTrayOnClose)
+        {
+            e.Cancel = true;
+            Hide();
+        }
+    }
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        try
+        {
+            var hwnd = new WindowInteropHelper(this).Handle;
+            int useDark = 1;
+            DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref useDark, sizeof(int));
+        }
+        catch { }
+    }
+
     private void NavButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is System.Windows.Controls.Button { Tag: string tab }) ShowTab(tab);
+        if (sender is Button { Tag: string tab }) ShowTab(tab);
     }
 
     private void ShowTab(string tab)
     {
         _shellVm.NavigateCommand.Execute(tab);
+
+        if (_tabs != null)
+        {
+            var activeStyle = (Style)FindResource("TopTabActive");
+            var inactiveStyle = (Style)FindResource("TopTab");
+            foreach (var (key, btn) in _tabs)
+                btn.Style = key == tab ? activeStyle : inactiveStyle;
+        }
 
         var sp = ((App)Application.Current).Host.Services;
         PageHost.Content = tab switch
@@ -45,48 +99,28 @@ public partial class MainWindow : Window
             "GameLibrary"  => sp.GetRequiredService<GameLibraryView>(),
             "CustomMode"   => sp.GetRequiredService<CustomModeView>(),
             "History"      => sp.GetRequiredService<HistoryView>(),
-            _ => new System.Windows.Controls.TextBlock
+            "Settings"     => sp.GetRequiredService<SettingsView>(),
+            _ => new TextBlock
             {
                 Text = $"{tab} (placeholder)",
-                FontSize = 22,
-                Foreground = (System.Windows.Media.Brush)FindResource("Text0Brush")
+                FontSize = 22
             }
         };
 
-        // Win11-style page fade + subtle slide-up on content swap
-        var slide = new TranslateTransform(0, 10);
+        var slide = new TranslateTransform(0, 12);
         PageHost.RenderTransform = slide;
         PageHost.Opacity = 0;
-        var fadeIn = new DoubleAnimation
+        PageHost.BeginAnimation(OpacityProperty, new DoubleAnimation
         {
             From = 0, To = 1,
             Duration = TimeSpan.FromMilliseconds(220),
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-        };
-        var slideIn = new DoubleAnimation
+        });
+        slide.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation
         {
-            From = 10, To = 0,
+            From = 12, To = 0,
             Duration = TimeSpan.FromMilliseconds(220),
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-        };
-        PageHost.BeginAnimation(OpacityProperty, fadeIn);
-        slide.BeginAnimation(TranslateTransform.YProperty, slideIn);
-
-        var idx = _shellVm.SelectedTabIndex;
-        var targetTop = idx * SlotHeight + IndicatorOffset;
-
-        NavIndicator.Visibility = Visibility.Visible;
-        var anim = new DoubleAnimation
-        {
-            To = targetTop,
-            Duration = TimeSpan.FromMilliseconds(280),
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
-            FillBehavior = FillBehavior.HoldEnd
-        };
-        Storyboard.SetTarget(anim, NavIndicator);
-        Storyboard.SetTargetProperty(anim, new PropertyPath("(Canvas.Top)"));
-        var sb = new Storyboard();
-        sb.Children.Add(anim);
-        sb.Begin();
+        });
     }
 }

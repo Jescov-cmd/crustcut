@@ -13,8 +13,8 @@ public sealed class PerAppGpuPreferenceTweak : ITweak
     private readonly IReadOnlyList<string> _exePaths;
 
     public string Id => "game.per-app-gpu-pref";
-    public string DisplayName => "Force high-performance GPU for installed games";
-    public string Description => "Tells Windows to use the discrete GPU when launching detected game executables.";
+    public string DisplayName => "Use the fast GPU for games";
+    public string Description => "Forces high-performance GPU on detected games.";
     public bool RequiresElevation => false;
     public bool IsDestructive => false;
 

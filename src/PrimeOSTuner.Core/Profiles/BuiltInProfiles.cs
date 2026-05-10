@@ -5,13 +5,12 @@ public static class BuiltInProfiles
     public static readonly ModeProfile Basic = new(
         Id: "basic",
         DisplayName: "Basic Mode",
-        Description: "Lightweight gaming preset: enables Game Mode, disables mouse acceleration, switches to high performance power plan, optimizes visual effects. Safe and reversible on every PC.",
+        Description: "Lightweight gaming preset: enables Game Mode, disables mouse acceleration, switches to high performance power plan. Safe and reversible on every PC.",
         TweakIds: new[]
         {
             "game.game-mode",
             "game.mouse-accel",
-            "core.power-plan",
-            "core.visual-effects"
+            "core.power-plan"
         });
 
     public static readonly ModeProfile Performance = new(
@@ -23,7 +22,6 @@ public static class BuiltInProfiles
             "game.game-mode",
             "game.mouse-accel",
             "core.power-plan",
-            "core.visual-effects",
             "game.timer-resolution",
             "game.hw-gpu-scheduling",
             "game.nagle-algorithm",

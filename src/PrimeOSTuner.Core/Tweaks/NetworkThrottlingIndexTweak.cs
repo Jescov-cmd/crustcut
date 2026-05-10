@@ -13,8 +13,8 @@ public sealed class NetworkThrottlingIndexTweak : ITweak
     private readonly IRegistryClient _registry;
 
     public string Id => "game.network-throttling";
-    public string DisplayName => "Disable network throttling";
-    public string Description => "Removes the Windows multimedia network throttling cap so games can use full network bandwidth at all times.";
+    public string DisplayName => "Remove network throttling";
+    public string Description => "Lets games use the full network all the time.";
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
 

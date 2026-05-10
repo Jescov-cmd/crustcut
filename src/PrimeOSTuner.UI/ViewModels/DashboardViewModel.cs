@@ -3,6 +3,7 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PrimeOSTuner.Core.Monitoring;
 using PrimeOSTuner.Core.Profiles;
+using PrimeOSTuner.Core.Tweaks;
 
 namespace PrimeOSTuner.UI.ViewModels;
 
@@ -10,6 +11,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
 {
     private readonly SystemSampler _sampler;
     private readonly ActiveTweaksStore _activeStore;
+    private readonly IEnumerable<ITweak> _tweaks;
     private readonly System.Timers.Timer _refreshTimer = new(2000) { AutoReset = true };
 
     [ObservableProperty] private double _cpuPercent;
@@ -20,24 +22,55 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     [ObservableProperty] private double _gpuTempC;
     [ObservableProperty] private long _networkDownBps;
     [ObservableProperty] private long _networkUpBps;
+    [ObservableProperty] private string _networkText = "0 B/s";
 
     [ObservableProperty] private string? _activeProfileName;
     [ObservableProperty] private string? _activeGameName;
     [ObservableProperty] private bool _hasActiveProfile;
+
+    [ObservableProperty] private int _boostScore;
+    [ObservableProperty] private string _boostScoreTier = "—";
+    [ObservableProperty] private string _boostScoreSubtitle = "Computing…";
 
     public ObservableCollection<double> CpuHistory { get; } = new();
     public ObservableCollection<double> RamHistory { get; } = new();
     public ObservableCollection<double> GpuHistory { get; } = new();
     public ObservableCollection<double> NetHistory { get; } = new();
 
-    public DashboardViewModel(SystemSampler sampler, ActiveTweaksStore activeStore)
+    public DashboardViewModel(SystemSampler sampler, ActiveTweaksStore activeStore, IEnumerable<ITweak> tweaks)
     {
         _sampler = sampler;
         _activeStore = activeStore;
+        _tweaks = tweaks;
         _sampler.Sampled += OnSampled;
         _sampler.Start();
         _refreshTimer.Elapsed += async (_, _) => await RefreshActiveAsync();
         _refreshTimer.Start();
+        _ = RefreshBoostScoreAsync();
+    }
+
+    public async Task RefreshBoostScoreAsync()
+    {
+        try
+        {
+            var result = await BoostScoreCalculator.ComputeAsync(_tweaks);
+            var dispatcher = System.Windows.Application.Current?.Dispatcher;
+            Action update = () =>
+            {
+                BoostScore = result.Score;
+                BoostScoreTier = result.Tier;
+                BoostScoreSubtitle = result.Total == 0
+                    ? "No tweaks available."
+                    : $"{result.Applied} of {result.Total} optimizations active";
+            };
+            if (dispatcher is null || dispatcher.CheckAccess()) update();
+            else dispatcher.Invoke(update);
+        }
+        catch
+        {
+            // Probe failures already get bucketed as Unknown by the calculator;
+            // a thrown exception here means something deeper went wrong — don't crash the dashboard.
+        }
     }
 
     private async Task RefreshActiveAsync()
@@ -68,10 +101,12 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
             GpuTempC = s.GpuTempC;
             NetworkDownBps = s.NetworkDownBps;
             NetworkUpBps = s.NetworkUpBps;
+            NetworkText = FormatBytesPerSec(s.NetworkDownBps + s.NetworkUpBps);
             Push(CpuHistory, s.CpuPercent);
             Push(RamHistory, s.RamPercent);
             Push(GpuHistory, s.GpuPercent);
-            Push(NetHistory, Math.Min(100, (s.NetworkDownBps + s.NetworkUpBps) / 1_000_000.0));
+            // Push raw bytes/sec — auto-scale handles fitting it into the chart range.
+            Push(NetHistory, s.NetworkDownBps + s.NetworkUpBps);
         };
         if (dispatcher is null || dispatcher.CheckAccess()) update();
         else dispatcher.Invoke(update);
@@ -81,6 +116,17 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     {
         series.Add(value);
         while (series.Count > 60) series.RemoveAt(0);
+    }
+
+    private static string FormatBytesPerSec(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B/s";
+        double kb = bytes / 1024.0;
+        if (kb < 1024) return $"{kb:F1} KB/s";
+        double mb = kb / 1024.0;
+        if (mb < 1024) return $"{mb:F1} MB/s";
+        double gb = mb / 1024.0;
+        return $"{gb:F2} GB/s";
     }
 
     public void Dispose()

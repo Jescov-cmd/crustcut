@@ -14,8 +14,8 @@ public sealed class NagleAlgorithmTweak : ITweak
     private readonly INetworkInterfaceClient _nics;
 
     public string Id => "game.nagle-algorithm";
-    public string DisplayName => "Disable Nagle's Algorithm on active NICs";
-    public string Description => "Sets TcpAckFrequency=1 and TCPNoDelay=1 on all active network adapters, so small packets are sent immediately. Lower latency for online games.";
+    public string DisplayName => "Disable Nagle's Algorithm";
+    public string Description => "Sends small packets immediately. Lower lag online.";
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
 

@@ -12,10 +12,11 @@ public sealed class HwGpuSchedulingTweak : ITweak
     private readonly IRegistryClient _registry;
 
     public string Id => "game.hw-gpu-scheduling";
-    public string DisplayName => "Enable Hardware-accelerated GPU Scheduling";
-    public string Description => "Sets HwSchMode=2 so the GPU manages its own scheduling, reducing CPU overhead. Requires admin and a reboot to take effect.";
+    public string DisplayName => "Hardware GPU scheduling";
+    public string Description => "Reduces CPU overhead. Reboot required.";
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
+    public bool RequiresReboot => true;
 
     public HwGpuSchedulingTweak(IRegistryClient registry) { _registry = registry; }
 

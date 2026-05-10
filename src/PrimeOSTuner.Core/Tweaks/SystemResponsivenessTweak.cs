@@ -13,8 +13,8 @@ public sealed class SystemResponsivenessTweak : ITweak
     private readonly IRegistryClient _registry;
 
     public string Id => "game.system-responsiveness";
-    public string DisplayName => "Maximize multimedia thread priority";
-    public string Description => "Sets SystemResponsiveness=0 so multimedia threads (like games) can fully saturate the CPU instead of yielding 20% to background tasks.";
+    public string DisplayName => "Maximize game CPU priority";
+    public string Description => "Stops Windows from reserving 20% for background tasks.";
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
 

@@ -2,6 +2,7 @@ using FluentAssertions;
 using Moq;
 using PrimeOSTuner.Core.Monitoring;
 using PrimeOSTuner.Core.Profiles;
+using PrimeOSTuner.Core.Tweaks;
 using PrimeOSTuner.UI.ViewModels;
 using PrimeOSTuner.Win;
 using Xunit;
@@ -18,7 +19,7 @@ public class DashboardViewModelTests
         using var sampler = new SystemSampler(hw.Object, 50);
         var activeStore = new ActiveTweaksStore(Path.Combine(Path.GetTempPath(), $"active-{Guid.NewGuid()}.json"));
 
-        var vm = new DashboardViewModel(sampler, activeStore);
+        var vm = new DashboardViewModel(sampler, activeStore, Array.Empty<ITweak>());
         sampler.Start();
         Thread.Sleep(250);
         sampler.Stop();

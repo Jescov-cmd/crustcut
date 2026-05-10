@@ -8,7 +8,7 @@ public sealed class RamCleanerTweak : ITweak
 
     public string Id => "core.ram-cleaner";
     public string DisplayName => "Free idle RAM";
-    public string Description => "Asks Windows to trim working sets of idle processes, returning unused memory to the available pool.";
+    public string Description => "Returns unused memory to the available pool.";
     public bool RequiresElevation => false;
     public bool IsDestructive => false;
 

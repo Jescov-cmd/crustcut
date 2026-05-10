@@ -1,35 +1,48 @@
 <UserControl x:Class="PrimeOSTuner.UI.Views.HistoryView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" Text="History" Style="{StaticResource HeaderText}" Margin="0,0,0,18"/>
-        <ItemsControl Grid.Row="1" ItemsSource="{Binding Entries}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Border Style="{StaticResource CardBorder}" Margin="0,0,0,8">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="{Binding DisplayName}" Foreground="{StaticResource Text0Brush}" FontWeight="Bold"/>
-                                <TextBlock Foreground="{StaticResource Text3Brush}" FontSize="11" Margin="0,4,0,0">
-                                    <Run Text="{Binding TweakId}"/>
-                                    <Run Text=" · "/>
-                                    <Run Text="{Binding AppliedAtUtc, StringFormat='{}{0:yyyy-MM-dd HH:mm} UTC'}"/>
-                                </TextBlock>
-                            </StackPanel>
-                            <TextBlock Grid.Column="1" Text="reverted" Foreground="{StaticResource Text3Brush}" FontStyle="Italic"
-                                       Visibility="{Binding Reverted, Converter={StaticResource BoolToVisibility}}"/>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-    </Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,16,0">
+        <StackPanel Margin="0,0,0,32">
+            <TextBlock Text="History" Style="{StaticResource HeaderText}" Margin="0,0,0,8"/>
+            <TextBlock Text="Tweaks you have applied, most recent first"
+                       Style="{StaticResource SubHeaderText}" Margin="0,0,0,24"/>
+
+            <ItemsControl ItemsSource="{Binding Entries}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource CardBorder}" Padding="20,14" Margin="0,0,0,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="{Binding DisplayName}"
+                                               FontWeight="SemiBold" FontSize="14"/>
+                                    <TextBlock Foreground="{StaticResource Text2Brush}"
+                                               FontSize="11" Margin="0,2,0,0">
+                                        <Run Text="{Binding TweakId}"/>
+                                        <Run Text=" · "/>
+                                        <Run Text="{Binding AppliedAtUtc, StringFormat='{}{0:yyyy-MM-dd HH:mm} UTC'}"/>
+                                    </TextBlock>
+                                </StackPanel>
+                                <Border Grid.Column="1" CornerRadius="4" Padding="8,3" VerticalAlignment="Center"
+                                        Background="{StaticResource Bg2Brush}"
+                                        BorderBrush="{StaticResource StrokeBrush}"
+                                        BorderThickness="1"
+                                        Visibility="{Binding Reverted, Converter={StaticResource BoolToVisibility}}">
+                                    <TextBlock Text="reverted" FontSize="11" Opacity="0.7"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

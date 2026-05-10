@@ -8,8 +8,8 @@ public sealed class TimerResolutionTweak : ITweak
     private readonly ITimerResolutionClient _client;
 
     public string Id => "game.timer-resolution";
-    public string DisplayName => "Set system timer to 0.5 ms";
-    public string Description => "Lowers the Windows scheduler tick to 0.5 ms via NtSetTimerResolution. Reduces input latency at the cost of slightly higher CPU usage.";
+    public string DisplayName => "Speed up the system timer";
+    public string Description => "Lowers input latency. Slight CPU cost.";
     public bool RequiresElevation => false;
     public bool IsDestructive => false;
 

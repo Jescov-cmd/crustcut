@@ -3,66 +3,179 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="PrimeOS Tuner"
         Height="780" Width="1240"
+        MinWidth="640" MinHeight="480"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource Bg0Brush}">
+        Background="{StaticResource Bg0Brush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="ClearType">
+    <Window.Resources>
+        <!-- Top tab: transparent button with accent-gradient underline when active -->
+        <Style x:Key="TopTab" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{StaticResource Text2Brush}"/>
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="14,10"/>
+            <Setter Property="Margin" Value="0,0,2,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Border x:Name="bg" Background="{TemplateBinding Background}"
+                                    CornerRadius="6,6,0,0" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <Border x:Name="underline" Height="2" CornerRadius="1"
+                                    VerticalAlignment="Bottom" Margin="14,0"
+                                    Background="Transparent"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bg" Property="Background" Value="#15FFFFFF"/>
+                                <Setter Property="Foreground" Value="{StaticResource Text0Brush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bg" Property="Background" Value="#22FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TopTabActive" TargetType="Button" BasedOn="{StaticResource TopTab}">
+            <Setter Property="Foreground" Value="{StaticResource Text0Brush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Border x:Name="bg" Background="#10FFFFFF"
+                                    CornerRadius="6,6,0,0" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <Border Height="2" CornerRadius="1"
+                                    VerticalAlignment="Bottom" Margin="14,0"
+                                    Background="{StaticResource AccentGradientBrush}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+    <DockPanel LastChildFill="True">
+        <!-- Top bar: brand · tabs · watcher -->
+        <Border DockPanel.Dock="Top"
+                Background="{StaticResource Bg1Brush}"
+                BorderBrush="{StaticResource StrokeBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="20,0">
+            <Grid Height="48">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-        <!-- Sidebar -->
-        <Grid Grid.Column="0">
-            <Border Background="{StaticResource Bg1Brush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0"/>
-            <!-- Soft radial accent glow at top of sidebar -->
-            <Border IsHitTestVisible="False">
-                <Border.Background>
-                    <RadialGradientBrush Center="0.5,0.0" GradientOrigin="0.5,0.0" RadiusX="0.9" RadiusY="0.6">
-                        <GradientStop Color="#22FF4D6D" Offset="0"/>
-                        <GradientStop Color="#00FFFFFF" Offset="1"/>
-                    </RadialGradientBrush>
-                </Border.Background>
-            </Border>
-
-            <DockPanel Margin="12,20" LastChildFill="True">
-                <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
-                    <Border Background="{StaticResource Bg2Brush}" CornerRadius="10" Padding="12">
-                        <StackPanel>
-                            <TextBlock x:Name="WatcherStatusText" Text="{Binding StatusText}" Foreground="{StaticResource Text1Brush}" FontSize="11" FontWeight="Bold"/>
-                            <ToggleButton x:Name="WatcherToggle" IsChecked="{Binding IsWatching, Mode=TwoWay}" Margin="0,6,0,0" Content="Toggle"/>
-                        </StackPanel>
-                    </Border>
+                <!-- Brand: animated morphing-blob (pink→orange gradient, slow spin + scale wobble + pink halo) -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,28,0">
+                    <Grid Width="18" Height="18" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <RotateTransform x:Name="BrandRotate" Angle="0"/>
+                        </Grid.RenderTransform>
+                        <Grid.Triggers>
+                            <EventTrigger RoutedEvent="Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="BrandRotate"
+                                                         Storyboard.TargetProperty="Angle"
+                                                         From="0" To="360" Duration="0:0:12"
+                                                         RepeatBehavior="Forever"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </Grid.Triggers>
+                        <Ellipse RenderTransformOrigin="0.5,0.5">
+                            <Ellipse.Fill>
+                                <LinearGradientBrush StartPoint="0.15,0" EndPoint="0.85,1">
+                                    <GradientStop Color="{StaticResource AccentPink}" Offset="0"/>
+                                    <GradientStop Color="{StaticResource AccentOrange}" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Ellipse.Fill>
+                            <Ellipse.Effect>
+                                <DropShadowEffect Color="#F7416B" BlurRadius="12" ShadowDepth="0" Opacity="0.65"/>
+                            </Ellipse.Effect>
+                            <Ellipse.RenderTransform>
+                                <ScaleTransform x:Name="BrandScale" ScaleX="1" ScaleY="1"/>
+                            </Ellipse.RenderTransform>
+                            <Ellipse.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <!-- ScaleX and ScaleY on different durations + offset → asymmetric "morph" wobble -->
+                                        <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                            <DoubleAnimation Storyboard.TargetName="BrandScale"
+                                                             Storyboard.TargetProperty="ScaleX"
+                                                             From="0.92" To="1.08" Duration="0:0:3"/>
+                                            <DoubleAnimation Storyboard.TargetName="BrandScale"
+                                                             Storyboard.TargetProperty="ScaleY"
+                                                             From="1.08" To="0.92" Duration="0:0:3.7"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+                    </Grid>
+                    <TextBlock Text="PrimeOS Tuner"
+                               FontFamily="Segoe UI Variable Display, Segoe UI"
+                               FontSize="14" FontWeight="SemiBold"
+                               Margin="10,0,0,0"
+                               VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <Grid>
-                    <!-- Sliding nav indicator -->
-                    <Canvas x:Name="NavIndicatorHost" Width="3" HorizontalAlignment="Left" Margin="0,32,0,0" Panel.ZIndex="1">
-                        <Border x:Name="NavIndicator" Width="3" Height="30"
-                                Canvas.Top="0"
-                                CornerRadius="2"
-                                Background="{StaticResource AccentGradientBrush}"
-                                Visibility="Collapsed">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#FF4D6D" BlurRadius="10" ShadowDepth="0" Opacity="0.7"/>
-                            </Border.Effect>
-                        </Border>
-                    </Canvas>
+                <!-- Tabs -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                    <Button x:Name="NavDashboard"   Tag="Dashboard"   Click="NavButton_Click" Content="Dashboard" Style="{StaticResource TopTabActive}"/>
+                    <Button x:Name="NavOptimize"    Tag="Optimize"    Click="NavButton_Click" Content="Optimize"  Style="{StaticResource TopTab}"/>
+                    <Button x:Name="NavGameBoost"   Tag="GameBoost"   Click="NavButton_Click" Content="Game Boost" Style="{StaticResource TopTab}"/>
+                    <Button x:Name="NavGameLibrary" Tag="GameLibrary" Click="NavButton_Click" Content="Library"   Style="{StaticResource TopTab}"/>
+                    <Button x:Name="NavCustomMode"  Tag="CustomMode"  Click="NavButton_Click" Content="Custom"    Style="{StaticResource TopTab}"/>
+                    <Button x:Name="NavHistory"     Tag="History"     Click="NavButton_Click" Content="History"   Style="{StaticResource TopTab}"/>
+                    <Button x:Name="NavSettings"    Tag="Settings"    Click="NavButton_Click" Content="Settings"  Style="{StaticResource TopTab}"/>
+                </StackPanel>
 
-                    <StackPanel Margin="8,0,0,0">
-                        <TextBlock Text="PRIMEOS TUNER" Style="{StaticResource SectionLabel}" Foreground="{StaticResource AccentBrush}" Margin="6,0,0,16"/>
-                        <TextBlock Text="NAVIGATION" Style="{StaticResource SectionLabel}" Margin="6,0,0,8"/>
-                        <Button Content="&#x2302;  Dashboard"   Tag="Dashboard"   Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
-                        <Button Content="&#x26A1;  Optimize"    Tag="Optimize"    Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
-                        <Button Content="&#x1F3AE;  Game Boost" Tag="GameBoost"   Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
-                        <Button Content="&#x1F4DA;  Library"    Tag="GameLibrary" Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
-                        <Button Content="&#x2699;  Custom"      Tag="CustomMode"  Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
-                        <Button Content="&#x26E8;  History"     Tag="History"     Click="NavButton_Click" Style="{StaticResource NavButtonStyle}"/>
-                    </StackPanel>
-                </Grid>
-            </DockPanel>
-        </Grid>
+                <!-- Watcher status + toggle -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse Width="8" Height="8" VerticalAlignment="Center" Margin="0,0,8,0">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="{StaticResource Text4Brush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsWatching}" Value="True">
+                                        <Setter Property="Fill" Value="{StaticResource GoodBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <TextBlock x:Name="WatcherStatusText"
+                               Text="{Binding StatusText}"
+                               FontSize="12" Foreground="{StaticResource Text2Brush}"
+                               VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <ToggleButton x:Name="WatcherToggle"
+                                  Style="{StaticResource ToggleSwitchStyle}"
+                                  IsChecked="{Binding IsWatching, Mode=TwoWay}"
+                                  VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
 
         <!-- Page host -->
-        <ContentControl Grid.Column="1" x:Name="PageHost" Margin="32,28"/>
+        <ContentControl x:Name="PageHost" Margin="32,24,32,32"/>
+    </DockPanel>
     </Grid>
 </Window>

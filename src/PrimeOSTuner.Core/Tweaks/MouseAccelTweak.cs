@@ -18,7 +18,7 @@ public sealed class MouseAccelTweak : ITweak
 
     public string Id => "game.mouse-accel";
     public string DisplayName => "Disable mouse acceleration";
-    public string Description => "Turns off Windows pointer acceleration so mouse movement maps 1:1 to pixels.";
+    public string Description => "Makes mouse movement 1:1 with cursor.";
     public bool RequiresElevation => false;
     public bool IsDestructive => false;
 

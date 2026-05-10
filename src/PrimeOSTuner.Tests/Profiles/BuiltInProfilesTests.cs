@@ -7,15 +7,14 @@ namespace PrimeOSTuner.Tests.Profiles;
 public class BuiltInProfilesTests
 {
     [Fact]
-    public void Basic_includes_game_mode_mouse_accel_power_plan_and_visual_effects()
+    public void Basic_includes_game_mode_mouse_accel_and_power_plan()
     {
         BuiltInProfiles.Basic.Id.Should().Be("basic");
         BuiltInProfiles.Basic.TweakIds.Should().BeEquivalentTo(new[]
         {
             "game.game-mode",
             "game.mouse-accel",
-            "core.power-plan",
-            "core.visual-effects"
+            "core.power-plan"
         });
     }
 

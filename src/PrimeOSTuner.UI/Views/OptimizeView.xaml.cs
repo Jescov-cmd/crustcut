@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -15,30 +16,35 @@ namespace PrimeOSTuner.UI.Views;
 public partial class OptimizeView : UserControl
 {
     private readonly TweakHistory _history;
-    private readonly List<ITweak> _allTweaks;
+    private readonly List<TweakRowVm> _allRows;
     private readonly ObservableCollection<FilterChipVm> _chips = new();
     private string _activeKey = "all";
+    private readonly HashSet<string> _pendingReboot = new();
 
     public OptimizeView(IEnumerable<ITweak> tweaks, TweakHistory history)
     {
         InitializeComponent();
-        _allTweaks = tweaks.Where(t => !t.IsDestructive).ToList();
         _history = history;
+        _allRows = tweaks
+            .Where(t => !t.IsDestructive)
+            .Where(t => !IsCleanupTweak(t.Id))    // System Cleanup lives on the Dashboard now
+            .Select(t => new TweakRowVm(t))
+            .ToList();
 
         _chips.Add(new FilterChipVm("all", "All", true));
         _chips.Add(new FilterChipVm("fps", "FPS & Latency"));
         _chips.Add(new FilterChipVm("network", "Network"));
-        _chips.Add(new FilterChipVm("system", "System Cleanup"));
         FilterChips.ItemsSource = _chips;
         Refilter();
     }
 
-    private static string CategoryFor(string id)
-    {
-        if (id.StartsWith("game.nagle") || id.StartsWith("game.network")) return "network";
-        if (id == "core.junk-files" || id == "core.ram-cleaner" || id == "core.visual-effects") return "system";
-        return "fps";
-    }
+    private static bool IsCleanupTweak(string id) =>
+        id == "core.ram-cleaner"
+        || id == "core.dns-flush"
+        || id == "core.windows-update-cache"
+        || id == "core.driver-health"
+        || id == "core.driver-store-cleanup"
+        || id == "core.registry-cleanup-safe";
 
     private void ChipClick(object sender, RoutedEventArgs e)
     {
@@ -51,44 +57,127 @@ public partial class OptimizeView : UserControl
     private void Refilter()
     {
         TweakList.ItemsSource = _activeKey == "all"
-            ? _allTweaks
-            : _allTweaks.Where(t => CategoryFor(t.Id) == _activeKey).ToList();
+            ? _allRows
+            : _allRows.Where(r => r.CategoryKey == _activeKey).ToList();
     }
 
-    private async void PreviewClick(object sender, RoutedEventArgs e)
+    private async void ToggleClick(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { Tag: ITweak t })
-        {
-            var preview = await t.PreviewAsync();
-            MessageBox.Show(preview, $"Preview — {t.DisplayName}");
-        }
-    }
+        if (sender is not ToggleButton tb || tb.Tag is not TweakRowVm row) return;
 
-    private async void ApplyClick(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button { Tag: ITweak t } btn)
+        tb.IsEnabled = false;
+        try
         {
-            btn.IsEnabled = false;
-            try
+            if (row.IsApplied)
             {
-                var result = await t.ApplyAsync();
+                var result = await row.Tweak.ApplyAsync();
                 if (result.Succeeded)
                 {
+                    row.UndoData = result.UndoData;
                     await _history.AppendAsync(new HistoryEntry(
-                        Guid.NewGuid(), t.Id, t.DisplayName, DateTime.UtcNow, result.UndoData, false));
-                    MessageBox.Show("Applied successfully.", t.DisplayName);
+                        Guid.NewGuid(), row.Tweak.Id, row.Tweak.DisplayName,
+                        DateTime.UtcNow, result.UndoData, false));
+                    if (row.Tweak.RequiresReboot) MarkPendingReboot(row.Tweak);
                 }
                 else
                 {
-                    MessageBox.Show($"Failed: {result.Error}", t.DisplayName);
+                    row.IsApplied = false;
+                    MessageBox.Show($"Failed: {result.Error}", row.Tweak.DisplayName);
                 }
             }
-            finally
+            else if (row.UndoData is not null)
             {
-                btn.IsEnabled = true;
+                var revert = await row.Tweak.RevertAsync(row.UndoData);
+                if (!revert.Succeeded)
+                {
+                    row.IsApplied = true;
+                    MessageBox.Show($"Revert failed: {revert.Error}", row.Tweak.DisplayName);
+                }
+                else
+                {
+                    row.UndoData = null;
+                    if (row.Tweak.RequiresReboot) MarkPendingReboot(row.Tweak);
+                }
             }
         }
+        finally
+        {
+            tb.IsEnabled = true;
+        }
     }
+
+    private void MarkPendingReboot(ITweak tweak)
+    {
+        _pendingReboot.Add(tweak.DisplayName);
+        var names = string.Join(", ", _pendingReboot);
+        RebootBannerDetail.Text = _pendingReboot.Count == 1
+            ? $"\"{names}\" needs a restart to fully take effect."
+            : $"{_pendingReboot.Count} changes need a restart: {names}.";
+        RebootBanner.Visibility = Visibility.Visible;
+    }
+
+    private void DismissRebootBannerClick(object sender, RoutedEventArgs e)
+    {
+        RebootBanner.Visibility = Visibility.Collapsed;
+        _pendingReboot.Clear();
+    }
+
+    private void RestartNowClick(object sender, RoutedEventArgs e)
+    {
+        var confirm = MessageBox.Show(
+            "Restart Windows now? Save your work first — this will reboot in 5 seconds.",
+            "Restart now", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+        if (confirm != MessageBoxResult.OK) return;
+
+        try
+        {
+            // /r restart, /t 5 = 5-second delay, /c message shown to user
+            Process.Start(new ProcessStartInfo("shutdown.exe", "/r /t 5 /c \"PrimeOS Tuner: applying changes\"")
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false,
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Could not start shutdown: {ex.Message}", "Restart now");
+        }
+    }
+}
+
+public sealed class TweakRowVm : INotifyPropertyChanged
+{
+    private bool _isApplied;
+    public ITweak Tweak { get; }
+    public string CategoryKey { get; }
+    public string Category { get; }
+
+    public bool IsApplied
+    {
+        get => _isApplied;
+        set { if (_isApplied != value) { _isApplied = value; OnChanged(); } }
+    }
+
+    public string? UndoData { get; set; }
+
+    public TweakRowVm(ITweak tweak)
+    {
+        Tweak = tweak;
+        var (key, label) = CategoryFor(tweak.Id);
+        CategoryKey = key;
+        Category = label;
+    }
+
+    private static (string Key, string Label) CategoryFor(string id)
+    {
+        if (id.StartsWith("game.nagle") || id.StartsWith("game.network"))
+            return ("network", "Network");
+        return ("fps", "FPS & Latency");
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnChanged([CallerMemberName] string? n = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
 }
 
 public sealed class FilterChipVm : INotifyPropertyChanged

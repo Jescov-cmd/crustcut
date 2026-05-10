@@ -12,9 +12,10 @@ public sealed class CpuCoreParkingTweak : ITweak
 
     public string Id => "game.cpu-core-parking";
     public string DisplayName => "Disable CPU core parking";
-    public string Description => "Forces all CPU cores to remain unparked (Min Cores = 100%) so games can use every core under load instantly.";
+    public string Description => "Keeps every core ready instead of parked.";
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
+    public bool RequiresReboot => true;
 
     public CpuCoreParkingTweak(IPowerPlanClient client) { _client = client; }
 

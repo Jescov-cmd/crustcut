@@ -5,11 +5,13 @@ namespace PrimeOSTuner.Core.Tweaks;
 
 public interface ITweak
 {
-    string Id { get; }                 // stable identifier, e.g. "core.junk-files"
+    string Id { get; }                 // stable identifier, e.g. "core.power-plan"
     string DisplayName { get; }        // shown in UI
     string Description { get; }        // plain-language explanation
     bool RequiresElevation { get; }    // does Apply need admin?
     bool IsDestructive { get; }        // requires manual opt-in (never auto-run)
+    bool RequiresReboot              // change doesn't fully take effect until next restart
+        => false;
 
     Task<TweakState> ProbeAsync(CancellationToken ct = default);
     Task<TweakResult> ApplyAsync(IProgress<int>? progress = null, CancellationToken ct = default);
