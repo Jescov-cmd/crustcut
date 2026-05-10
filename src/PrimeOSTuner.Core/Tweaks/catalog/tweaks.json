@@ -55,6 +55,76 @@
       "valueKind": "DWord",
       "appliedData": "-1",
       "riskNote": null
+    },
+    {
+      "id": "core.tcp-ack-frequency",
+      "displayName": "TCP ACK Frequency = 1",
+      "description": "Sends TCP acknowledgements immediately. Slightly lower latency.",
+      "category": "network",
+      "requiresElevation": true,
+      "requiresReboot": true,
+      "hive": "LocalMachine",
+      "key": "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+      "valueName": "TcpAckFrequency",
+      "valueKind": "DWord",
+      "appliedData": "1",
+      "riskNote": null
+    },
+    {
+      "id": "core.tcp-delivery-acceleration",
+      "displayName": "TCP Delivery Acceleration",
+      "description": "Speeds up small-packet delivery.",
+      "category": "network",
+      "requiresElevation": true,
+      "requiresReboot": true,
+      "hive": "LocalMachine",
+      "key": "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+      "valueName": "TCPNoDelay",
+      "valueKind": "DWord",
+      "appliedData": "1",
+      "riskNote": null
+    },
+    {
+      "id": "core.qos-bandwidth",
+      "displayName": "Disable reserved QoS bandwidth",
+      "description": "Frees the 20% bandwidth Windows holds back for QoS.",
+      "category": "network",
+      "requiresElevation": true,
+      "requiresReboot": true,
+      "hive": "LocalMachine",
+      "key": "SOFTWARE\\Policies\\Microsoft\\Windows\\Psched",
+      "valueName": "NonBestEffortLimit",
+      "valueKind": "DWord",
+      "appliedData": "0",
+      "riskNote": null
+    },
+    {
+      "id": "core.netbios-disable",
+      "displayName": "Disable NetBIOS over TCP/IP",
+      "description": "Removes legacy NetBIOS broadcast traffic. Faster network for most home networks.",
+      "category": "network",
+      "requiresElevation": true,
+      "requiresReboot": true,
+      "hive": "LocalMachine",
+      "key": "SYSTEM\\CurrentControlSet\\Services\\NetBT\\Parameters",
+      "valueName": "NodeType",
+      "valueKind": "DWord",
+      "appliedData": "2",
+      "riskNote": null
+    },
+    {
+      "id": "core.ipv6-disable",
+      "displayName": "Disable IPv6 (advanced)",
+      "description": "Forces IPv4-only networking.",
+      "category": "network",
+      "requiresElevation": true,
+      "requiresReboot": true,
+      "hive": "LocalMachine",
+      "key": "SYSTEM\\CurrentControlSet\\Services\\Tcpip6\\Parameters",
+      "valueName": "DisabledComponents",
+      "valueKind": "DWord",
+      "appliedData": "255",
+      "riskNote": "May break some apps and VPNs that require IPv6."
     }
   ]
 }
