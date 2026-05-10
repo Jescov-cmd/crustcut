@@ -59,9 +59,25 @@ public partial class OptimizeView : UserControl
 
     private void Refilter()
     {
-        TweakList.ItemsSource = _activeKey == "all"
+        var filtered = _activeKey == "all"
             ? _allRows
             : _allRows.Where(r => r.CategoryKey == _activeKey).ToList();
+
+        // Standard = no reboot needed AND no risk note. Advanced = anything with either flag.
+        var standard = filtered
+            .Where(r => !r.HasRisk && !r.Tweak.RequiresReboot)
+            .OrderBy(r => r.Tweak.DisplayName)
+            .ToList();
+        var advanced = filtered
+            .Where(r => r.HasRisk || r.Tweak.RequiresReboot)
+            .OrderBy(r => r.HasRisk ? 1 : 0)             // reboot-only first
+            .ThenBy(r => r.Tweak.DisplayName)
+            .ToList();
+
+        StandardTweakList.ItemsSource = standard;
+        AdvancedTweakList.ItemsSource = advanced;
+        StandardHeader.Visibility = standard.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        AdvancedHeader.Visibility = advanced.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private async void ToggleClick(object sender, RoutedEventArgs e)
@@ -142,6 +158,9 @@ public partial class OptimizeView : UserControl
             ? $"\"{names}\" needs a restart to fully take effect."
             : $"{_pendingReboot.Count} changes need a restart: {names}.";
         RebootBanner.Visibility = Visibility.Visible;
+        // The banner sits at the top of the page. If the user toggled a tweak way down
+        // the list they'd never see it pop up — scroll the page back to the top.
+        PageScroller.ScrollToTop();
     }
 
     private void DismissRebootBannerClick(object sender, RoutedEventArgs e)

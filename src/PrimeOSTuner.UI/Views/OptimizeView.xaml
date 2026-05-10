@@ -51,9 +51,114 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Section header for the Standard / Advanced groupings on the tile list -->
+        <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource Text3Brush}"/>
+            <Setter Property="Margin" Value="0,8,0,10"/>
+        </Style>
+
+        <!-- Shared tile template used by both the Standard and Advanced lists. -->
+        <DataTemplate x:Key="TweakTileTemplate">
+            <Border Style="{StaticResource OptimizerTile}"
+                    Width="280" Height="180"
+                    Margin="0,0,12,12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Status pills row: Active/Off + (optional) Reboot + (optional) Caution -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal">
+                        <Border HorizontalAlignment="Left"
+                                CornerRadius="6" Padding="8,3"
+                                Background="{StaticResource Bg2Brush}"
+                                BorderBrush="{StaticResource StrokeBrush}" BorderThickness="1">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="ToolTip" Value="This tweak is not currently applied. Toggle the switch on to apply it."/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsApplied}" Value="True">
+                                            <Setter Property="ToolTip" Value="This tweak is currently applied. Toggle the switch off to revert it."/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock FontSize="10" FontWeight="SemiBold">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="OFF"/>
+                                        <Setter Property="Foreground" Value="{StaticResource Text3Brush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsApplied}" Value="True">
+                                                <Setter Property="Text" Value="ACTIVE"/>
+                                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
+                        <!-- "REBOOT" pill — only visible when the tweak's RequiresReboot flag is true -->
+                        <Border Margin="6,0,0,0"
+                                CornerRadius="6" Padding="8,3"
+                                BorderThickness="1"
+                                BorderBrush="{StaticResource AccentBrush}"
+                                Background="#1F1916"
+                                Visibility="{Binding Tweak.RequiresReboot, Converter={StaticResource BoolToVisibility}}"
+                                ToolTip="Windows needs to restart for this change to fully take effect.">
+                            <TextBlock Text="REBOOT" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{StaticResource AccentBrush}"/>
+                        </Border>
+                        <!-- "CAUTION" pill — only visible when the tweak has a RiskNote -->
+                        <Border Margin="6,0,0,0"
+                                CornerRadius="6" Padding="8,3"
+                                BorderThickness="1"
+                                BorderBrush="#FFA01F"
+                                Background="#1F1916"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding HasRisk, Converter={StaticResource BoolToVisibility}}"
+                                ToolTip="{Binding RiskNote}">
+                            <TextBlock Text="⚠ CAUTION" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="#FFD580"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Title + description -->
+                    <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,12,0,0">
+                        <TextBlock Text="{Binding Tweak.DisplayName}"
+                                   FontFamily="Segoe UI Variable Display, Segoe UI"
+                                   FontSize="15" FontWeight="SemiBold"
+                                   TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding Tweak.Description}"
+                                   ToolTip="{Binding Tweak.Description}"
+                                   Foreground="{StaticResource Text2Brush}"
+                                   FontSize="11" Margin="0,4,0,0"
+                                   TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
+                                   MaxHeight="36"/>
+                    </StackPanel>
+
+                    <!-- Toggle bottom-right -->
+                    <ToggleButton Grid.Row="2"
+                                  Style="{StaticResource ToggleSwitchStyle}"
+                                  IsChecked="{Binding IsApplied, Mode=TwoWay}"
+                                  Tag="{Binding}"
+                                  Click="ToggleClick"
+                                  HorizontalAlignment="Right"
+                                  Margin="0,12,0,0"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,16,0">
+    <ScrollViewer x:Name="PageScroller"
+                  VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled" Padding="0,0,16,0">
         <StackPanel Margin="0,0,0,32">
             <TextBlock Text="Optimize" Style="{StaticResource HeaderText}" Margin="0,0,0,8"/>
             <TextBlock Text="Toggle each tile on or off. The tile lights up while a tweak is active."
@@ -108,107 +213,31 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <!-- Tile grid -->
-            <ItemsControl x:Name="TweakList">
+            <!-- Standard tweaks: no reboot, no caution. The "easy ones." -->
+            <TextBlock x:Name="StandardHeader"
+                       Text="STANDARD"
+                       Style="{StaticResource SectionHeaderStyle}"/>
+            <ItemsControl x:Name="StandardTweakList"
+                          ItemTemplate="{StaticResource TweakTileTemplate}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <WrapPanel HorizontalAlignment="Center"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border Style="{StaticResource OptimizerTile}"
-                                Width="280" Height="180"
-                                Margin="0,0,12,12">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+            </ItemsControl>
 
-                                <!-- Status pills row: Active/Off + (optional) Reboot + (optional) Caution -->
-                                <StackPanel Grid.Row="0" Orientation="Horizontal">
-                                    <Border HorizontalAlignment="Left"
-                                            CornerRadius="6" Padding="8,3"
-                                            Background="{StaticResource Bg2Brush}"
-                                            BorderBrush="{StaticResource StrokeBrush}" BorderThickness="1">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="ToolTip" Value="This tweak is not currently applied. Toggle the switch on to apply it."/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsApplied}" Value="True">
-                                                        <Setter Property="ToolTip" Value="This tweak is currently applied. Toggle the switch off to revert it."/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <TextBlock FontSize="10" FontWeight="SemiBold">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Text" Value="OFF"/>
-                                                    <Setter Property="Foreground" Value="{StaticResource Text3Brush}"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsApplied}" Value="True">
-                                                            <Setter Property="Text" Value="ACTIVE"/>
-                                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </Border>
-                                    <!-- "REBOOT" pill — only visible when the tweak's RequiresReboot flag is true -->
-                                    <Border Margin="6,0,0,0"
-                                            CornerRadius="6" Padding="8,3"
-                                            BorderThickness="1"
-                                            BorderBrush="{StaticResource AccentBrush}"
-                                            Background="#1F1916"
-                                            Visibility="{Binding Tweak.RequiresReboot, Converter={StaticResource BoolToVisibility}}"
-                                            ToolTip="Windows needs to restart for this change to fully take effect.">
-                                        <TextBlock Text="REBOOT" FontSize="10" FontWeight="SemiBold"
-                                                   Foreground="{StaticResource AccentBrush}"/>
-                                    </Border>
-                                    <!-- "CAUTION" pill — only visible when the tweak has a RiskNote -->
-                                    <Border Margin="6,0,0,0"
-                                            CornerRadius="6" Padding="8,3"
-                                            BorderThickness="1"
-                                            BorderBrush="#FFA01F"
-                                            Background="#1F1916"
-                                            VerticalAlignment="Center"
-                                            Visibility="{Binding HasRisk, Converter={StaticResource BoolToVisibility}}"
-                                            ToolTip="{Binding RiskNote}">
-                                        <TextBlock Text="⚠ CAUTION" FontSize="10" FontWeight="SemiBold"
-                                                   Foreground="#FFD580"/>
-                                    </Border>
-                                </StackPanel>
-
-                                <!-- Title + description -->
-                                <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,12,0,0">
-                                    <TextBlock Text="{Binding Tweak.DisplayName}"
-                                               FontFamily="Segoe UI Variable Display, Segoe UI"
-                                               FontSize="15" FontWeight="SemiBold"
-                                               TextWrapping="Wrap"/>
-                                    <TextBlock Text="{Binding Tweak.Description}"
-                                               ToolTip="{Binding Tweak.Description}"
-                                               Foreground="{StaticResource Text2Brush}"
-                                               FontSize="11" Margin="0,4,0,0"
-                                               TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
-                                               MaxHeight="36"/>
-                                </StackPanel>
-
-                                <!-- Toggle bottom-right -->
-                                <ToggleButton Grid.Row="2"
-                                              Style="{StaticResource ToggleSwitchStyle}"
-                                              IsChecked="{Binding IsApplied, Mode=TwoWay}"
-                                              Tag="{Binding}"
-                                              Click="ToggleClick"
-                                              HorizontalAlignment="Right"
-                                              Margin="0,12,0,0"/>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
+            <!-- Advanced tweaks: anything that needs reboot or has a caution flag. -->
+            <TextBlock x:Name="AdvancedHeader"
+                       Text="ADVANCED &amp; CAUTION"
+                       Style="{StaticResource SectionHeaderStyle}"
+                       Margin="0,16,0,10"/>
+            <ItemsControl x:Name="AdvancedTweakList"
+                          ItemTemplate="{StaticResource TweakTileTemplate}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel HorizontalAlignment="Center"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
             </ItemsControl>
         </StackPanel>
     </ScrollViewer>
