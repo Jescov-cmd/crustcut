@@ -33,7 +33,7 @@ public class RegistryClientTests : IDisposable
 
         var backup = client.WriteString(RegistryHive.CurrentUser, SubKey, "Speed", "0");
 
-        backup.PreviousValue.Should().Be("1");
+        backup.PreviousString.Should().Be("1");
         client.ReadString(RegistryHive.CurrentUser, SubKey, "Speed").Should().Be("0");
     }
 

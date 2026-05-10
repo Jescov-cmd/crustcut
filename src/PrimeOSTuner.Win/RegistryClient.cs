@@ -11,6 +11,21 @@ public sealed class RegistryClient : IRegistryClient
         return key?.GetValue(valueName) as string;
     }
 
+    public int? ReadDword(RegistryHive hive, string subKey, string valueName)
+    {
+        using var root = RegistryKey.OpenBaseKey(hive, RegistryView.Default);
+        using var key = root.OpenSubKey(subKey);
+        if (key is null) return null;
+        var v = key.GetValue(valueName);
+        if (v is null) return null;
+        return v switch
+        {
+            int i => i,
+            long l => unchecked((int)l),
+            _ => int.TryParse(v.ToString(), out var parsed) ? parsed : null
+        };
+    }
+
     public RegistryBackup WriteString(RegistryHive hive, string subKey, string valueName, string newValue)
     {
         var previous = ReadString(hive, subKey, valueName);
@@ -21,15 +36,47 @@ public sealed class RegistryClient : IRegistryClient
         return new RegistryBackup(hive, subKey, valueName, previous);
     }
 
+    public RegistryBackup WriteDword(RegistryHive hive, string subKey, string valueName, int newValue)
+    {
+        using var root = RegistryKey.OpenBaseKey(hive, RegistryView.Default);
+        using var key = root.CreateSubKey(subKey, writable: true)
+            ?? throw new InvalidOperationException($"Could not open or create {hive}\\{subKey}");
+        var prev = key.GetValue(valueName);
+        var prevKind = prev is null ? RegistryValueKind.Unknown : key.GetValueKind(valueName);
+        string? prevString = null;
+        int? prevDword = null;
+        if (prev is int i) prevDword = i;
+        else if (prev is not null) prevString = prev.ToString();
+        key.SetValue(valueName, newValue, RegistryValueKind.DWord);
+        return new RegistryBackup(hive, subKey, valueName, prevString, prevDword, prevKind);
+    }
+
     public void RestoreFromBackup(RegistryBackup backup)
     {
-        using var baseKey = RegistryKey.OpenBaseKey(backup.Hive, RegistryView.Default);
-        using var key = baseKey.OpenSubKey(backup.SubKey, writable: true);
+        using var root = RegistryKey.OpenBaseKey(backup.Hive, RegistryView.Default);
+        using var key = root.CreateSubKey(backup.SubKey, writable: true);
         if (key is null) return;
 
-        if (backup.PreviousValue is null)
-            key.DeleteValue(backup.ValueName, throwOnMissingValue: false);
-        else
-            key.SetValue(backup.ValueName, backup.PreviousValue, RegistryValueKind.String);
+        if (backup.PreviousKind == RegistryValueKind.Unknown
+            && backup.PreviousString is null
+            && backup.PreviousDword is null)
+        {
+            // Value didn't exist before — delete it.
+            if (key.GetValue(backup.ValueName) is not null)
+                key.DeleteValue(backup.ValueName, throwOnMissingValue: false);
+            return;
+        }
+
+        if (backup.PreviousDword is int d)
+        {
+            key.SetValue(backup.ValueName, d, RegistryValueKind.DWord);
+        }
+        else if (backup.PreviousString is string s)
+        {
+            var kind = backup.PreviousKind == RegistryValueKind.Unknown
+                ? RegistryValueKind.String
+                : backup.PreviousKind;
+            key.SetValue(backup.ValueName, s, kind);
+        }
     }
 }
