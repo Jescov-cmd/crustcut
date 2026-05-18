@@ -49,7 +49,7 @@
                         <TextBlock TextWrapping="Wrap"
                                    Foreground="{StaticResource Text2Brush}"
                                    FontSize="12" Margin="0,0,0,18">
-                            Everything in Basic + timer resolution + HwGPU scheduling + Nagle off + network throttling off + multimedia priority maxed + telemetry trimmed.
+                            Everything in Basic + timer resolution + hardware GPU scheduling + multimedia priority maxed + telemetry trimmed.
                         </TextBlock>
                         <Border Background="{StaticResource StrokeBrush}" Height="1" Margin="0,0,0,14"/>
                         <Grid>
@@ -78,7 +78,7 @@
                         <TextBlock TextWrapping="Wrap"
                                    Foreground="{StaticResource Text2Brush}"
                                    FontSize="12" Margin="0,0,0,18">
-                            Everything in Performance + IPv6 off + Cortana off + search indexing off + modern standby off + hibernation off. May break some apps.
+                            Everything in Performance + Cortana off + modern standby off + hibernation off. May break some apps.
                         </TextBlock>
                         <Border Background="{StaticResource StrokeBrush}" Height="1" Margin="0,0,0,14"/>
                         <Grid>

@@ -23,8 +23,6 @@ public class BuiltInProfilesTests
 
         BuiltInProfiles.Performance.TweakIds.Should().Contain("game.timer-resolution");
         BuiltInProfiles.Performance.TweakIds.Should().Contain("game.hw-gpu-scheduling");
-        BuiltInProfiles.Performance.TweakIds.Should().Contain("game.nagle-algorithm");
-        BuiltInProfiles.Performance.TweakIds.Should().Contain("game.network-throttling");
         BuiltInProfiles.Performance.TweakIds.Should().Contain("game.system-responsiveness");
     }
 
@@ -34,9 +32,7 @@ public class BuiltInProfilesTests
         foreach (var t in BuiltInProfiles.Performance.TweakIds)
             BuiltInProfiles.Aggressive.TweakIds.Should().Contain(t);
 
-        BuiltInProfiles.Aggressive.TweakIds.Should().Contain("core.ipv6-disable");
         BuiltInProfiles.Aggressive.TweakIds.Should().Contain("core.cortana-disable");
-        BuiltInProfiles.Aggressive.TweakIds.Should().Contain("core.search-indexing-tune");
         BuiltInProfiles.Aggressive.TweakIds.Should().Contain("core.modern-standby-disable");
         BuiltInProfiles.Aggressive.TweakIds.Should().Contain("core.hibernation-disable");
     }
@@ -53,29 +49,24 @@ public class BuiltInProfilesTests
     [Fact]
     public void All_profile_tweak_ids_resolve_against_the_registered_tweak_set()
     {
-        // Build the set of known ids that v0.4 ships.
+        // Build the set of known ids that v0.4 ships. Kept in sync with App.xaml.cs
+        // tweak registration and tweaks.json after the honest-optimization refactor
+        // removed the placebo network tweaks, the registry cleaner, and the
+        // generic service disablers.
         var knownIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            // Existing custom tweaks
+            // Custom tweaks
             "core.power-plan", "core.ram-cleaner", "core.dns-flush",
             "core.windows-update-cache", "core.driver-health",
-            "core.driver-store-cleanup", "core.registry-cleanup-safe",
+            "core.driver-store-cleanup",
             "game.mouse-accel", "game.timer-resolution", "game.game-mode",
-            "game.hw-gpu-scheduling", "game.nagle-algorithm",
-            "game.network-throttling", "game.system-responsiveness",
-            "game.cpu-core-parking", "game.per-app-gpu-pref",
-            // New custom
+            "game.hw-gpu-scheduling", "game.cpu-core-parking",
+            "game.per-app-gpu-pref",
             "core.telemetry-disable", "core.cortana-disable",
             "core.ultimate-performance", "core.hibernation-disable",
-            "core.nic-power-mgmt",
-            // Service disables
-            "core.sysmain-disable", "core.search-indexing-tune",
-            "core.connected-user-experiences",
             // Registry catalog (must match tweaks.json)
             "core.win32-priority-separation", "core.startup-delay",
-            "core.tcp-ack-frequency", "core.tcp-delivery-acceleration",
-            "core.qos-bandwidth",
-            "core.netbios-disable", "core.ipv6-disable",
+            "game.system-responsiveness",
             "core.werror-reporting", "core.game-dvr-disable",
             "core.fullscreen-optimizations",
             "core.ceip-disable", "core.activity-history",

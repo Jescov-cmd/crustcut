@@ -87,7 +87,6 @@ public partial class App : Application
                 s.AddSingleton<WindowsUpdateCacheTweak>();
                 s.AddSingleton<DriverHealthCheckTweak>();
                 s.AddSingleton<DriverStoreCleanupTweak>();
-                s.AddSingleton<SafeRegistryCleanupTweak>();
 
                 // Win-layer additions
                 s.AddSingleton<INetworkInterfaceClient, NetworkInterfaceClient>();
@@ -110,12 +109,10 @@ public partial class App : Application
                 s.AddSingleton<TimerResolutionTweak>();
                 s.AddSingleton<GameModeTweak>();
                 s.AddSingleton<HwGpuSchedulingTweak>();
-                s.AddSingleton<NagleAlgorithmTweak>();
                 s.AddSingleton<CpuCoreParkingTweak>();
                 s.AddSingleton<CortanaDisableTweak>();
                 s.AddSingleton<UltimatePerformanceTweak>();
                 s.AddSingleton<HibernationTweak>();
-                s.AddSingleton<NicPowerManagementTweak>();
                 s.AddSingleton<Func<IEnumerable<string>, PerAppGpuPreferenceTweak>>(sp =>
                     paths => new PerAppGpuPreferenceTweak(sp.GetRequiredService<IRegistryClient>(), paths));
 
@@ -125,39 +122,6 @@ public partial class App : Application
                     var registry = sp.GetRequiredService<IRegistryClient>();
                     var defs = RegistryTweakCatalog.LoadFromFile(RegistryTweakCatalog.DefaultPath());
                     return defs.Select(d => new RegistryTweak(d, registry)).ToList();
-                });
-
-                // Service-disable tweaks for the System category.
-                s.AddSingleton<IEnumerable<ServiceDisableTweak>>(sp =>
-                {
-                    var client = sp.GetRequiredService<IServiceClient>();
-                    return new[]
-                    {
-                        new ServiceDisableTweak(
-                            id: "core.sysmain-disable",
-                            displayName: "Disable Superfetch / SysMain",
-                            description: "Recommended for SSDs. Stops Windows pre-loading apps into memory.",
-                            category: "system",
-                            serviceName: "SysMain",
-                            riskNote: null,
-                            client: client),
-                        new ServiceDisableTweak(
-                            id: "core.search-indexing-tune",
-                            displayName: "Disable Windows Search indexing service",
-                            description: "Reduces background disk activity. Slows Start menu search.",
-                            category: "system",
-                            serviceName: "WSearch",
-                            riskNote: "Reduces Start menu search speed.",
-                            client: client),
-                        new ServiceDisableTweak(
-                            id: "core.connected-user-experiences",
-                            displayName: "Disable Connected User Experiences telemetry service",
-                            description: "Stops the DiagTrack-related Connected User Experiences and Telemetry service.",
-                            category: "system",
-                            serviceName: "DiagTrack",
-                            riskNote: null,
-                            client: client),
-                    };
                 });
 
                 // Bloatware
@@ -233,23 +197,19 @@ public partial class App : Application
                         sp.GetRequiredService<WindowsUpdateCacheTweak>(),
                         sp.GetRequiredService<DriverHealthCheckTweak>(),
                         sp.GetRequiredService<DriverStoreCleanupTweak>(),
-                        sp.GetRequiredService<SafeRegistryCleanupTweak>(),
                         sp.GetRequiredService<MouseAccelTweak>(),
                         sp.GetRequiredService<TimerResolutionTweak>(),
                         sp.GetRequiredService<GameModeTweak>(),
                         sp.GetRequiredService<HwGpuSchedulingTweak>(),
-                        sp.GetRequiredService<NagleAlgorithmTweak>(),
                         sp.GetRequiredService<CpuCoreParkingTweak>(),
                         sp.GetRequiredService<TelemetryDisableTweak>(),
                         sp.GetRequiredService<CortanaDisableTweak>(),
                         sp.GetRequiredService<UltimatePerformanceTweak>(),
                         sp.GetRequiredService<HibernationTweak>(),
-                        sp.GetRequiredService<NicPowerManagementTweak>(),
                         perAppFactory(gamePaths),
                     };
                     var catalog = sp.GetRequiredService<IReadOnlyList<RegistryTweak>>();
-                    var services = sp.GetRequiredService<IEnumerable<ServiceDisableTweak>>();
-                    return custom.Concat(catalog).Concat(services).ToArray();
+                    return custom.Concat(catalog).ToArray();
                 });
                 s.AddSingleton<OneClickOptimizer>();
 

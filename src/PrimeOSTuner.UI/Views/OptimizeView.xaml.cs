@@ -47,8 +47,7 @@ public partial class OptimizeView : UserControl
         || id == "core.dns-flush"
         || id == "core.windows-update-cache"
         || id == "core.driver-health"
-        || id == "core.driver-store-cleanup"
-        || id == "core.registry-cleanup-safe";
+        || id == "core.driver-store-cleanup";
 
     private void ChipClick(object sender, RoutedEventArgs e)
     {
