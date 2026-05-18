@@ -192,7 +192,6 @@ public partial class App : Application
                     var custom = new ITweak[]
                     {
                         sp.GetRequiredService<PowerPlanTweak>(),
-                        sp.GetRequiredService<RamCleanerTweak>(),
                         sp.GetRequiredService<DnsFlushTweak>(),
                         sp.GetRequiredService<WindowsUpdateCacheTweak>(),
                         sp.GetRequiredService<DriverHealthCheckTweak>(),
@@ -237,6 +236,7 @@ public partial class App : Application
                 s.AddTransient<Views.BloatwareView>();
                 s.AddSingleton<MemoryPriorityViewModel>();
                 s.AddTransient<Views.MemoryPriorityView>();
+                s.AddTransient<Views.MaintenanceView>();
 
                 s.AddSingleton<Services.TrayIconService>();
                 s.AddSingleton<MainWindow>();

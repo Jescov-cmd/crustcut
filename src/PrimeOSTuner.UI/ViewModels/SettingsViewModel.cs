@@ -1,4 +1,3 @@
-using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Win32;
 using PrimeOSTuner.Core.Monitoring;
@@ -14,7 +13,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private const string RunValueName = "PrimeOSTuner";
 
     private readonly AppSettingsStore _store;
-    private readonly RamCleanerTweak? _ramCleaner;
+    private readonly RamCleanerTweak _ramCleaner;
     private readonly SystemSampler _sampler;
     private readonly TrayIconService _tray;
     private readonly System.Timers.Timer _intervalTimer = new() { AutoReset = true };
@@ -36,12 +35,12 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
     public SettingsViewModel(
         AppSettingsStore store,
-        IEnumerable<ITweak> tweaks,
+        RamCleanerTweak ramCleaner,
         SystemSampler sampler,
         TrayIconService tray)
     {
         _store = store;
-        _ramCleaner = tweaks.OfType<RamCleanerTweak>().FirstOrDefault();
+        _ramCleaner = ramCleaner;
         _sampler = sampler;
         _tray = tray;
 
@@ -65,30 +64,24 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
     public async Task RunRamCleanupNowAsync()
     {
-        if (_ramCleaner is null)
-        {
-            RamStatusMessage = "RAM cleaner not registered.";
-            return;
-        }
         var result = await _ramCleaner.ApplyAsync();
         RamStatusMessage = result.Succeeded
-            ? $"RAM cleaned at {DateTime.Now:HH:mm:ss}."
+            ? $"Standby cache cleared at {DateTime.Now:HH:mm:ss}."
             : $"Failed: {result.Error}";
     }
 
     private async Task RunAutoRamCleanAsync()
     {
-        if (_ramCleaner is null) return;
         try
         {
             await _ramCleaner.ApplyAsync();
-            var stamp = $"Auto-cleaned at {DateTime.Now:HH:mm:ss}.";
+            var stamp = $"Standby cache auto-cleared at {DateTime.Now:HH:mm:ss}.";
             var dispatcher = System.Windows.Application.Current?.Dispatcher;
             Action update = () => RamStatusMessage = stamp;
             if (dispatcher is null || dispatcher.CheckAccess()) update();
             else dispatcher.Invoke(update);
 
-            if (NotificationsEnabled) _tray.ShowNotification("PrimeOS Tuner", "RAM auto-cleanup ran.");
+            if (NotificationsEnabled) _tray.ShowNotification("PrimeOS Tuner", "Standby cache cleared.");
         }
         catch { }
     }

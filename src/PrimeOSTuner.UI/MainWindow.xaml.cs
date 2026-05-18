@@ -43,6 +43,7 @@ public partial class MainWindow : Window
             ["GameLibrary"] = NavGameLibrary,
             ["Bloatware"]   = NavBloatware,
             ["MemoryPriority"] = NavMemoryPriority,
+            ["Maintenance"] = NavMaintenance,
             ["History"]     = NavHistory,
             ["Settings"]    = NavSettings,
         };
@@ -100,6 +101,7 @@ public partial class MainWindow : Window
             "GameLibrary"  => sp.GetRequiredService<GameLibraryView>(),
             "Bloatware"    => sp.GetRequiredService<BloatwareView>(),
             "MemoryPriority" => sp.GetRequiredService<MemoryPriorityView>(),
+            "Maintenance"  => sp.GetRequiredService<MaintenanceView>(),
             "History"      => sp.GetRequiredService<HistoryView>(),
             "Settings"     => sp.GetRequiredService<SettingsView>(),
             _ => new TextBlock
