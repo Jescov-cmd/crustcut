@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PrimeOSTuner.Core.Bloatware;
+using PrimeOSTuner.Core.Education;
 using PrimeOSTuner.Core.Games;
 using PrimeOSTuner.Core.History;
 using PrimeOSTuner.Core.Lifecycle;
@@ -237,6 +238,16 @@ public partial class App : Application
                 s.AddSingleton<MemoryPriorityViewModel>();
                 s.AddTransient<Views.MemoryPriorityView>();
                 s.AddTransient<Views.MaintenanceView>();
+
+                // Optimization 101 — educational guides
+                s.AddSingleton<IReadOnlyList<Guide>>(_ =>
+                {
+                    try { return GuideCatalog.LoadFromDirectory(GuideCatalog.DefaultDirectory()); }
+                    catch { return Array.Empty<Guide>(); }
+                });
+                s.AddSingleton(_ => new GuideCompletionStore(GuideCompletionStore.DefaultPath()));
+                s.AddSingleton<Optimization101ViewModel>();
+                s.AddTransient<Views.Optimization101View>();
 
                 s.AddSingleton<Services.TrayIconService>();
                 s.AddSingleton<MainWindow>();

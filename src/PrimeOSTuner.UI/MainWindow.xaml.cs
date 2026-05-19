@@ -44,6 +44,7 @@ public partial class MainWindow : Window
             ["Bloatware"]   = NavBloatware,
             ["MemoryPriority"] = NavMemoryPriority,
             ["Maintenance"] = NavMaintenance,
+            ["Optimization101"] = NavOptimization101,
             ["History"]     = NavHistory,
             ["Settings"]    = NavSettings,
         };
@@ -102,6 +103,7 @@ public partial class MainWindow : Window
             "Bloatware"    => sp.GetRequiredService<BloatwareView>(),
             "MemoryPriority" => sp.GetRequiredService<MemoryPriorityView>(),
             "Maintenance"  => sp.GetRequiredService<MaintenanceView>(),
+            "Optimization101" => sp.GetRequiredService<Optimization101View>(),
             "History"      => sp.GetRequiredService<HistoryView>(),
             "Settings"     => sp.GetRequiredService<SettingsView>(),
             _ => new TextBlock

@@ -181,6 +181,12 @@
                             <TextBlock Text="Maintenance" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+                    <Button x:Name="NavOptimization101" Tag="Optimization101" Click="NavButton_Click" Style="{StaticResource TopTab}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{StaticResource IconEducation}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <TextBlock Text="Guides" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                     <Button x:Name="NavHistory" Tag="History" Click="NavButton_Click" Style="{StaticResource TopTab}">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="{StaticResource IconHistory}" Width="20" Height="20" Margin="0,0,8,0"/>

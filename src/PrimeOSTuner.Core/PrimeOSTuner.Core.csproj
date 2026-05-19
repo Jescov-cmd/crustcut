@@ -29,4 +29,10 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Education\guides\*.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
