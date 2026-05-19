@@ -93,4 +93,19 @@ public class GuideCatalogTests
         }
         finally { Directory.Delete(dir, recursive: true); }
     }
+
+    [Fact]
+    public void Every_guide_that_ships_with_the_app_parses_cleanly()
+    {
+        var guides = GuideCatalog.LoadFromDirectory(GuideCatalog.DefaultDirectory());
+
+        guides.Should().NotBeEmpty();
+        guides.Select(g => g.Id).Should().Contain(new[]
+        {
+            "enable-resizable-bar", "enable-xmp-expo", "nvidia-control-panel",
+            "disable-nic-power-management", "clean-gpu-driver-install",
+            "update-motherboard-bios", "disable-visual-effects",
+            "low-latency-audio", "clean-pc-dust",
+        });
+    }
 }

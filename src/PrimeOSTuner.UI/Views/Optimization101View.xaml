@@ -165,6 +165,14 @@
                             </TextBlock>
 
                             <Border Margin="0,14,0,0" Padding="12,9" CornerRadius="6"
+                                    Background="#2BE5484D" BorderBrush="#80E5484D" BorderThickness="1"
+                                    Visibility="{Binding SelectedGuide.IsHighRisk, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock FontSize="12" FontWeight="SemiBold"
+                                           Foreground="#FFB3B5" TextWrapping="Wrap"
+                                           Text="High risk — a mistake here can stop your PC from booting or damage hardware. Read every step and all the warnings before you start."/>
+                            </Border>
+
+                            <Border Margin="0,14,0,0" Padding="12,9" CornerRadius="6"
                                     Background="#1F4DA3FF"
                                     Visibility="{Binding SelectedGuide.HasStateBadge, Converter={StaticResource BoolToVisibility}}">
                                 <TextBlock Text="{Binding SelectedGuide.StateBadge}" FontSize="12"

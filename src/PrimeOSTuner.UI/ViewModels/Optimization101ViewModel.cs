@@ -126,6 +126,7 @@ public partial class GuideTileViewModel : ObservableObject
     public string RiskLabel => $"{Guide.Risk} risk";
     public string EstimatedTime => Guide.EstimatedTime;
     public string Body => Guide.MarkdownBody;
+    public bool IsHighRisk => Guide.Risk == GuideRisk.High;
 
     public bool HasStateBadge => StateBadge.Length > 0;
     public string DoneLabel => IsCompleted ? "✓  Completed — click to undo" : "Mark as completed";
