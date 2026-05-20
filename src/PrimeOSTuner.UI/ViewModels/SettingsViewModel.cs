@@ -66,7 +66,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     {
         var result = await _ramCleaner.ApplyAsync();
         RamStatusMessage = result.Succeeded
-            ? $"Standby cache cleared at {DateTime.Now:HH:mm:ss}."
+            ? $"Working sets trimmed at {DateTime.Now:HH:mm:ss}."
             : $"Failed: {result.Error}";
     }
 
@@ -75,13 +75,13 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         try
         {
             await _ramCleaner.ApplyAsync();
-            var stamp = $"Standby cache auto-cleared at {DateTime.Now:HH:mm:ss}.";
+            var stamp = $"Working sets auto-trimmed at {DateTime.Now:HH:mm:ss}.";
             var dispatcher = System.Windows.Application.Current?.Dispatcher;
             Action update = () => RamStatusMessage = stamp;
             if (dispatcher is null || dispatcher.CheckAccess()) update();
             else dispatcher.Invoke(update);
 
-            if (NotificationsEnabled) _tray.ShowNotification("PrimeOS Tuner", "Standby cache cleared.");
+            if (NotificationsEnabled) _tray.ShowNotification("PrimeOS Tuner", "Working sets trimmed.");
         }
         catch { }
     }

@@ -9,8 +9,8 @@ public sealed class RamCleanerTweak : ITweak
     private readonly IRamCleanerProtectList _protectList;
 
     public string Id => "core.ram-cleaner";
-    public string DisplayName => "Force-clear standby cache";
-    public string Description => "Useful for memory-leaking games (some Unreal Engine titles). Modern Windows manages memory well — for most apps this is neutral or mildly counterproductive.";
+    public string DisplayName => "Trim process working sets";
+    public string Description => "Asks each user process to release memory pages it isn't actively using. Mostly helps memory-leaking games (some Unreal Engine titles); otherwise neutral or mildly counterproductive — modern Windows manages this on its own.";
     public bool RequiresElevation => false;
     public bool IsDestructive => false;
     public bool RequiresReboot => false;

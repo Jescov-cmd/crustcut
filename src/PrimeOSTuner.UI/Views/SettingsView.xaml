@@ -8,8 +8,8 @@
             <TextBlock Text="App behavior and automation"
                        Style="{StaticResource SubHeaderText}" Margin="0,0,0,24"/>
 
-            <!-- ===================================== Standby memory ===================================== -->
-            <TextBlock Text="STANDBY MEMORY" Style="{StaticResource SectionLabel}"/>
+            <!-- ===================================== Memory trim ===================================== -->
+            <TextBlock Text="MEMORY TRIM" Style="{StaticResource SectionLabel}"/>
             <Border Style="{StaticResource CardBorder}" Margin="0,0,0,18">
                 <StackPanel>
                     <!-- Auto on interval -->
@@ -19,8 +19,8 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Auto-clear on a timer" FontWeight="SemiBold" FontSize="14"/>
-                            <TextBlock Text="Force-clear the standby cache every N minutes. Mainly helps memory-leaking games; otherwise neutral."
+                            <TextBlock Text="Trim on a timer" FontWeight="SemiBold" FontSize="14"/>
+                            <TextBlock Text="Trim every N minutes. Asks each app to release idle memory pages; mainly helps memory-leaky games, otherwise neutral."
                                        Foreground="{StaticResource Text2Brush}" FontSize="12" Margin="0,2,0,0"/>
                         </StackPanel>
                         <ToggleButton Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}"
@@ -50,8 +50,8 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Auto-clear when memory is high" FontWeight="SemiBold" FontSize="14"/>
-                            <TextBlock Text="Force-clear the standby cache when RAM usage rises above a set percentage."
+                            <TextBlock Text="Trim when memory is high" FontWeight="SemiBold" FontSize="14"/>
+                            <TextBlock Text="Trim when RAM usage rises above a set percentage."
                                        Foreground="{StaticResource Text2Brush}" FontSize="12" Margin="0,2,0,0"/>
                         </StackPanel>
                         <ToggleButton Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}"
@@ -81,12 +81,12 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Clear standby cache now" FontWeight="SemiBold" FontSize="14"/>
+                            <TextBlock Text="Trim memory now" FontWeight="SemiBold" FontSize="14"/>
                             <TextBlock x:Name="RamStatus" Text="{Binding RamStatusMessage}"
                                        Foreground="{StaticResource Text3Brush}"
                                        FontSize="11" Margin="0,2,0,0"/>
                         </StackPanel>
-                        <Button Grid.Column="1" Content="Clear now" Click="OptimizeNowClick"
+                        <Button Grid.Column="1" Content="Trim now" Click="OptimizeNowClick"
                                 VerticalAlignment="Center"/>
                     </Grid>
                 </StackPanel>
