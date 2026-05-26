@@ -51,6 +51,7 @@ public static class BuiltInProfiles
             "core.snappy-ui",
             "core.widgets-disable",
             "core.ndu-disable",
+            "core.sticky-keys-shortcuts",
         });
 
     public static readonly ModeProfile Aggressive = new(

@@ -120,6 +120,19 @@ public partial class App : Application
                 s.AddSingleton<MmcssGamesPriorityTweak>();
                 s.AddSingleton<SnappyUiTweak>();
                 s.AddSingleton<WidgetsDisableTweak>();
+                s.AddSingleton<StickyKeysTweak>();
+                s.AddSingleton<VbsHvciTweak>();
+                s.AddSingleton<DefenderGameExclusionsTweak>(sp =>
+                {
+                    var registry = sp.GetRequiredService<GameRegistry>();
+                    return new DefenderGameExclusionsTweak(() =>
+                        registry.GetAllAsync().GetAwaiter().GetResult()
+                            .Select(g => g.InstallPath)
+                            .Where(p => !string.IsNullOrWhiteSpace(p))
+                            .Select(p => p!)
+                            .Distinct()
+                            .ToList());
+                });
                 s.AddSingleton<Func<IEnumerable<string>, PerAppGpuPreferenceTweak>>(sp =>
                     paths => new PerAppGpuPreferenceTweak(sp.GetRequiredService<IRegistryClient>(), paths));
 
@@ -223,6 +236,9 @@ public partial class App : Application
                         sp.GetRequiredService<MmcssGamesPriorityTweak>(),
                         sp.GetRequiredService<SnappyUiTweak>(),
                         sp.GetRequiredService<WidgetsDisableTweak>(),
+                        sp.GetRequiredService<StickyKeysTweak>(),
+                        sp.GetRequiredService<VbsHvciTweak>(),
+                        sp.GetRequiredService<DefenderGameExclusionsTweak>(),
                         perAppFactory(gamePaths),
                     };
                     var catalog = sp.GetRequiredService<IReadOnlyList<RegistryTweak>>();

@@ -66,6 +66,8 @@ public class BuiltInProfilesTests
             "core.ultimate-performance", "core.hibernation-disable",
             "core.visual-effects", "game.mmcss-games-priority",
             "core.snappy-ui", "core.widgets-disable",
+            "core.sticky-keys-shortcuts", "core.vbs-hvci-disable",
+            "core.defender-game-exclusions",
             // Registry catalog (must match tweaks.json)
             "core.win32-priority-separation", "core.startup-delay",
             "game.system-responsiveness",
