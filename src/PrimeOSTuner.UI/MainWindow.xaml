@@ -1,14 +1,24 @@
 <Window x:Class="PrimeOSTuner.UI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="PrimeOS Tuner"
         Height="780" Width="1240"
         MinWidth="640" MinHeight="480"
         WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="CanResize"
         Background="{StaticResource Bg0Brush}"
         FontFamily="Segoe UI Variable Text, Segoe UI"
         TextOptions.TextFormattingMode="Ideal"
         TextOptions.TextRenderingMode="ClearType">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="48"
+                            ResizeBorderThickness="6"
+                            CornerRadius="0"
+                            GlassFrameThickness="0"
+                            UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
     <Window.Resources>
         <!-- Top tab: transparent button with accent-gradient underline when active -->
         <Style x:Key="TopTab" TargetType="Button">
@@ -16,10 +26,10 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Foreground" Value="{StaticResource Text2Brush}"/>
             <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="14,10"/>
-            <Setter Property="Margin" Value="0,0,2,0"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="0,0,1,0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -30,7 +40,7 @@
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <Border x:Name="underline" Height="2" CornerRadius="1"
-                                    VerticalAlignment="Bottom" Margin="14,0"
+                                    VerticalAlignment="Bottom" Margin="10,0"
                                     Background="Transparent"/>
                         </Grid>
                         <ControlTemplate.Triggers>
@@ -58,7 +68,7 @@
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <Border Height="2" CornerRadius="1"
-                                    VerticalAlignment="Bottom" Margin="14,0"
+                                    VerticalAlignment="Bottom" Margin="10,0"
                                     Background="{StaticResource AccentGradientBrush}"/>
                         </Grid>
                     </ControlTemplate>
@@ -74,11 +84,12 @@
                 Background="{StaticResource Bg1Brush}"
                 BorderBrush="{StaticResource StrokeBrush}"
                 BorderThickness="0,0,0,1"
-                Padding="20,0">
+                Padding="20,0,0,0">
             <Grid Height="48">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
@@ -137,72 +148,82 @@
                                VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- Tabs (icon + label) -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                <!-- Tabs (icon + label) — horizontally scrollable, mouse-wheel scrolls left/right -->
+                <ScrollViewer Grid.Column="1"
+                              HorizontalScrollBarVisibility="Hidden"
+                              VerticalScrollBarVisibility="Disabled"
+                              VerticalAlignment="Bottom"
+                              Margin="0,0,12,0"
+                              shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                              PreviewMouseWheel="TabsScroll_PreviewMouseWheel">
+                <StackPanel Orientation="Horizontal">
                     <Button x:Name="NavDashboard" Tag="Dashboard" Click="NavButton_Click" Style="{StaticResource TopTabActive}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{StaticResource IconDashboard}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <Image Source="{StaticResource IconDashboard}" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="Dashboard" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="NavOptimize" Tag="Optimize" Click="NavButton_Click" Style="{StaticResource TopTab}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{StaticResource IconOptimize}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <Image Source="{StaticResource IconOptimize}" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="Optimize" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="NavGameBoost" Tag="GameBoost" Click="NavButton_Click" Style="{StaticResource TopTab}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{StaticResource IconGameBoost}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <Image Source="{StaticResource IconGameBoost}" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="Game Boost" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="NavGameLibrary" Tag="GameLibrary" Click="NavButton_Click" Style="{StaticResource TopTab}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{StaticResource IconGameLibrary}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <Image Source="{StaticResource IconGameLibrary}" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="Library" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="NavBloatware" Tag="Bloatware" Click="NavButton_Click" Style="{StaticResource TopTab}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{StaticResource IconBloatware}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <Image Source="{StaticResource IconBloatware}" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="Bloatware" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="NavMemoryPriority" Tag="MemoryPriority" Click="NavButton_Click" Style="{StaticResource TopTab}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{StaticResource IconMemoryPriority}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <Image Source="{StaticResource IconMemoryPriority}" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="Memory Priority" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="NavMaintenance" Tag="Maintenance" Click="NavButton_Click" Style="{StaticResource TopTab}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{StaticResource IconMaintenance}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <Image Source="{StaticResource IconMaintenance}" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="Maintenance" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="NavOptimization101" Tag="Optimization101" Click="NavButton_Click" Style="{StaticResource TopTab}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{StaticResource IconEducation}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <Image Source="{StaticResource IconEducation}" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="Guides" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="NavHistory" Tag="History" Click="NavButton_Click" Style="{StaticResource TopTab}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{StaticResource IconHistory}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <Image Source="{StaticResource IconHistory}" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="History" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="NavSettings" Tag="Settings" Click="NavButton_Click" Style="{StaticResource TopTab}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{StaticResource IconSettings}" Width="20" Height="20" Margin="0,0,8,0"/>
+                            <Image Source="{StaticResource IconSettings}" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="Settings" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
+                </ScrollViewer>
 
                 <!-- Watcher status + toggle -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                            Margin="0,0,16,0">
                     <Ellipse Width="8" Height="8" VerticalAlignment="Center" Margin="0,0,8,0">
                         <Ellipse.Style>
                             <Style TargetType="Ellipse">
@@ -223,6 +244,76 @@
                                   Style="{StaticResource ToggleSwitchStyle}"
                                   IsChecked="{Binding IsWatching, Mode=TwoWay}"
                                   VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Window buttons: minimize · maximize/restore · close -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Stretch"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button x:Name="MinBtn" Click="MinimizeClick"
+                            Width="46" Height="48"
+                            Background="Transparent" BorderThickness="0"
+                            Foreground="{StaticResource Text1Brush}" Cursor="Hand"
+                            ToolTip="Minimize">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bg" Background="{TemplateBinding Background}">
+                                    <Path Data="M 0,5 L 10,5" Stroke="{TemplateBinding Foreground}" StrokeThickness="1.4"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center" Width="10" Height="10"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bg" Property="Background" Value="#15FFFFFF"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <Button x:Name="MaxBtn" Click="MaxRestoreClick"
+                            Width="46" Height="48"
+                            Background="Transparent" BorderThickness="0"
+                            Foreground="{StaticResource Text1Brush}" Cursor="Hand"
+                            ToolTip="Maximize">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bg" Background="{TemplateBinding Background}">
+                                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="10" Height="10">
+                                        <Path x:Name="MaxIcon" Data="M 0,0 L 10,0 L 10,10 L 0,10 Z"
+                                              Stroke="{TemplateBinding Foreground}" StrokeThickness="1.2" Fill="Transparent"/>
+                                        <Path x:Name="RestoreIcon" Visibility="Collapsed"
+                                              Data="M 2,2 L 10,2 L 10,10 M 0,4 L 8,4 L 8,12 L 0,12 Z"
+                                              Stroke="{TemplateBinding Foreground}" StrokeThickness="1.2" Fill="Transparent"/>
+                                    </Grid>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bg" Property="Background" Value="#15FFFFFF"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <Button x:Name="CloseBtn" Click="CloseClick"
+                            Width="46" Height="48"
+                            Background="Transparent" BorderThickness="0"
+                            Foreground="{StaticResource Text1Brush}" Cursor="Hand"
+                            ToolTip="Close">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bg" Background="{TemplateBinding Background}">
+                                    <Path Data="M 0,0 L 10,10 M 10,0 L 0,10"
+                                          Stroke="{TemplateBinding Foreground}" StrokeThickness="1.4"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center" Width="10" Height="10"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bg" Property="Background" Value="#E81123"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>

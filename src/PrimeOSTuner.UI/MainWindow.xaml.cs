@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -34,6 +35,7 @@ public partial class MainWindow : Window
             parent.DataContext = watcherVm;
 
         Closing += OnClosing;
+        StateChanged += OnStateChanged;
 
         _tabs = new Dictionary<string, Button>
         {
@@ -79,6 +81,34 @@ public partial class MainWindow : Window
     private void NavButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button { Tag: string tab }) ShowTab(tab);
+    }
+
+    private void TabsScroll_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (sender is ScrollViewer sv)
+        {
+            sv.ScrollToHorizontalOffset(sv.HorizontalOffset - e.Delta);
+            e.Handled = true;
+        }
+    }
+
+    private void MinimizeClick(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void MaxRestoreClick(object sender, RoutedEventArgs e) =>
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+    private void CloseClick(object sender, RoutedEventArgs e) => Close();
+
+    private void OnStateChanged(object? sender, EventArgs e)
+    {
+        if (MaxBtn?.Template?.FindName("MaxIcon", MaxBtn) is System.Windows.Shapes.Path maxIcon &&
+            MaxBtn.Template.FindName("RestoreIcon", MaxBtn) is System.Windows.Shapes.Path restoreIcon)
+        {
+            var maximized = WindowState == WindowState.Maximized;
+            maxIcon.Visibility = maximized ? Visibility.Collapsed : Visibility.Visible;
+            restoreIcon.Visibility = maximized ? Visibility.Visible : Visibility.Collapsed;
+            MaxBtn.ToolTip = maximized ? "Restore" : "Maximize";
+        }
     }
 
     private void ShowTab(string tab)
