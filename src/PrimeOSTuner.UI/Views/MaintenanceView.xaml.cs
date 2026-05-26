@@ -20,6 +20,7 @@ public partial class MaintenanceView : UserControl
         "core.windows-update-cache",
         "core.driver-health",
         "core.driver-store-cleanup",
+        "core.shader-cache-cleanup",
     };
 
     private readonly TweakHistory _history;

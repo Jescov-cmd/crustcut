@@ -89,6 +89,7 @@ public partial class App : Application
                 s.AddSingleton<WindowsUpdateCacheTweak>();
                 s.AddSingleton<DriverHealthCheckTweak>();
                 s.AddSingleton<DriverStoreCleanupTweak>();
+                s.AddSingleton<ShaderCacheCleanupTweak>();
 
                 // Win-layer additions
                 s.AddSingleton<INetworkInterfaceClient, NetworkInterfaceClient>();
@@ -208,6 +209,7 @@ public partial class App : Application
                         sp.GetRequiredService<WindowsUpdateCacheTweak>(),
                         sp.GetRequiredService<DriverHealthCheckTweak>(),
                         sp.GetRequiredService<DriverStoreCleanupTweak>(),
+                        sp.GetRequiredService<ShaderCacheCleanupTweak>(),
                         sp.GetRequiredService<MouseAccelTweak>(),
                         sp.GetRequiredService<TimerResolutionTweak>(),
                         sp.GetRequiredService<GameModeTweak>(),
