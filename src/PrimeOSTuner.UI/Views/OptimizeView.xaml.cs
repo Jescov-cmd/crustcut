@@ -20,6 +20,7 @@ public partial class OptimizeView : UserControl
     private readonly List<TweakRowVm> _allRows;
     private readonly ObservableCollection<FilterChipVm> _chips = new();
     private string _activeKey = "all";
+    private string _searchText = "";
     private readonly HashSet<string> _pendingReboot = new();
 
     public OptimizeView(IEnumerable<ITweak> tweaks, TweakHistory history)
@@ -57,18 +58,40 @@ public partial class OptimizeView : UserControl
         Refilter();
     }
 
+    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        _searchText = SearchBox.Text?.Trim() ?? "";
+        if (ClearSearchBtn is not null)
+            ClearSearchBtn.Visibility = _searchText.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        Refilter();
+    }
+
+    private void ClearSearchClick(object sender, RoutedEventArgs e)
+    {
+        SearchBox.Text = "";
+        SearchBox.Focus();
+    }
+
     private void Refilter()
     {
-        var filtered = _activeKey == "all"
+        IEnumerable<TweakRowVm> filtered = _activeKey == "all"
             ? _allRows
-            : _allRows.Where(r => r.CategoryKey == _activeKey).ToList();
+            : _allRows.Where(r => r.CategoryKey == _activeKey);
+
+        if (_searchText.Length > 0)
+        {
+            filtered = filtered.Where(r =>
+                r.Tweak.DisplayName.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
+                || r.Tweak.Description.Contains(_searchText, StringComparison.OrdinalIgnoreCase));
+        }
+        var filteredList = filtered.ToList();
 
         // Standard = no reboot needed AND no risk note. Advanced = anything with either flag.
-        var standard = filtered
+        var standard = filteredList
             .Where(r => !r.HasRisk && !r.Tweak.RequiresReboot)
             .OrderBy(r => r.Tweak.DisplayName)
             .ToList();
-        var advanced = filtered
+        var advanced = filteredList
             .Where(r => r.HasRisk || r.Tweak.RequiresReboot)
             .OrderBy(r => r.HasRisk ? 1 : 0)             // reboot-only first
             .ThenBy(r => r.Tweak.DisplayName)

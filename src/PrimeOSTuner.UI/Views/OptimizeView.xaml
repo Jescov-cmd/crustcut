@@ -193,6 +193,54 @@
                 </Grid>
             </Border>
 
+            <!-- Search box -->
+            <Border CornerRadius="8" Background="{StaticResource Bg2Brush}"
+                    BorderBrush="{StaticResource StrokeBrush}" BorderThickness="1"
+                    Padding="12,6" Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Path Grid.Column="0" VerticalAlignment="Center" Width="14" Height="14"
+                          Stretch="Uniform"
+                          Stroke="{StaticResource Text3Brush}" StrokeThickness="1.6"
+                          Data="M 10 10 m -6 0 a 6 6 0 1 0 12 0 a 6 6 0 1 0 -12 0 M 14 14 L 18 18"/>
+                    <TextBox x:Name="SearchBox" Grid.Column="1"
+                             Background="Transparent" BorderThickness="0"
+                             Foreground="{StaticResource Text0Brush}"
+                             CaretBrush="{StaticResource AccentBrush}"
+                             FontSize="13" VerticalAlignment="Center"
+                             Margin="10,0,0,0"
+                             TextChanged="SearchBox_TextChanged"/>
+                    <TextBlock Grid.Column="1" IsHitTestVisible="False"
+                               Text="Search tweaks…"
+                               Foreground="{StaticResource Text4Brush}"
+                               FontSize="13" VerticalAlignment="Center"
+                               Margin="10,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <Button Grid.Column="2" x:Name="ClearSearchBtn"
+                            Content="×" Width="22" Height="22"
+                            Padding="0" FontSize="16" FontWeight="Bold"
+                            Background="Transparent" BorderThickness="0"
+                            Foreground="{StaticResource Text3Brush}" Cursor="Hand"
+                            VerticalAlignment="Center"
+                            Click="ClearSearchClick"
+                            Visibility="Collapsed"/>
+                </Grid>
+            </Border>
+
             <!-- Filter chips -->
             <ItemsControl x:Name="FilterChips" Margin="0,0,0,18">
                 <ItemsControl.ItemsPanel>
