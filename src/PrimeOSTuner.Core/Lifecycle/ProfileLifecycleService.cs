@@ -1,5 +1,6 @@
 using PrimeOSTuner.Core.Games;
 using PrimeOSTuner.Core.Profiles;
+using PrimeOSTuner.Win.Suspension;
 
 namespace PrimeOSTuner.Core.Lifecycle;
 
@@ -10,19 +11,22 @@ public sealed class ProfileLifecycleService
     private readonly ActiveTweaksStore _active;
     private readonly IReadOnlyDictionary<string, ModeProfile> _profileLookup;
     private readonly ProfileApplier _applier;
+    private readonly IBackgroundSuspenderService? _suspender;
 
     public ProfileLifecycleService(
         IGameProcessWatcher watcher,
         GameProfileStore profiles,
         ActiveTweaksStore active,
         IReadOnlyDictionary<string, ModeProfile> profileLookup,
-        ProfileApplier applier)
+        ProfileApplier applier,
+        IBackgroundSuspenderService? suspender = null)
     {
         _watcher = watcher;
         _profiles = profiles;
         _active = active;
         _profileLookup = profileLookup;
         _applier = applier;
+        _suspender = suspender;
     }
 
     public void Start()
@@ -59,6 +63,9 @@ public sealed class ProfileLifecycleService
             var result = await _applier.ApplyAsync(profile);
             await _active.SaveAsync(new ActiveTweaksRecord(
                 game.Id, profile.Id, DateTime.UtcNow, result.Outcomes));
+
+            try { _suspender?.SuspendBackgroundApps(); }
+            catch { /* freezing optional apps must never break a game launch */ }
         }
         catch
         {
@@ -69,6 +76,9 @@ public sealed class ProfileLifecycleService
     {
         try
         {
+            try { _suspender?.ResumeAll(); }
+            catch { /* never trap a stopped game in a frozen-app state */ }
+
             var record = await _active.LoadAsync();
             if (record is null || record.GameId != e.Game.Id) return;
 

@@ -15,6 +15,7 @@ using PrimeOSTuner.Win;
 using PrimeOSTuner.Win.Network;
 using PrimeOSTuner.Win.Steam;
 using PrimeOSTuner.Win.SteamGridDb;
+using PrimeOSTuner.Win.Suspension;
 using Serilog;
 using System.IO;
 using System.Net.Http;
@@ -158,6 +159,11 @@ public partial class App : Application
                 s.AddSingleton<GameRegistry>();
                 s.AddSingleton(_ => new GameProfileStore(GameProfileStore.DefaultPath()));
 
+                // Background suspender (foundation in Win.Suspension)
+                s.AddSingleton<IProcessSuspender, NtProcessSuspender>();
+                s.AddSingleton<IBackgroundSuspenderService>(sp =>
+                    new BackgroundSuspenderService(sp.GetRequiredService<IProcessSuspender>()));
+
                 // Lifecycle
                 s.AddSingleton<IGameProcessWatcher>(sp =>
                 {
@@ -183,7 +189,8 @@ public partial class App : Application
                         sp.GetRequiredService<GameProfileStore>(),
                         sp.GetRequiredService<ActiveTweaksStore>(),
                         dict,
-                        sp.GetRequiredService<ProfileApplier>());
+                        sp.GetRequiredService<ProfileApplier>(),
+                        sp.GetRequiredService<IBackgroundSuspenderService>());
                 });
 
                 s.AddSingleton<IEnumerable<ITweak>>(sp =>

@@ -225,6 +225,33 @@
                            FontSize="13" TextWrapping="Wrap"/>
             </Border>
 
+            <TextBlock Text="SUSPENDED WHILE GAMING" Style="{StaticResource SectionLabel}"/>
+            <Border Style="{StaticResource CardBorder}" Margin="0,0,0,18">
+                <StackPanel>
+                    <TextBlock TextWrapping="Wrap"
+                               Foreground="{StaticResource Text2Brush}"
+                               FontSize="12" Margin="0,0,0,8">
+                        When a game from your Library launches, these background apps are frozen (their processes are paused, not killed) and resumed when the game exits. Steam and browsers are deliberately excluded.
+                    </TextBlock>
+                    <ItemsControl ItemsSource="{Binding SuspendedApps}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Name}"
+                                               FontSize="13" Foreground="{StaticResource Text0Brush}"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Pid, StringFormat='PID {0}'}"
+                                               FontSize="11" Foreground="{StaticResource Text3Brush}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
             <TextBlock Foreground="{StaticResource Text3Brush}"
                        FontSize="12" TextWrapping="Wrap">
                 Tip: To attach a profile to a specific game so it auto-applies on launch, go to the Library tab and pick a profile from the dropdown on each game tile.
