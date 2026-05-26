@@ -64,6 +64,8 @@ public class BuiltInProfilesTests
             "game.per-app-gpu-pref",
             "core.telemetry-disable", "core.cortana-disable",
             "core.ultimate-performance", "core.hibernation-disable",
+            "core.visual-effects", "game.mmcss-games-priority",
+            "core.snappy-ui", "core.widgets-disable",
             // Registry catalog (must match tweaks.json)
             "core.win32-priority-separation", "core.startup-delay",
             "game.system-responsiveness",
@@ -74,6 +76,7 @@ public class BuiltInProfilesTests
             "core.feedback-diagnostics", "core.typing-personalization",
             "core.usb-selective-suspend", "core.pcie-aspm-disable",
             "core.power-throttling-disable", "core.modern-standby-disable",
+            "core.ndu-disable",
         };
 
         foreach (var profile in new[] { BuiltInProfiles.Basic, BuiltInProfiles.Performance, BuiltInProfiles.Aggressive })

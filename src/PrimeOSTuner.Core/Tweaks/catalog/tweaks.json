@@ -223,6 +223,20 @@
       "valueKind": "DWord",
       "appliedData": "0",
       "riskNote": "May affect resume-from-sleep behavior on some laptops."
+    },
+    {
+      "id": "core.ndu-disable",
+      "displayName": "Disable Network Data Usage driver (Ndu.sys)",
+      "description": "Stops the NDU driver from holding non-paged pool. Helps on large-RAM systems where Task Manager shows the 'Non-paged' memory category creeping up.",
+      "category": "system",
+      "requiresElevation": true,
+      "requiresReboot": true,
+      "hive": "LocalMachine",
+      "key": "SYSTEM\\CurrentControlSet\\Services\\Ndu",
+      "valueName": "Start",
+      "valueKind": "DWord",
+      "appliedData": "4",
+      "riskNote": null
     }
   ]
 }

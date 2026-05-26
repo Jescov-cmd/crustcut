@@ -46,6 +46,11 @@ public static class BuiltInProfiles
             "core.usb-selective-suspend",
             "core.power-throttling-disable",
             "core.ultimate-performance",
+            "core.visual-effects",
+            "game.mmcss-games-priority",
+            "core.snappy-ui",
+            "core.widgets-disable",
+            "core.ndu-disable",
         });
 
     public static readonly ModeProfile Aggressive = new(
