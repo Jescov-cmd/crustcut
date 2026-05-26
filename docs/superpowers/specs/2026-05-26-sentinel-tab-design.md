@@ -1,6 +1,6 @@
 # Sentinel — passive performance watcher
 
-**Status:** draft — awaiting user review
+**Status:** approved — ready for implementation plan
 **Date:** 2026-05-26
 **Author:** Claude (working under PrimeOS Tuner v0.4 honest-optimization rules)
 
@@ -235,16 +235,16 @@ Cancellation: the loop respects a `CancellationTokenSource` owned by
 `SentinelService`. When the service is disposed (app shutdown), the loop
 exits cleanly.
 
-## Open questions for user review
+## Decisions (resolved 2026-05-26)
 
-1. Name confirmation: **Sentinel** or **Eagle Eye**?
-2. Should the master Enabled toggle default ON or OFF on first launch?
-   (Recommend ON — feature is invisible until something is wrong.)
-3. Should the red dot clear when the user opens the tab (Recommended), or
-   stay visible until the problem clears?
-4. Should the Recent Alerts list persist across app restarts, or only the
-   current session? (Recommend current session — Sentinel is "what's
-   happening right now," not a history tool. History tab handles history.)
+1. **Name:** Sentinel.
+2. **Master Enabled toggle:** defaults ON on first launch. Feature is
+   invisible until something is wrong, so default-on is non-intrusive.
+3. **Red dot:** clears when the user opens the Sentinel tab (treated as
+   "acknowledged"), regardless of whether the underlying problem is still
+   active. The in-tab rows continue to show the live state.
+4. **Recent Alerts:** session-only — cleared on app restart. Long-term
+   history is the History tab's job, not Sentinel's.
 
 ## Out of scope for v1, candidates for v2
 
