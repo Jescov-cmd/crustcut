@@ -163,6 +163,24 @@
                                       IsChecked="{Binding NotificationsEnabled, Mode=TwoWay}"
                                       VerticalAlignment="Center"/>
                     </Grid>
+
+                    <Border Background="{StaticResource StrokeBrush}" Height="1" Margin="0,16,0,16"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Sentinel (performance watcher)" FontWeight="SemiBold" FontSize="14"/>
+                            <TextBlock Text="Compares the running game's live resource use to its Steam spec. Surfaces a subtle red dot on the Sentinel tab when something looks wrong."
+                                       Foreground="{StaticResource Text2Brush}" FontSize="12"
+                                       TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <ToggleButton Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}"
+                                      IsChecked="{Binding SentinelEnabled, Mode=TwoWay}"
+                                      VerticalAlignment="Center"/>
+                    </Grid>
                 </StackPanel>
             </Border>
 

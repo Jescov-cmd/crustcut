@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Win32;
 using PrimeOSTuner.Core.Monitoring;
+using PrimeOSTuner.Core.Sentinel;
 using PrimeOSTuner.Core.Settings;
 using PrimeOSTuner.Core.Tweaks;
 using PrimeOSTuner.UI.Services;
@@ -16,6 +17,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private readonly RamCleanerTweak _ramCleaner;
     private readonly SystemSampler _sampler;
     private readonly TrayIconService _tray;
+    private readonly ISentinelService _sentinel;
     private readonly System.Timers.Timer _intervalTimer = new() { AutoReset = true };
     private bool _suspendSave;
     private double _lastRamPercent;
@@ -30,6 +32,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _startMinimized;
     [ObservableProperty] private bool _minimizeToTrayOnClose;
     [ObservableProperty] private bool _notificationsEnabled = true;
+    [ObservableProperty] private bool _sentinelEnabled = true;
 
     [ObservableProperty] private string _ramStatusMessage = "";
 
@@ -37,12 +40,14 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         AppSettingsStore store,
         RamCleanerTweak ramCleaner,
         SystemSampler sampler,
-        TrayIconService tray)
+        TrayIconService tray,
+        ISentinelService sentinel)
     {
         _store = store;
         _ramCleaner = ramCleaner;
         _sampler = sampler;
         _tray = tray;
+        _sentinel = sentinel;
 
         var loaded = store.Load();
         _suspendSave = true;
@@ -54,6 +59,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         StartMinimized = loaded.StartMinimized;
         MinimizeToTrayOnClose = loaded.MinimizeToTrayOnClose;
         NotificationsEnabled = loaded.NotificationsEnabled;
+        SentinelEnabled = loaded.SentinelEnabled;
         _suspendSave = false;
 
         _intervalTimer.Elapsed += async (_, _) => await RunAutoRamCleanAsync();
@@ -146,6 +152,11 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     partial void OnStartMinimizedChanged(bool value) => SaveIfNeeded();
     partial void OnMinimizeToTrayOnCloseChanged(bool value) => SaveIfNeeded();
     partial void OnNotificationsEnabledChanged(bool value) => SaveIfNeeded();
+    partial void OnSentinelEnabledChanged(bool value)
+    {
+        SaveIfNeeded();
+        _sentinel.Enabled = value;
+    }
 
     private void SaveIfNeeded()
     {
@@ -160,6 +171,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             StartMinimized = StartMinimized,
             MinimizeToTrayOnClose = MinimizeToTrayOnClose,
             NotificationsEnabled = NotificationsEnabled,
+            SentinelEnabled = SentinelEnabled,
         });
     }
 

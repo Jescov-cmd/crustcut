@@ -9,6 +9,7 @@ using PrimeOSTuner.Core.Memory;
 using PrimeOSTuner.Core.Monitoring;
 using PrimeOSTuner.Core.Pipeline;
 using PrimeOSTuner.Core.Profiles;
+using PrimeOSTuner.Core.Sentinel;
 using PrimeOSTuner.Core.Tweaks;
 using PrimeOSTuner.UI.ViewModels;
 using PrimeOSTuner.Win;
@@ -178,6 +179,20 @@ public partial class App : Application
                 s.AddSingleton<IBackgroundSuspenderService>(sp =>
                     new BackgroundSuspenderService(sp.GetRequiredService<IProcessSuspender>()));
 
+                // Sentinel — passive performance watcher
+                s.AddSingleton<IMetricsSampler>(_ => new GpuPerfCounterMetricsSampler());
+                s.AddHttpClient<ISpecFetcher, SteamSpecFetcher>(c =>
+                {
+                    c.BaseAddress = new Uri("https://store.steampowered.com");
+                    c.Timeout = TimeSpan.FromSeconds(15);
+                });
+                s.AddSingleton<ISentinelService>(sp =>
+                    new SentinelService(
+                        sp.GetRequiredService<ISpecFetcher>(),
+                        sp.GetRequiredService<IMetricsSampler>()));
+                s.AddSingleton<SentinelViewModel>();
+                s.AddTransient<Views.SentinelView>();
+
                 // Lifecycle
                 s.AddSingleton<IGameProcessWatcher>(sp =>
                 {
@@ -204,7 +219,8 @@ public partial class App : Application
                         sp.GetRequiredService<ActiveTweaksStore>(),
                         dict,
                         sp.GetRequiredService<ProfileApplier>(),
-                        sp.GetRequiredService<IBackgroundSuspenderService>());
+                        sp.GetRequiredService<IBackgroundSuspenderService>(),
+                        sp.GetRequiredService<ISentinelService>());
                 });
 
                 s.AddSingleton<IEnumerable<ITweak>>(sp =>
@@ -303,6 +319,8 @@ public partial class App : Application
         var tray = Host.Services.GetRequiredService<Services.TrayIconService>();
         var window = Host.Services.GetRequiredService<MainWindow>();
         var settings = Host.Services.GetRequiredService<SettingsViewModel>();
+        var sentinelSvc = Host.Services.GetRequiredService<ISentinelService>();
+        sentinelSvc.Enabled = settings.SentinelEnabled;
 
         tray.ShowRequested += (_, _) =>
         {
