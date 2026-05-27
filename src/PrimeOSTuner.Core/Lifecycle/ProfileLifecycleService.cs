@@ -1,4 +1,5 @@
 using PrimeOSTuner.Core.Games;
+using PrimeOSTuner.Core.Performance;
 using PrimeOSTuner.Core.Profiles;
 using PrimeOSTuner.Core.Sentinel;
 using PrimeOSTuner.Win.Suspension;
@@ -14,6 +15,7 @@ public sealed class ProfileLifecycleService
     private readonly ProfileApplier _applier;
     private readonly IBackgroundSuspenderService? _suspender;
     private readonly ISentinelService? _sentinel;
+    private readonly FrameRecordingService? _recorder;
 
     private readonly object _stateGate = new();
     private KnownGame? _currentGame;
@@ -43,7 +45,8 @@ public sealed class ProfileLifecycleService
         IReadOnlyDictionary<string, ModeProfile> profileLookup,
         ProfileApplier applier,
         IBackgroundSuspenderService? suspender = null,
-        ISentinelService? sentinel = null)
+        ISentinelService? sentinel = null,
+        FrameRecordingService? recorder = null)
     {
         _watcher = watcher;
         _profiles = profiles;
@@ -52,6 +55,7 @@ public sealed class ProfileLifecycleService
         _applier = applier;
         _suspender = suspender;
         _sentinel = sentinel;
+        _recorder = recorder;
     }
 
     public void Start()
@@ -97,6 +101,9 @@ public sealed class ProfileLifecycleService
 
             try { _sentinel?.OnGameStarted(game, pid); }
             catch { /* Sentinel must never break a game launch */ }
+
+            try { _recorder?.OnGameStarted(game, pid); }
+            catch { /* recording must never break a game launch */ }
         }
         catch
         {
@@ -111,6 +118,9 @@ public sealed class ProfileLifecycleService
 
             try { _sentinel?.OnGameStopped(); }
             catch { /* never trap on Sentinel teardown */ }
+
+            try { if (_recorder is not null) await _recorder.OnGameStoppedAsync(); }
+            catch { /* recording must never break game-exit teardown */ }
 
             try { _suspender?.ResumeAll(); }
             catch { /* never trap a stopped game in a frozen-app state */ }
