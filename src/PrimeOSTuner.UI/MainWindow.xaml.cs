@@ -22,13 +22,15 @@ public partial class MainWindow : Window
 
     private readonly ShellViewModel _shellVm;
     private readonly SettingsViewModel _settingsVm;
+    private readonly SentinelViewModel _sentinelVm;
     private Dictionary<string, Button>? _tabs;
 
-    public MainWindow(ShellViewModel vm, WatcherStatusViewModel watcherVm, SettingsViewModel settingsVm)
+    public MainWindow(ShellViewModel vm, WatcherStatusViewModel watcherVm, SettingsViewModel settingsVm, SentinelViewModel sentinelVm)
     {
         InitializeComponent();
         _shellVm = vm;
         _settingsVm = settingsVm;
+        _sentinelVm = sentinelVm;
         DataContext = vm;
         var watcher = (FrameworkElement)FindName("WatcherStatusText");
         if (watcher?.Parent is FrameworkElement parent)
@@ -48,8 +50,11 @@ public partial class MainWindow : Window
             ["Maintenance"] = NavMaintenance,
             ["Optimization101"] = NavOptimization101,
             ["History"]     = NavHistory,
+            ["Sentinel"]    = NavSentinel,
             ["Settings"]    = NavSettings,
         };
+
+        SentinelDot.DataContext = _sentinelVm;
 
         ShowTab("Dashboard");
     }
@@ -135,6 +140,7 @@ public partial class MainWindow : Window
             "Maintenance"  => sp.GetRequiredService<MaintenanceView>(),
             "Optimization101" => sp.GetRequiredService<Optimization101View>(),
             "History"      => sp.GetRequiredService<HistoryView>(),
+            "Sentinel"     => sp.GetRequiredService<SentinelView>(),
             "Settings"     => sp.GetRequiredService<SettingsView>(),
             _ => new TextBlock
             {

@@ -211,6 +211,22 @@
                             <TextBlock Text="History" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+                    <Button x:Name="NavSentinel" Tag="Sentinel" Click="NavButton_Click" Style="{StaticResource TopTab}">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="{StaticResource IconSentinel}" Width="16" Height="16" Margin="0,0,6,0"/>
+                                <TextBlock Text="Sentinel" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Ellipse x:Name="SentinelDot" Width="6" Height="6" Fill="#FF6A6A"
+                                     HorizontalAlignment="Right" VerticalAlignment="Top"
+                                     Margin="0,4,-2,0"
+                                     Visibility="{Binding HasActiveProblem, Converter={StaticResource BoolToVisibility}}">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="#FF6A6A" ShadowDepth="0" BlurRadius="6" Opacity="0.85"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                        </Grid>
+                    </Button>
                     <Button x:Name="NavSettings" Tag="Settings" Click="NavButton_Click" Style="{StaticResource TopTab}">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="{StaticResource IconSettings}" Width="16" Height="16" Margin="0,0,6,0"/>
