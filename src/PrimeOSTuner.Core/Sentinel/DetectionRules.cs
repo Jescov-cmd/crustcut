@@ -25,7 +25,7 @@ public static class DetectionRules
     public static IReadOnlyList<Problem> Evaluate(
         MetricsSnapshot snap,
         SteamPcRequirements spec,
-        Queue<(DateTime At, double Percent)> rollingCpuWindow)
+        IEnumerable<(DateTime At, double Percent)> rollingCpuWindow)
     {
         var problems = new List<Problem>();
 
@@ -82,15 +82,15 @@ public static class DetectionRules
 
     private static bool TryCpuSaturated(
         MetricsSnapshot snap,
-        Queue<(DateTime At, double Percent)> window,
+        IEnumerable<(DateTime At, double Percent)> window,
         out Problem? p)
     {
         p = null;
         if (snap.SystemCpuPercent < 0) return false;
-        if (window.Count == 0) return false;
+        if (!window.Any()) return false;
 
         // Need a full 30s of history.
-        var span = snap.At - window.Peek().At;
+        var span = snap.At - window.First().At;
         if (span < CpuWindow) return false;
 
         // Every sample in the window AND the current snapshot must exceed the watermark.
