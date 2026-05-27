@@ -119,6 +119,87 @@
             <TextBlock x:Name="OptimizeStatus"
                        Foreground="{StaticResource Text3Brush}"
                        FontSize="11" Margin="0,12,0,0"/>
+
+            <!-- PERFORMANCE — recent frame-time recordings -->
+            <TextBlock Text="PERFORMANCE"
+                       Style="{StaticResource SectionLabel}"
+                       Margin="0,24,0,8"/>
+            <TextBlock Text="Recent gaming sessions captured by PresentMon. Apply a tweak, play again, compare the cards."
+                       Foreground="{StaticResource Text3Brush}"
+                       FontSize="11" Margin="0,0,0,12"
+                       TextWrapping="Wrap"/>
+
+            <!-- Empty state -->
+            <TextBlock Text="No game sessions recorded yet — launch a game from your Library."
+                       Foreground="{StaticResource Text3Brush}"
+                       FontStyle="Italic" FontSize="12">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding RecentSessions.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <ItemsControl ItemsSource="{Binding RecentSessions}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource CardBorder}"
+                                Width="220" Height="120" Margin="0,0,12,12">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0"
+                                           Text="{Binding GameName}"
+                                           FontWeight="SemiBold" FontSize="13"
+                                           Foreground="{StaticResource Text0Brush}"
+                                           TextTrimming="CharacterEllipsis"/>
+
+                                <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,4">
+                                    <TextBlock Text="{Binding AvgFpsDisplay}"
+                                               FontFamily="Segoe UI Variable Display, Segoe UI"
+                                               FontSize="22" FontWeight="Bold"
+                                               Foreground="{StaticResource AccentBrush}"/>
+                                    <TextBlock Text="{Binding OnePctLowDisplay}"
+                                               Foreground="{StaticResource Text2Brush}"
+                                               FontSize="11"/>
+                                    <TextBlock Text="{Binding ZeroPointOnePctDisplay}"
+                                               Foreground="{StaticResource Text3Brush}"
+                                               FontSize="11"/>
+                                </StackPanel>
+
+                                <Grid Grid.Row="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding StartedAtDisplay}"
+                                               Foreground="{StaticResource Text3Brush}"
+                                               FontSize="10"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding DurationDisplay}"
+                                               Foreground="{StaticResource Text3Brush}"
+                                               FontSize="10"/>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </StackPanel>
     </ScrollViewer>
 </UserControl>
