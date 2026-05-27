@@ -43,4 +43,10 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Fixtures\presentmon\*.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

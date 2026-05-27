@@ -1,0 +1,4 @@
+Application,ProcessID,SwapChainAddress,Runtime,SyncInterval,PresentFlags,AllowsTearing,PresentMode,Dropped,TimeInSeconds,msBetweenPresents,msBetweenDisplayChange,msInPresentAPI,msUntilRenderComplete,msUntilDisplayed
+game.exe,1234,0x1,DXGI,0,0,0,Hardware,0,1.000,0.0,16.7,0.5,8.2,16.7
+game.exe,1234,0x1,DXGI,0,0,0,Hardware,0,1.017,16.7,16.7,0.5,8.2,16.7
+game.exe,1234,0x1,DXGI,0,0,0,Hardware,0,1.034,0.0,16.7,0.5,8.2,16.7
