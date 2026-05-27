@@ -9,7 +9,7 @@ public sealed class PowerPlanTweak : ITweak
 
     public string Id => "core.power-plan";
     public string DisplayName => "Use the fastest power plan";
-    public string Description => "Tells Windows to prioritize speed over battery.";
+    public string Description => "Switches to the High Performance power plan. CPU stays near base clock instead of throttling down at idle; on laptops this also means warmer and louder.";
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
     public bool RequiresReboot => false;

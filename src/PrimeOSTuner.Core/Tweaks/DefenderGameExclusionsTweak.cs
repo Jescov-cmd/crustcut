@@ -19,7 +19,7 @@ public sealed class DefenderGameExclusionsTweak : ITweak
 
     public string Id => "core.defender-game-exclusions";
     public string DisplayName => "Exclude games from Defender";
-    public string Description => "Adds every game's install folder to Windows Defender exclusions. Real IO win for disk-bound loading screens.";
+    public string Description => "Adds every game's install folder to Windows Defender exclusions. Reduces real-time scan overhead on disk-bound loading screens. Defender still scans everything outside game folders.";
     public bool RequiresElevation => true;
     public bool IsDestructive => true;   // weakens AV scope — opt-in only
     public bool RequiresReboot => false;

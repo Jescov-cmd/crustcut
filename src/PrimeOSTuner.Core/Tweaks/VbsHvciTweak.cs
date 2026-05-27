@@ -10,7 +10,7 @@ namespace PrimeOSTuner.Core.Tweaks;
 /// enabled by default, but it IS a security feature — so this is marked
 /// destructive (opt-in only, never part of a one-click profile).
 /// </summary>
-public sealed class VbsHvciTweak : ITweak
+public sealed class VbsHvciTweak : ITweak, ICategorizedTweak
 {
     private const string DeviceGuardKey = @"SYSTEM\CurrentControlSet\Control\DeviceGuard";
     private const string HvciKey = @"SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity";
@@ -19,10 +19,13 @@ public sealed class VbsHvciTweak : ITweak
 
     public string Id => "core.vbs-hvci-disable";
     public string DisplayName => "Disable VBS / Memory Integrity";
-    public string Description => "Turns off Virtualization-Based Security and HVCI. 5–15% FPS win on Win11 — but this is a security feature. Reboot required.";
+    public string Description => "Turns off Virtualization-Based Security and HVCI. 5–15% FPS win on Win11 — but kernel-level anti-cheats (Valorant's Vanguard, others) require it ON and will refuse to launch. Reboot required.";
     public bool RequiresElevation => true;
     public bool IsDestructive => true;   // security disable — opt-in only
     public bool RequiresReboot => true;
+
+    public string Category => "system";
+    public string? RiskNote => "Will block Valorant (Vanguard) and other kernel-level anti-cheats from launching. Re-enable in Windows Security → Device Security if you switch to a game that needs it.";
 
     public VbsHvciTweak(IRegistryClient registry) { _registry = registry; }
 

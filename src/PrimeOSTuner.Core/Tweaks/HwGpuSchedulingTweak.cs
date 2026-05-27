@@ -13,7 +13,7 @@ public sealed class HwGpuSchedulingTweak : ITweak
 
     public string Id => "game.hw-gpu-scheduling";
     public string DisplayName => "Hardware GPU scheduling";
-    public string Description => "Reduces CPU overhead. Reboot required.";
+    public string Description => "Moves GPU command scheduling off the CPU and onto the GPU. Helps on most modern NVIDIA / AMD cards; rarely hurts on older drivers — try it, reboot, and check Sentinel's CPU row. Reboot required.";
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
     public bool RequiresReboot => true;

@@ -12,7 +12,7 @@ public sealed class CpuCoreParkingTweak : ITweak
 
     public string Id => "game.cpu-core-parking";
     public string DisplayName => "Disable CPU core parking";
-    public string Description => "Keeps every core ready instead of parked.";
+    public string Description => "Stops Windows from parking idle CPU cores. Marginal on modern systems under load (Windows already unparks for games); occasionally helps with sub-1ms wake latency on bursty workloads.";
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
     public bool RequiresReboot => true;

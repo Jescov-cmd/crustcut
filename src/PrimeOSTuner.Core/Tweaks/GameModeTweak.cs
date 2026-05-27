@@ -13,7 +13,7 @@ public sealed class GameModeTweak : ITweak
 
     public string Id => "game.game-mode";
     public string DisplayName => "Turn on Game Mode";
-    public string Description => "Lets Windows prioritize games automatically.";
+    public string Description => "Enables Windows Game Mode. Suppresses background notifications, pauses driver updates, and reserves CPU/GPU for the active fullscreen game.";
     public bool RequiresElevation => false;
     public bool IsDestructive => false;
     public bool RequiresReboot => false;
