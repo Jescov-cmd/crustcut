@@ -11,30 +11,27 @@ public partial class GameCard : UserControl
     public GameCard()
     {
         InitializeComponent();
-        DataContextChanged += (_, _) => SyncCombo();
+        DataContextChanged += (_, _) => SyncPills();
     }
 
-    private void SyncCombo()
-    {
-        if (DataContext is GameTileViewModel vm)
-        {
-            for (int i = 0; i < ProfileCombo.Items.Count; i++)
-            {
-                if (((ComboBoxItem)ProfileCombo.Items[i]).Content?.ToString() == vm.AssignedMode)
-                {
-                    ProfileCombo.SelectedIndex = i;
-                    return;
-                }
-            }
-            ProfileCombo.SelectedIndex = 0;
-        }
-    }
-
-    private void ProfileCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void SyncPills()
     {
         if (DataContext is not GameTileViewModel vm) return;
-        if (ProfileCombo.SelectedItem is not ComboBoxItem item) return;
-        var mode = item.Content?.ToString() ?? "(none)";
+        for (int i = 0; i < ProfilePills.Items.Count; i++)
+        {
+            if (ProfilePills.Items[i] is string mode && mode == vm.AssignedMode)
+            {
+                ProfilePills.SelectedIndex = i;
+                return;
+            }
+        }
+        ProfilePills.SelectedIndex = 0;
+    }
+
+    private void ProfilePills_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (DataContext is not GameTileViewModel vm) return;
+        if (ProfilePills.SelectedItem is not string mode) return;
         if (vm.AssignedMode == mode) return;
         vm.AssignedMode = mode;
         ProfileChanged?.Invoke(this, (vm.Id, mode));

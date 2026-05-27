@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using PrimeOSTuner.Core.Games;
+using PrimeOSTuner.Core.Memory;
 using PrimeOSTuner.UI.Dialogs;
 using PrimeOSTuner.UI.ViewModels;
 
@@ -13,6 +15,7 @@ public partial class MemoryPriorityView : UserControl
 {
     private readonly MemoryPriorityViewModel _vm;
     private readonly GameRegistry _games;
+    private bool? _dragSelectValue;  // null = not dragging; true/false = the value to paint while dragging
 
     public MemoryPriorityView(MemoryPriorityViewModel vm, GameRegistry games)
     {
@@ -51,26 +54,30 @@ public partial class MemoryPriorityView : UserControl
 
     private async void ApplyRecommendedClick(object _, RoutedEventArgs __)
     {
-        var games = await _games.GetAllAsync();
-        var existingPaths = new HashSet<string>(
-            _vm.Rules.Select(r => r.ExePath), StringComparer.OrdinalIgnoreCase);
-        var pendingCount = games.Count(g =>
-            !string.IsNullOrEmpty(g.InstallPath) && !existingPaths.Contains(g.InstallPath!));
+        var confirm = MessageBox.Show(
+            "Apply recommended settings to every detected game?\n\n" +
+            "  • Priority = High\n" +
+            "  • Protect from RAM cleanups\n" +
+            "  • Game Booster on launch\n\n" +
+            "Games already in your list will be reset to these values. Custom apps are untouched.",
+            "Apply Recommended",
+            MessageBoxButton.OKCancel,
+            MessageBoxImage.Question);
+        if (confirm != MessageBoxResult.OK) return;
 
-        if (pendingCount == 0)
+        var (added, updated) = await _vm.ApplyRecommendedToAllGamesAsync();
+        ApplyFilter();
+
+        if (added == 0 && updated == 0)
         {
-            MessageBox.Show("No new games to add.", "Apply Recommended");
+            MessageBox.Show("Everything was already on recommended settings.", "Apply Recommended");
             return;
         }
 
-        var dlg = new BulkApplyGamesDialog { Owner = Window.GetWindow(this) };
-        dlg.Configure(pendingCount);
-        dlg.ShowDialog();
-        if (!dlg.Confirmed) return;
-
-        var added = await _vm.ApplyRecommendedToAllGamesAsync();
-        ApplyFilter();
-        MessageBox.Show($"Added {added} game(s).", "Apply Recommended");
+        var parts = new List<string>();
+        if (added > 0)   parts.Add(added == 1 ? "added 1 game" : $"added {added} games");
+        if (updated > 0) parts.Add(updated == 1 ? "reset 1 existing rule" : $"reset {updated} existing rules");
+        MessageBox.Show("Recommended settings applied — " + string.Join(" and ", parts) + ".", "Apply Recommended");
     }
 
     private async void RescanClick(object _, RoutedEventArgs __)
@@ -93,5 +100,97 @@ public partial class MemoryPriorityView : UserControl
     {
         // Persist on any inline rule change. View-model handles ToList → SaveAsync → engine reload.
         await _vm.UpdateRuleAsync(null!);
+    }
+
+    // ---- Multi-select mode --------------------------------------------------
+
+    private void MultiSelectToggleClick(object sender, RoutedEventArgs e)
+    {
+        _vm.MultiSelectMode = MultiSelectToggle.IsChecked == true;
+        if (!_vm.MultiSelectMode)
+        {
+            foreach (var r in _vm.Rules) r.IsSelected = false;
+        }
+        UpdateSelectionCount();
+    }
+
+    private void Row_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!_vm.MultiSelectMode) return;
+        if (sender is not FrameworkElement fe || fe.DataContext is not PriorityRuleVm vm) return;
+
+        var newValue = !vm.IsSelected;
+        vm.IsSelected = newValue;
+        _dragSelectValue = newValue;
+        UpdateSelectionCount();
+        Mouse.Capture(RuleList);
+        e.Handled = true;
+    }
+
+    private void Row_MouseEnter(object sender, MouseEventArgs e)
+    {
+        if (!_vm.MultiSelectMode) return;
+        if (_dragSelectValue is not bool target) return;
+        if (e.LeftButton != MouseButtonState.Pressed) return;
+        if (sender is not FrameworkElement fe || fe.DataContext is not PriorityRuleVm vm) return;
+
+        if (vm.IsSelected == target) return;
+        vm.IsSelected = target;
+        UpdateSelectionCount();
+    }
+
+    protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
+    {
+        base.OnPreviewMouseLeftButtonUp(e);
+        if (Mouse.Captured == RuleList) RuleList.ReleaseMouseCapture();
+        _dragSelectValue = null;
+    }
+
+    private void UpdateSelectionCount()
+    {
+        var n = _vm.Rules.Count(r => r.IsSelected);
+        SelectionCountText.Text = n == 1 ? "1 selected" : $"{n} selected";
+    }
+
+    private IReadOnlyList<PriorityRuleVm> Selected =>
+        _vm.Rules.Where(r => r.IsSelected).ToList();
+
+    private async void BulkPriorityClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not string priorityName) return;
+        if (!Enum.TryParse<PriorityLevel>(priorityName, out var level)) return;
+        var picks = Selected;
+        if (picks.Count == 0) return;
+        foreach (var r in picks) r.Priority = level;
+        await _vm.UpdateRuleAsync(null!);
+    }
+
+    private async void BulkProtectClick(object _, RoutedEventArgs __)
+    {
+        var picks = Selected;
+        if (picks.Count == 0) return;
+        // Toggle: if every selected row already has Protect on, turn them all off. Otherwise turn them all on.
+        var allOn = picks.All(r => r.ProtectFromRamCleanup);
+        var target = !allOn;
+        foreach (var r in picks) r.ProtectFromRamCleanup = target;
+        await _vm.UpdateRuleAsync(null!);
+    }
+
+    private async void BulkBoosterClick(object _, RoutedEventArgs __)
+    {
+        var picks = Selected;
+        if (picks.Count == 0) return;
+        var allOn = picks.All(r => r.GameBooster);
+        var target = !allOn;
+        foreach (var r in picks) r.GameBooster = target;
+        await _vm.UpdateRuleAsync(null!);
+    }
+
+    private void DiscardSelectionClick(object _, RoutedEventArgs __)
+    {
+        foreach (var r in _vm.Rules) r.IsSelected = false;
+        _vm.MultiSelectMode = false;
+        MultiSelectToggle.IsChecked = false;
+        UpdateSelectionCount();
     }
 }

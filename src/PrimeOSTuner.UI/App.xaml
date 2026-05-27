@@ -13,6 +13,8 @@
             <conv:StringEqualsBoolConverter x:Key="StringEqualsBool"/>
             <conv:InverseBoolConverter x:Key="InverseBoolConverter"/>
             <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility"/>
+            <conv:PriorityShortLabelConverter x:Key="PriorityShortLabel"/>
+            <conv:ProfileModeShortLabelConverter x:Key="ProfileModeShortLabel"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -11,11 +11,19 @@ public partial class BulkApplyGamesDialog : Window
         InitializeComponent();
     }
 
-    public void Configure(int gameCount)
+    public void Configure(int newCount, int updateCount)
     {
-        GameCountText.Text = gameCount == 1
-            ? "This will add 1 detected game to Memory Priority with these settings:"
-            : $"This will add {gameCount} detected games to Memory Priority with these settings:";
+        var parts = new List<string>();
+        if (newCount > 0)
+            parts.Add(newCount == 1 ? "add 1 detected game" : $"add {newCount} detected games");
+        if (updateCount > 0)
+            parts.Add(updateCount == 1
+                ? "reset 1 existing rule to recommended"
+                : $"reset {updateCount} existing rules to recommended");
+
+        GameCountText.Text = parts.Count == 0
+            ? "Everything is already on the recommended settings."
+            : "This will " + string.Join(" and ", parts) + " with these settings:";
     }
 
     private void ApplyClick(object sender, RoutedEventArgs e)

@@ -15,6 +15,9 @@ public partial class PriorityRuleVm : ObservableObject
     [ObservableProperty] private string _statusText = "Idle";
     [ObservableProperty] private string _statusColor = "#888";
 
+    // UI-only — used by Memory Priority's multi-select mode.
+    [ObservableProperty] private bool _isSelected;
+
     public string ExeName => Path.GetFileName(ExePath);
 
     public PriorityRuleVm(PriorityRule rule)

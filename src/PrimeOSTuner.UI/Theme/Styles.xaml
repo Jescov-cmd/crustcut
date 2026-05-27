@@ -318,22 +318,29 @@
         </Setter>
     </Style>
 
-    <!-- CheckBox (Win11 Settings style) -->
+    <!-- CheckBox (Win11 Settings style) — box + content label -->
     <Style TargetType="CheckBox">
         <Setter Property="Foreground" Value="{StaticResource Text0Brush}"/>
+        <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI"/>
+        <Setter Property="FontSize" Value="12"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
-                    <Grid>
-                        <Border x:Name="box" Width="20" Height="20" CornerRadius="4"
-                                Background="Transparent"
-                                BorderBrush="{StaticResource Text2Brush}" BorderThickness="1.5"/>
-                        <TextBlock x:Name="check" Text="&#xE73E;" FontFamily="Segoe Fluent Icons"
-                                   FontSize="12" Foreground="White"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   Visibility="Collapsed"/>
-                    </Grid>
+                    <StackPanel Orientation="Horizontal" Background="Transparent">
+                        <Grid Width="20" Height="20" VerticalAlignment="Center">
+                            <Border x:Name="box" Width="20" Height="20" CornerRadius="4"
+                                    Background="Transparent"
+                                    BorderBrush="{StaticResource Text2Brush}" BorderThickness="1.5"/>
+                            <TextBlock x:Name="check" Text="&#xE73E;" FontFamily="Segoe Fluent Icons"
+                                       FontSize="12" Foreground="White"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="Collapsed"/>
+                        </Grid>
+                        <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"/>
+                    </StackPanel>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="box" Property="Background" Value="{StaticResource AccentBrush}"/>

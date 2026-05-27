@@ -17,6 +17,8 @@ public partial class MemoryPriorityViewModel : ObservableObject
 
     [ObservableProperty] private string _activeFilter = "all"; // all | games | apps
 
+    [ObservableProperty] private bool _multiSelectMode;
+
     public MemoryPriorityViewModel(
         PriorityRuleStore store, PriorityRuleEngine engine, GameRegistry games)
     {
@@ -246,22 +248,36 @@ public partial class MemoryPriorityViewModel : ObservableObject
         await PersistAsync();
     }
 
-    public async Task<int> ApplyRecommendedToAllGamesAsync()
+    public async Task<(int Added, int Updated)> ApplyRecommendedToAllGamesAsync()
     {
         var games = (await _games.GetAllAsync())
             .Where(g => !string.IsNullOrEmpty(g.InstallPath))
             .ToList();
-        var existingPaths = new HashSet<string>(
-            Rules.Select(r => r.ExePath), StringComparer.OrdinalIgnoreCase);
 
         var added = 0;
+        var updated = 0;
         foreach (var game in games)
         {
             // Each game has potentially multiple EXEs; use the launch executable
             // (best-effort: the first .exe under InstallPath whose name matches the game name).
             var exePath = ResolveLaunchExe(game.InstallPath!);
             if (exePath is null) continue;
-            if (existingPaths.Contains(exePath)) continue;
+
+            var existing = Rules.FirstOrDefault(r =>
+                string.Equals(r.ExePath, exePath, StringComparison.OrdinalIgnoreCase));
+            if (existing is not null)
+            {
+                // Re-apply recommended settings — High priority + Protect + Booster — if any drift from recommended.
+                var changed = existing.Priority != PriorityLevel.High
+                           || !existing.ProtectFromRamCleanup
+                           || !existing.GameBooster;
+                if (!changed) continue;
+                existing.Priority = PriorityLevel.High;
+                existing.ProtectFromRamCleanup = true;
+                existing.GameBooster = true;
+                updated++;
+                continue;
+            }
 
             var rule = new PriorityRule(
                 ExePath: exePath,
@@ -274,8 +290,8 @@ public partial class MemoryPriorityViewModel : ObservableObject
             added++;
         }
 
-        if (added > 0) await PersistAsync();
-        return added;
+        if (added > 0 || updated > 0) await PersistAsync();
+        return (added, updated);
     }
 
     private static string? ResolveLaunchExe(string installPath)
