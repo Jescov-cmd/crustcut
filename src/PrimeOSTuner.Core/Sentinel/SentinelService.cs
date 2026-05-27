@@ -64,18 +64,19 @@ public sealed class SentinelService : ISentinelService
             _currently = Array.Empty<Problem>();
             _epoch++;
             epoch = _epoch;
+            // Timer mutation under _gate so a rapid stop/start race can't orphan a timer.
+            _timer ??= new System.Threading.Timer(_ => _ = TickOnceAsync(), null, SamplePeriod, SamplePeriod);
         }
         Changed?.Invoke(this, EventArgs.Empty);
 
         if (!string.IsNullOrWhiteSpace(game.SteamAppId))
             _ = FetchSpecAsync(game.SteamAppId, epoch);
-
-        _timer ??= new System.Threading.Timer(_ => _ = TickOnceAsync(), null, SamplePeriod, SamplePeriod);
     }
 
     public void OnGameStopped()
     {
         bool fire;
+        System.Threading.Timer? toDispose;
         lock (_gate)
         {
             fire = _watchingGame is not null || _currently.Count > 0;
@@ -86,9 +87,10 @@ public sealed class SentinelService : ISentinelService
             _cpuWindow.Clear();
             _currently = Array.Empty<Problem>();
             _epoch++;
+            toDispose = _timer;
+            _timer = null;
         }
-        _timer?.Dispose();
-        _timer = null;
+        toDispose?.Dispose();
         if (fire) Changed?.Invoke(this, EventArgs.Empty);
     }
 
