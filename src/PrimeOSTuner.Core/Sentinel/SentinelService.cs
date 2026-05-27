@@ -20,8 +20,10 @@ public sealed class SentinelService : ISentinelService
     private IReadOnlyList<Problem> _currently = Array.Empty<Problem>();
     private bool _enabled = true;
     private int _epoch;
+    private System.Threading.Timer? _timer;
 
     private static readonly TimeSpan CpuWindowSize = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan SamplePeriod = TimeSpan.FromSeconds(4);
     private static readonly SteamPcRequirements EmptySpec = new(null, null, null, null);
 
     public SentinelService(ISpecFetcher specs, IMetricsSampler sampler)
@@ -67,6 +69,8 @@ public sealed class SentinelService : ISentinelService
 
         if (!string.IsNullOrWhiteSpace(game.SteamAppId))
             _ = FetchSpecAsync(game.SteamAppId, epoch);
+
+        _timer ??= new System.Threading.Timer(_ => _ = TickOnceAsync(), null, SamplePeriod, SamplePeriod);
     }
 
     public void OnGameStopped()
@@ -83,6 +87,8 @@ public sealed class SentinelService : ISentinelService
             _currently = Array.Empty<Problem>();
             _epoch++;
         }
+        _timer?.Dispose();
+        _timer = null;
         if (fire) Changed?.Invoke(this, EventArgs.Empty);
     }
 
