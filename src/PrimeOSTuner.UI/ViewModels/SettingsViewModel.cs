@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Win32;
+using PrimeOSTuner.Core.Lifecycle;
 using PrimeOSTuner.Core.Monitoring;
 using PrimeOSTuner.Core.Sentinel;
 using PrimeOSTuner.Core.Settings;
@@ -18,6 +19,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private readonly SystemSampler _sampler;
     private readonly TrayIconService _tray;
     private readonly ISentinelService _sentinel;
+    private readonly ProfileLifecycleService _lifecycle;
     private readonly System.Timers.Timer _intervalTimer = new() { AutoReset = true };
     private bool _suspendSave;
     private double _lastRamPercent;
@@ -41,13 +43,15 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         RamCleanerTweak ramCleaner,
         SystemSampler sampler,
         TrayIconService tray,
-        ISentinelService sentinel)
+        ISentinelService sentinel,
+        ProfileLifecycleService lifecycle)
     {
         _store = store;
         _ramCleaner = ramCleaner;
         _sampler = sampler;
         _tray = tray;
         _sentinel = sentinel;
+        _lifecycle = lifecycle;
 
         var loaded = store.Load();
         _suspendSave = true;
@@ -156,6 +160,13 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     {
         SaveIfNeeded();
         _sentinel.Enabled = value;
+        // If the user turns Sentinel on while a game is already running, pick it up
+        // immediately instead of waiting for the next stop/start cycle.
+        if (value && _lifecycle.CurrentRunningGame is { } current)
+        {
+            try { _sentinel.OnGameStarted(current.Game, current.Pid); }
+            catch { /* Sentinel must never break a settings toggle */ }
+        }
     }
 
     private void SaveIfNeeded()

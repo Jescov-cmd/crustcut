@@ -15,6 +15,27 @@ public sealed class ProfileLifecycleService
     private readonly IBackgroundSuspenderService? _suspender;
     private readonly ISentinelService? _sentinel;
 
+    private readonly object _stateGate = new();
+    private KnownGame? _currentGame;
+    private int _currentPid;
+
+    /// <summary>
+    /// The game currently running (per the watcher's last GameStarted/Stopped event),
+    /// or null if none. Lets other components — e.g. the Sentinel settings toggle —
+    /// resume mid-game when they come online.
+    /// </summary>
+    public (KnownGame Game, int Pid)? CurrentRunningGame
+    {
+        get
+        {
+            lock (_stateGate)
+            {
+                if (_currentGame is null) return null;
+                return (_currentGame, _currentPid);
+            }
+        }
+    }
+
     public ProfileLifecycleService(
         IGameProcessWatcher watcher,
         GameProfileStore profiles,
@@ -71,29 +92,10 @@ public sealed class ProfileLifecycleService
             try { _suspender?.SuspendBackgroundApps(); }
             catch { /* freezing optional apps must never break a game launch */ }
 
-            try
-            {
-                if (_sentinel is not null)
-                {
-                    var exeName = game.ExecutableNames.FirstOrDefault();
-                    if (!string.IsNullOrEmpty(exeName))
-                    {
-                        var trimmed = exeName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
-                            ? exeName[..^4]
-                            : exeName;
-                        var procs = System.Diagnostics.Process.GetProcessesByName(trimmed);
-                        try
-                        {
-                            var pid = procs.Length > 0 ? procs[0].Id : 0;
-                            _sentinel.OnGameStarted(game, pid);
-                        }
-                        finally
-                        {
-                            foreach (var p in procs) p.Dispose();
-                        }
-                    }
-                }
-            }
+            var pid = ResolvePid(game);
+            lock (_stateGate) { _currentGame = game; _currentPid = pid; }
+
+            try { _sentinel?.OnGameStarted(game, pid); }
             catch { /* Sentinel must never break a game launch */ }
         }
         catch
@@ -105,6 +107,8 @@ public sealed class ProfileLifecycleService
     {
         try
         {
+            lock (_stateGate) { _currentGame = null; _currentPid = 0; }
+
             try { _sentinel?.OnGameStopped(); }
             catch { /* never trap on Sentinel teardown */ }
 
@@ -120,5 +124,18 @@ public sealed class ProfileLifecycleService
         catch
         {
         }
+    }
+
+    private static int ResolvePid(KnownGame game)
+    {
+        var exeName = game.ExecutableNames.FirstOrDefault();
+        if (string.IsNullOrEmpty(exeName)) return 0;
+
+        var trimmed = exeName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
+            ? exeName[..^4]
+            : exeName;
+        var procs = System.Diagnostics.Process.GetProcessesByName(trimmed);
+        try { return procs.Length > 0 ? procs[0].Id : 0; }
+        finally { foreach (var p in procs) p.Dispose(); }
     }
 }
