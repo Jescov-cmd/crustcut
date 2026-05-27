@@ -7,6 +7,7 @@ using PrimeOSTuner.Core.History;
 using PrimeOSTuner.Core.Lifecycle;
 using PrimeOSTuner.Core.Memory;
 using PrimeOSTuner.Core.Monitoring;
+using PrimeOSTuner.Core.Performance;
 using PrimeOSTuner.Core.Pipeline;
 using PrimeOSTuner.Core.Profiles;
 using PrimeOSTuner.Core.Sentinel;
@@ -193,6 +194,21 @@ public partial class App : Application
                 s.AddSingleton<SentinelViewModel>();
                 s.AddTransient<Views.SentinelView>();
 
+                // PresentMon frame-time recording
+                var presentMonBinaryPath = Path.Combine(
+                    AppContext.BaseDirectory, "Assets", "PresentMon", "PresentMon-x64.exe");
+                var framesDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "PrimeOSTuner", "frames");
+
+                s.AddSingleton<IPresentMonRunner>(_ => new PresentMonRunner(presentMonBinaryPath));
+                s.AddSingleton<IFrameSessionStore>(_ => new FrameSessionStore(FrameSessionStore.DefaultPath()));
+                s.AddSingleton<FrameRecordingService>(sp =>
+                    new FrameRecordingService(
+                        sp.GetRequiredService<IPresentMonRunner>(),
+                        sp.GetRequiredService<IFrameSessionStore>(),
+                        framesDir));
+
                 // Lifecycle
                 s.AddSingleton<IGameProcessWatcher>(sp =>
                 {
@@ -220,7 +236,8 @@ public partial class App : Application
                         dict,
                         sp.GetRequiredService<ProfileApplier>(),
                         sp.GetRequiredService<IBackgroundSuspenderService>(),
-                        sp.GetRequiredService<ISentinelService>());
+                        sp.GetRequiredService<ISentinelService>(),
+                        sp.GetRequiredService<FrameRecordingService>());
                 });
 
                 s.AddSingleton<IEnumerable<ITweak>>(sp =>
@@ -306,6 +323,8 @@ public partial class App : Application
         CustomModeMigration.RunIfNeeded();
         Host.Start();
 
+        TryCleanupOrphanFrameCsvs();
+
         var priorityEngine = Host.Services.GetRequiredService<PriorityRuleEngine>();
         var priorityVm = Host.Services.GetRequiredService<MemoryPriorityViewModel>();
         await priorityVm.LoadAsync();   // populates rules + reloads engine
@@ -367,5 +386,27 @@ public partial class App : Application
         Host?.StopAsync().Wait(TimeSpan.FromSeconds(5));
         Host?.Dispose();
         base.OnExit(e);
+    }
+
+    private static void TryCleanupOrphanFrameCsvs()
+    {
+        try
+        {
+            var framesDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "PrimeOSTuner", "frames");
+            if (!Directory.Exists(framesDir)) return;
+
+            var cutoff = DateTime.UtcNow.AddHours(-24);
+            foreach (var file in Directory.EnumerateFiles(framesDir, "*.csv"))
+            {
+                try
+                {
+                    if (File.GetLastWriteTimeUtc(file) < cutoff) File.Delete(file);
+                }
+                catch { /* best effort */ }
+            }
+        }
+        catch { /* never block app startup */ }
     }
 }
