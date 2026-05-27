@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PrimeOSTuner.Core.Monitoring;
+using PrimeOSTuner.Core.Performance;
 using PrimeOSTuner.Core.Profiles;
 using PrimeOSTuner.Core.Tweaks;
 
@@ -12,6 +13,7 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     private readonly SystemSampler _sampler;
     private readonly ActiveTweaksStore _activeStore;
     private readonly IEnumerable<ITweak> _tweaks;
+    private readonly IFrameSessionStore _frameStore;
     private readonly System.Timers.Timer _refreshTimer = new(2000) { AutoReset = true };
 
     [ObservableProperty] private double _cpuPercent;
@@ -37,16 +39,28 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
     public ObservableCollection<double> GpuHistory { get; } = new();
     public ObservableCollection<double> NetHistory { get; } = new();
 
-    public DashboardViewModel(SystemSampler sampler, ActiveTweaksStore activeStore, IEnumerable<ITweak> tweaks)
+    public ObservableCollection<FrameSessionVm> RecentSessions { get; } = new();
+
+    public DashboardViewModel(SystemSampler sampler, ActiveTweaksStore activeStore, IEnumerable<ITweak> tweaks, IFrameSessionStore frameStore)
     {
         _sampler = sampler;
         _activeStore = activeStore;
         _tweaks = tweaks;
+        _frameStore = frameStore;
         _sampler.Sampled += OnSampled;
         _sampler.Start();
         _refreshTimer.Elapsed += async (_, _) => await RefreshActiveAsync();
         _refreshTimer.Start();
         _ = RefreshBoostScoreAsync();
+
+        _frameStore.Updated += (_, _) => Application.Current?.Dispatcher.BeginInvoke(RefreshSessions);
+        RefreshSessions();
+    }
+
+    private void RefreshSessions()
+    {
+        RecentSessions.Clear();
+        foreach (var s in _frameStore.Load()) RecentSessions.Add(new FrameSessionVm(s));
     }
 
     public async Task RefreshBoostScoreAsync()
