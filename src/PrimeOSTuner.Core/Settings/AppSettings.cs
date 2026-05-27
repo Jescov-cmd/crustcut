@@ -18,4 +18,7 @@ public sealed class AppSettings
     public bool StartMinimized { get; set; } = false;
     public bool MinimizeToTrayOnClose { get; set; } = false;
     public bool NotificationsEnabled { get; set; } = true;
+
+    // Sentinel
+    public bool SentinelEnabled { get; set; } = true;
 }
