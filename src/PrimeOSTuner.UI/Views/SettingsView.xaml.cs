@@ -17,11 +17,21 @@ public partial class SettingsView : UserControl
 
     private async void OptimizeNowClick(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn)
+        if (sender is not Button btn) return;
+
+        var originalContent = btn.Content;
+        btn.IsEnabled = false;
+        btn.Content = "Trimming…";
+        try
         {
-            btn.IsEnabled = false;
-            try { await _vm.RunRamCleanupNowAsync(); }
-            finally { btn.IsEnabled = true; }
+            await _vm.RunRamCleanupNowAsync();
+            btn.Content = "✓ Trimmed";
+            await Task.Delay(1500);
+        }
+        finally
+        {
+            btn.Content = originalContent;
+            btn.IsEnabled = true;
         }
     }
 }
