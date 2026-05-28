@@ -16,6 +16,16 @@ namespace PrimeOSTuner.UI.Views;
 
 public partial class OptimizeView : UserControl
 {
+    // One-shot cleanup actions — folded in from the old Maintenance tab. Order preserved.
+    private static readonly string[] CleanupTweakIds =
+    {
+        "core.dns-flush",
+        "core.windows-update-cache",
+        "core.driver-health",
+        "core.driver-store-cleanup",
+        "core.shader-cache-cleanup",
+    };
+
     private readonly TweakHistory _history;
     private readonly List<TweakRowVm> _allRows;
     private readonly ObservableCollection<FilterChipVm> _chips = new();
@@ -27,10 +37,18 @@ public partial class OptimizeView : UserControl
     {
         InitializeComponent();
         _history = history;
-        _allRows = tweaks
+        var allTweaks = tweaks.ToList();
+
+        _allRows = allTweaks
             .Where(t => !t.IsDestructive)
-            .Where(t => !IsCleanupTweak(t.Id))    // System Cleanup lives on the Dashboard now
+            .Where(t => !IsCleanupTweak(t.Id))    // cleanup actions render in the bottom section, not as toggle tiles
+            .Where(t => t.Id != "core.ram-cleaner")
             .Select(t => new TweakRowVm(t))
+            .ToList();
+
+        CleanupActions.ItemsSource = allTweaks
+            .Where(t => IsCleanupTweak(t.Id))
+            .OrderBy(t => Array.IndexOf(CleanupTweakIds, t.Id))
             .ToList();
 
         _chips.Add(new FilterChipVm("all", "All", true));
@@ -43,12 +61,38 @@ public partial class OptimizeView : UserControl
         Refilter();
     }
 
-    private static bool IsCleanupTweak(string id) =>
-        id == "core.ram-cleaner"
-        || id == "core.dns-flush"
-        || id == "core.windows-update-cache"
-        || id == "core.driver-health"
-        || id == "core.driver-store-cleanup";
+    private static bool IsCleanupTweak(string id) => CleanupTweakIds.Contains(id);
+
+    private async void CleanupClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: ITweak tweak } btn) return;
+
+        var originalContent = btn.Content;
+        btn.IsEnabled = false;
+        btn.Content = "Working…";
+        try
+        {
+            var result = await tweak.ApplyAsync();
+            if (result.Succeeded)
+            {
+                await TryAppendHistoryAsync(tweak, result.UndoData);
+                CleanupStatus.Text = $"{tweak.DisplayName} — {result.Message ?? "done."}";
+            }
+            else
+            {
+                CleanupStatus.Text = $"{tweak.DisplayName} — failed: {result.Error}";
+            }
+        }
+        catch (Exception ex)
+        {
+            CleanupStatus.Text = $"{tweak.DisplayName} — error: {ex.Message}";
+        }
+        finally
+        {
+            btn.IsEnabled = true;
+            btn.Content = originalContent;
+        }
+    }
 
     private void ChipClick(object sender, RoutedEventArgs e)
     {

@@ -43,11 +43,9 @@ public partial class MainWindow : Window
         {
             ["Dashboard"]   = NavDashboard,
             ["Optimize"]    = NavOptimize,
-            ["GameBoost"]   = NavGameBoost,
             ["GameLibrary"] = NavGameLibrary,
             ["Bloatware"]   = NavBloatware,
             ["MemoryPriority"] = NavMemoryPriority,
-            ["Maintenance"] = NavMaintenance,
             ["Optimization101"] = NavOptimization101,
             ["History"]     = NavHistory,
             ["Sentinel"]    = NavSentinel,
@@ -133,11 +131,9 @@ public partial class MainWindow : Window
         {
             "Dashboard"    => sp.GetRequiredService<DashboardView>(),
             "Optimize"     => sp.GetRequiredService<OptimizeView>(),
-            "GameBoost"    => sp.GetRequiredService<GameBoostView>(),
             "GameLibrary"  => sp.GetRequiredService<GameLibraryView>(),
             "Bloatware"    => sp.GetRequiredService<BloatwareView>(),
             "MemoryPriority" => sp.GetRequiredService<MemoryPriorityView>(),
-            "Maintenance"  => sp.GetRequiredService<MaintenanceView>(),
             "Optimization101" => sp.GetRequiredService<Optimization101View>(),
             "History"      => sp.GetRequiredService<HistoryView>(),
             "Sentinel"     => sp.GetRequiredService<SentinelView>(),

@@ -169,12 +169,6 @@
                             <TextBlock Text="Optimize" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button x:Name="NavGameBoost" Tag="GameBoost" Click="NavButton_Click" Style="{StaticResource TopTab}">
-                        <StackPanel Orientation="Horizontal">
-                            <Image Source="{StaticResource IconGameBoost}" Width="16" Height="16" Margin="0,0,6,0"/>
-                            <TextBlock Text="Game Boost" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
                     <Button x:Name="NavGameLibrary" Tag="GameLibrary" Click="NavButton_Click" Style="{StaticResource TopTab}">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="{StaticResource IconGameLibrary}" Width="16" Height="16" Margin="0,0,6,0"/>
@@ -191,12 +185,6 @@
                         <StackPanel Orientation="Horizontal">
                             <Image Source="{StaticResource IconMemoryPriority}" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="Memory Priority" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                    <Button x:Name="NavMaintenance" Tag="Maintenance" Click="NavButton_Click" Style="{StaticResource TopTab}">
-                        <StackPanel Orientation="Horizontal">
-                            <Image Source="{StaticResource IconMaintenance}" Width="16" Height="16" Margin="0,0,6,0"/>
-                            <TextBlock Text="Maintenance" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="NavOptimization101" Tag="Optimization101" Click="NavButton_Click" Style="{StaticResource TopTab}">

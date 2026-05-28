@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using Microsoft.Extensions.DependencyInjection;
 using PrimeOSTuner.Core.Games;
 using PrimeOSTuner.UI.Dialogs;
@@ -13,12 +14,20 @@ public partial class GameLibraryView : UserControl
     private readonly GameProfileStore _profiles;
     private readonly AddedGamesStore _added;
 
-    public GameLibraryView(GameLibraryViewModel vm, GameProfileStore profiles, AddedGamesStore added)
+    /// <summary>Exposed so the XAML can `{Binding GameBoostVm, ElementName=Root}` it.</summary>
+    public GameBoostViewModel GameBoostVm { get; }
+
+    public GameLibraryView(
+        GameLibraryViewModel vm,
+        GameProfileStore profiles,
+        AddedGamesStore added,
+        GameBoostViewModel gameBoostVm)
     {
         InitializeComponent();
         _vm = vm;
         _profiles = profiles;
         _added = added;
+        GameBoostVm = gameBoostVm;
         DataContext = vm;
         Loaded += async (_, _) => await vm.LoadAsync();
     }
@@ -40,5 +49,22 @@ public partial class GameLibraryView : UserControl
             await _added.AddAsync(dialog.Result);
             await _vm.LoadAsync();
         }
+    }
+
+    // ---- Boost mode toggles (folded in from the old Game Boost tab) ----
+
+    private async void BasicToggleClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleButton { IsChecked: true }) await GameBoostVm.ApplyBasicAsync();
+    }
+
+    private async void PerformanceToggleClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleButton { IsChecked: true }) await GameBoostVm.ApplyPerformanceAsync();
+    }
+
+    private async void AggressiveToggleClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleButton { IsChecked: true }) await GameBoostVm.ApplyAggressiveAsync();
     }
 }
