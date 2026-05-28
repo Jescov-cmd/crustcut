@@ -42,6 +42,9 @@ packages/
 # Velopack
 [Rr]eleases/
 
+# dotnet publish output — built artifacts, not source
+publish/
+
 # OS
 Thumbs.db
 Desktop.ini
