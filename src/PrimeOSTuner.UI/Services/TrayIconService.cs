@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using H.NotifyIcon;
 using DColor = System.Drawing.Color;
 using DFont = System.Drawing.Font;
@@ -58,19 +59,24 @@ public sealed class TrayIconService : IDisposable
 
     private ContextMenu BuildContextMenu()
     {
-        var menu = new ContextMenu();
-        var show = new MenuItem { Header = "Show PrimeOS Tuner" };
-        show.Click += (_, _) => ShowRequested?.Invoke(this, EventArgs.Empty);
-        var optimize = new MenuItem { Header = "Optimize Now" };
-        optimize.Click += (_, _) => OptimizeRequested?.Invoke(this, EventArgs.Empty);
-        var sep = new Separator();
-        var exit = new MenuItem { Header = "Exit" };
-        exit.Click += (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty);
-        menu.Items.Add(show);
-        menu.Items.Add(optimize);
-        menu.Items.Add(sep);
-        menu.Items.Add(exit);
+        // Explicit colors so the popup can't fall into white-on-white (the menu
+        // renders outside MainWindow, so it doesn't inherit our normal theme).
+        var menuBg = new SolidColorBrush(Color.FromRgb(0x1F, 0x1F, 0x22));
+        var menuFg = Brushes.White;
+
+        var menu = new ContextMenu { Background = menuBg, Foreground = menuFg };
+        menu.Items.Add(BuildItem("Show PrimeOS Tuner", menuFg, () => ShowRequested?.Invoke(this, EventArgs.Empty)));
+        menu.Items.Add(BuildItem("Optimize Now", menuFg, () => OptimizeRequested?.Invoke(this, EventArgs.Empty)));
+        menu.Items.Add(new Separator());
+        menu.Items.Add(BuildItem("Exit", menuFg, () => ExitRequested?.Invoke(this, EventArgs.Empty)));
         return menu;
+    }
+
+    private static MenuItem BuildItem(string header, Brush foreground, Action onClick)
+    {
+        var item = new MenuItem { Header = header, Foreground = foreground };
+        item.Click += (_, _) => onClick();
+        return item;
     }
 
     /// <summary>
