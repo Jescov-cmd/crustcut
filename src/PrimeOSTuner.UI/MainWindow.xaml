@@ -146,7 +146,7 @@
                                    FontFamily="Segoe UI Variable Display, Segoe UI"
                                    FontSize="14" FontWeight="SemiBold"
                                    VerticalAlignment="Center"/>
-                        <TextBlock Text="v0.4.0"
+                        <TextBlock Text="v0.4.1"
                                    FontFamily="Segoe UI Variable Text, Segoe UI"
                                    FontSize="10"
                                    Foreground="{StaticResource Text3Brush}"

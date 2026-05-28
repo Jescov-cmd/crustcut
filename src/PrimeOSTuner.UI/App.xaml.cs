@@ -107,6 +107,8 @@ public partial class App : Application
                     new ArtCache(ArtCache.DefaultDir(),
                         sp.GetRequiredService<IHttpClientFactory>().CreateClient("art-download")));
                 s.AddHttpClient("art-download");
+                s.AddSingleton<SteamCdnCoverFetcher>(sp =>
+                    new SteamCdnCoverFetcher(sp.GetRequiredService<ArtCache>()));
 
                 // Core additions — new tweaks
                 s.AddSingleton<MouseAccelTweak>();

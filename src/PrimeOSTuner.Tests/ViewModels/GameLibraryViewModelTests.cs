@@ -29,7 +29,7 @@ public class GameLibraryViewModelTests : IDisposable
         var sgdb = new Mock<ISteamGridDbClient>();
         sgdb.SetupGet(c => c.HasApiKey).Returns(false);
 
-        var vm = new GameLibraryViewModel(registry, profileStore, sgdb.Object, artCache: null);
+        var vm = new GameLibraryViewModel(registry, profileStore, sgdb.Object, artCache: null, steamCdn: null);
         await vm.LoadAsync();
 
         vm.Tiles.Should().NotBeEmpty();
@@ -47,7 +47,7 @@ public class GameLibraryViewModelTests : IDisposable
         var sgdb = new Mock<ISteamGridDbClient>();
         sgdb.SetupGet(c => c.HasApiKey).Returns(false);
 
-        var vm = new GameLibraryViewModel(registry, profileStore, sgdb.Object, artCache: null);
+        var vm = new GameLibraryViewModel(registry, profileStore, sgdb.Object, artCache: null, steamCdn: null);
         await vm.LoadAsync();
 
         var tile = vm.Tiles.First(t => t.Id == "static.valorant");

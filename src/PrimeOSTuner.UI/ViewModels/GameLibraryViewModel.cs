@@ -12,6 +12,7 @@ public partial class GameLibraryViewModel : ObservableObject
     private readonly GameProfileStore _profiles;
     private readonly ISteamGridDbClient _sgdb;
     private readonly ArtCache? _art;
+    private readonly SteamCdnCoverFetcher? _steamCdn;
 
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private bool _showApiKeyPrompt;
@@ -22,12 +23,14 @@ public partial class GameLibraryViewModel : ObservableObject
         GameRegistry registry,
         GameProfileStore profiles,
         ISteamGridDbClient sgdb,
-        ArtCache? artCache)
+        ArtCache? artCache,
+        SteamCdnCoverFetcher? steamCdn)
     {
         _registry = registry;
         _profiles = profiles;
         _sgdb = sgdb;
         _art = artCache;
+        _steamCdn = steamCdn;
     }
 
     public async Task LoadAsync()
@@ -44,7 +47,10 @@ public partial class GameLibraryViewModel : ObservableObject
             Tiles.Add(tile);
         }
 
-        ShowApiKeyPrompt = !_sgdb.HasApiKey;
+        // Only nag about the SGDB key if the user has at least one non-Steam game in
+        // their library — every Steam game is already covered by the CDN fetcher.
+        var hasNonSteamGame = games.Any(g => string.IsNullOrEmpty(g.SteamAppId));
+        ShowApiKeyPrompt = hasNonSteamGame && !_sgdb.HasApiKey;
         IsLoading = false;
 
         _ = LoadCoversAsync();
@@ -52,35 +58,44 @@ public partial class GameLibraryViewModel : ObservableObject
 
     private async Task LoadCoversAsync()
     {
-        if (_art is null || !_sgdb.HasApiKey) return;
+        if (_art is null) return;
+
         foreach (var tile in Tiles.ToList())
         {
             try
             {
-                CoverArt art;
-                if (tile.Game.SteamAppId is not null)
-                    art = await _sgdb.GetCoverByAppIdAsync(tile.Game.SteamAppId);
-                else
+                string? path = null;
+
+                // Primary: Steam's public CDN. No API key, no rate limits.
+                if (_steamCdn is not null && !string.IsNullOrEmpty(tile.Game.SteamAppId))
+                    path = await _steamCdn.FetchCoverAsync(tile.Game.SteamAppId);
+
+                // Fallback: SteamGridDB lookup-by-name for games without a Steam app id
+                // (manually-added EXEs, Epic-only titles). Only available if the user
+                // added a SteamGridDB API key.
+                if (path is null && _sgdb.HasApiKey)
                 {
-                    var hits = await _sgdb.SearchAsync(tile.Game.DisplayName);
-                    var first = hits.FirstOrDefault();
-                    art = first is null
-                        ? new CoverArt(null, tile.Game.DisplayName, null, null)
-                        : await _sgdb.GetCoverByGameIdAsync(first.Id, first.Name);
+                    CoverArt art;
+                    if (tile.Game.SteamAppId is not null)
+                        art = await _sgdb.GetCoverByAppIdAsync(tile.Game.SteamAppId);
+                    else
+                    {
+                        var hits = await _sgdb.SearchAsync(tile.Game.DisplayName);
+                        var first = hits.FirstOrDefault();
+                        art = first is null
+                            ? new CoverArt(null, tile.Game.DisplayName, null, null)
+                            : await _sgdb.GetCoverByGameIdAsync(first.Id, first.Name);
+                    }
+
+                    if (art.GameId is not null && art.Url is not null)
+                        path = await _art.GetOrDownloadAsync(art.GameId.Value, art.Url);
                 }
 
-                if (art.GameId is not null && art.Url is not null)
-                {
-                    var path = await _art.GetOrDownloadAsync(art.GameId.Value, art.Url);
-                    var dispatcher = Application.Current?.Dispatcher;
-                    Action update = () => { tile.CoverImagePath = path; tile.IsLoadingCover = false; };
-                    if (dispatcher is null || dispatcher.CheckAccess()) update();
-                    else dispatcher.Invoke(update);
-                }
-                else
-                {
-                    tile.IsLoadingCover = false;
-                }
+                var dispatcher = Application.Current?.Dispatcher;
+                var finalPath = path;
+                Action update = () => { tile.CoverImagePath = finalPath; tile.IsLoadingCover = false; };
+                if (dispatcher is null || dispatcher.CheckAccess()) update();
+                else dispatcher.Invoke(update);
             }
             catch
             {

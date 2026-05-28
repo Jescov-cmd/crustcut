@@ -17,21 +17,23 @@
                 <TextBlock Grid.Column="0" VerticalAlignment="Center"
                            Foreground="{StaticResource Text2Brush}"
                            FontSize="12"
-                           Text="Click + Add Game to register an executable. Cover art comes from SteamGridDB."/>
+                           Text="Click + Add Game to register an executable. Cover art is fetched automatically for Steam games."/>
                 <Button Grid.Column="1"
                         Style="{StaticResource PrimaryActionButton}"
                         Content="+ Add Game"
                         Click="AddGameClick"/>
             </Grid>
 
-            <!-- API key prompt card (full-width) -->
+            <!-- SteamGridDB key prompt — only shown when the user has at least one non-Steam
+                 game (manually-added EXE) and no SGDB key configured. Steam games use the
+                 public Steam CDN and need no key. -->
             <Border Style="{StaticResource CardBorder}" Margin="0,0,0,16"
                     Visibility="{Binding ShowApiKeyPrompt, Converter={StaticResource BoolToVisibility}}">
                 <StackPanel>
-                    <TextBlock Text="Cover art disabled"
+                    <TextBlock Text="Cover art for non-Steam games"
                                Foreground="{StaticResource WarnBrush}"
                                FontWeight="SemiBold" FontSize="14"/>
-                    <TextBlock Text="Add a SteamGridDB API key to %LOCALAPPDATA%\PrimeOSTuner\settings.json under SteamGridDbApiKey to enable cover art."
+                    <TextBlock Text="Steam games already get cover art automatically. For manually-added games, add a SteamGridDB API key to %LOCALAPPDATA%\PrimeOSTuner\settings.json under SteamGridDbApiKey."
                                Foreground="{StaticResource Text2Brush}"
                                FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
                 </StackPanel>
