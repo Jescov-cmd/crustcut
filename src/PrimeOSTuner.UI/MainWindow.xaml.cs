@@ -43,6 +43,7 @@ public partial class MainWindow : Window
         {
             ["Dashboard"]   = NavDashboard,
             ["Optimize"]    = NavOptimize,
+            ["GameBoost"]   = NavGameBoost,
             ["GameLibrary"] = NavGameLibrary,
             ["Bloatware"]   = NavBloatware,
             ["MemoryPriority"] = NavMemoryPriority,
@@ -131,6 +132,7 @@ public partial class MainWindow : Window
         {
             "Dashboard"    => sp.GetRequiredService<DashboardView>(),
             "Optimize"     => sp.GetRequiredService<OptimizeView>(),
+            "GameBoost"    => sp.GetRequiredService<GameBoostView>(),
             "GameLibrary"  => sp.GetRequiredService<GameLibraryView>(),
             "Bloatware"    => sp.GetRequiredService<BloatwareView>(),
             "MemoryPriority" => sp.GetRequiredService<MemoryPriorityView>(),

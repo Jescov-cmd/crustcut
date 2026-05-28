@@ -169,6 +169,12 @@
                             <TextBlock Text="Optimize" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+                    <Button x:Name="NavGameBoost" Tag="GameBoost" Click="NavButton_Click" Style="{StaticResource TopTab}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{StaticResource IconGameBoost}" Width="16" Height="16" Margin="0,0,6,0"/>
+                            <TextBlock Text="Game Boost" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                     <Button x:Name="NavGameLibrary" Tag="GameLibrary" Click="NavButton_Click" Style="{StaticResource TopTab}">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="{StaticResource IconGameLibrary}" Width="16" Height="16" Margin="0,0,6,0"/>
