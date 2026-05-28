@@ -8,7 +8,7 @@
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         ResizeMode="CanResize"
-        Background="{StaticResource Bg0Brush}"
+        Background="Transparent"
         FontFamily="Segoe UI Variable Text, Segoe UI"
         TextOptions.TextFormattingMode="Ideal"
         TextOptions.TextRenderingMode="ClearType">
@@ -79,9 +79,10 @@
 
     <Grid>
     <DockPanel LastChildFill="True">
-        <!-- Top bar: brand · tabs · watcher -->
+        <!-- Top bar: brand · tabs · watcher. TopBarBrush is alpha-blended; combined with
+             the Mica backdrop set in code-behind, this gives a translucent title-bar feel. -->
         <Border DockPanel.Dock="Top"
-                Background="{StaticResource Bg1Brush}"
+                Background="{StaticResource TopBarBrush}"
                 BorderBrush="{StaticResource StrokeBrush}"
                 BorderThickness="0,0,0,1"
                 Padding="20,0,0,0">
@@ -93,34 +94,12 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Brand: bread loaf icon (pink→orange gradient) + Crustcut wordmark.
-                     The bread shape is built from WPF paths so the gradient fills it naturally.
-                     If a custom icon image is later placed at Assets\Brand\bread.png, the
-                     PrimeOSTuner.UI.csproj <Content Include> will copy it and you can swap
-                     this Grid for an Image element pointing at it. -->
+                <!-- Brand: bread PNG (warm brown tones baked in) + Crustcut wordmark. -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,28,0">
-                    <Grid Width="22" Height="22" VerticalAlignment="Center">
-                        <!-- Soft pink halo, same as before — keeps the brand recognizable -->
-                        <Ellipse Width="22" Height="22" Fill="Transparent">
-                            <Ellipse.Effect>
-                                <DropShadowEffect Color="#F7416B" BlurRadius="10" ShadowDepth="0" Opacity="0.45"/>
-                            </Ellipse.Effect>
-                        </Ellipse>
-                        <!-- Bread loaf body: rounded oval, slightly taller on top, with the accent gradient -->
-                        <Path Stretch="Uniform" Width="22" Height="22"
-                              Data="M 4,12 C 4,7  9,4  16,4  C 23,4  28,7  28,12 C 28,14 27,16 25,17 C 25,19 23,20 20,20 C 18,20 17,19 16,18 C 15,19 14,20 12,20 C 9,20 7,19 7,17 C 5,16 4,14 4,12 Z">
-                            <Path.Fill>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                    <GradientStop Color="{StaticResource AccentPink}" Offset="0"/>
-                                    <GradientStop Color="{StaticResource AccentOrange}" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Path.Fill>
-                        </Path>
-                        <!-- Diagonal score marks (the classic three slashes across the top of a baguette) -->
-                        <Path Stretch="Uniform" Width="22" Height="22"
-                              Stroke="#80FFFFFF" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                              Data="M 11,8 L 13,11   M 15,7 L 17,10   M 19,8 L 21,11"/>
-                    </Grid>
+                    <Image Source="pack://application:,,,/Assets/Brand/bread.png"
+                           Width="24" Height="24"
+                           VerticalAlignment="Center"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
                         <TextBlock Text="Crustcut"
                                    FontFamily="Segoe UI Variable Display, Segoe UI"
@@ -315,8 +294,11 @@
             </Grid>
         </Border>
 
-        <!-- Page host -->
-        <ContentControl x:Name="PageHost" Margin="32,24,32,32"/>
+        <!-- Page host — wrapped in a solid-bg Border so Mica only shows in the title bar,
+             not behind the main content. -->
+        <Border Background="{StaticResource Bg0Brush}">
+            <ContentControl x:Name="PageHost" Margin="32,24,32,32"/>
+        </Border>
     </DockPanel>
     </Grid>
 </Window>

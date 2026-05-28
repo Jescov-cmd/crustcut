@@ -1,7 +1,6 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using H.NotifyIcon;
 using DIcon = System.Drawing.Icon;
 
@@ -49,24 +48,34 @@ public sealed class TrayIconService : IDisposable
 
     private ContextMenu BuildContextMenu()
     {
-        // Explicit colors so the popup can't fall into white-on-white (the menu
-        // renders outside MainWindow, so it doesn't inherit our normal theme).
-        var menuBg = new SolidColorBrush(Color.FromRgb(0x1F, 0x1F, 0x22));
-        var menuFg = Brushes.White;
+        var menu = new ContextMenu();
+        // Apply our fully-themed templates. Without TrayContextMenu, WPF's default
+        // template paints an icon-column gutter on the left that reads as a white strip.
+        if (Application.Current?.TryFindResource("TrayContextMenu") is Style menuStyle)
+            menu.Style = menuStyle;
 
-        var menu = new ContextMenu { Background = menuBg, Foreground = menuFg };
-        menu.Items.Add(BuildItem("Show Crustcut", menuFg, () => ShowRequested?.Invoke(this, EventArgs.Empty)));
-        menu.Items.Add(BuildItem("Optimize Now", menuFg, () => OptimizeRequested?.Invoke(this, EventArgs.Empty)));
-        menu.Items.Add(new Separator());
-        menu.Items.Add(BuildItem("Exit", menuFg, () => ExitRequested?.Invoke(this, EventArgs.Empty)));
+        menu.Items.Add(BuildItem("Show Crustcut", () => ShowRequested?.Invoke(this, EventArgs.Empty)));
+        menu.Items.Add(BuildItem("Optimize Now", () => OptimizeRequested?.Invoke(this, EventArgs.Empty)));
+        menu.Items.Add(BuildSeparator());
+        menu.Items.Add(BuildItem("Exit", () => ExitRequested?.Invoke(this, EventArgs.Empty)));
         return menu;
     }
 
-    private static MenuItem BuildItem(string header, Brush foreground, Action onClick)
+    private static MenuItem BuildItem(string header, Action onClick)
     {
-        var item = new MenuItem { Header = header, Foreground = foreground };
+        var item = new MenuItem { Header = header };
+        if (Application.Current?.TryFindResource("TrayMenuItem") is Style trayStyle)
+            item.Style = trayStyle;
         item.Click += (_, _) => onClick();
         return item;
+    }
+
+    private static Separator BuildSeparator()
+    {
+        var sep = new Separator();
+        if (Application.Current?.TryFindResource("TraySeparator") is Style sepStyle)
+            sep.Style = sepStyle;
+        return sep;
     }
 
     private static DIcon BuildIcon() => BreadIcon.BuildSystemIcon(32);

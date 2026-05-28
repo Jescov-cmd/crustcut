@@ -9,6 +9,67 @@
                 <ResourceDictionary Source="Theme/Styles.xaml"/>
                 <ResourceDictionary Source="Theme/Icons.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <!-- Tray context menu styling. WPF's default ContextMenu template paints
+                 a "gutter" rectangle on the left where icons would normally go — that
+                 rectangle reads as a white strip in our dark popup. We override BOTH
+                 the ContextMenu template (no gutter) AND the MenuItem template (no
+                 icon column on each row). Used only by TrayIconService. -->
+            <Style x:Key="TrayContextMenu" TargetType="ContextMenu">
+                <Setter Property="Background" Value="#1F1F22"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="BorderBrush" Value="#33FFFFFF"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="0,4"/>
+                <Setter Property="HasDropShadow" Value="True"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ContextMenu">
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    Padding="{TemplateBinding Padding}"
+                                    SnapsToDevicePixels="True">
+                                <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="TrayMenuItem" TargetType="MenuItem">
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Padding" Value="14,7"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="MenuItem">
+                            <Border x:Name="Bd"
+                                    Background="{TemplateBinding Background}"
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter ContentSource="Header"
+                                                  RecognizesAccessKey="True"
+                                                  VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsHighlighted" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="#33FFFFFF"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="TraySeparator" TargetType="Separator">
+                <Setter Property="Margin" Value="8,4"/>
+                <Setter Property="Background" Value="#22FFFFFF"/>
+                <Setter Property="Height" Value="1"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Separator">
+                            <Border Background="{TemplateBinding Background}" Height="{TemplateBinding Height}"/>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
             <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
             <conv:StringEqualsBoolConverter x:Key="StringEqualsBool"/>
             <conv:InverseBoolConverter x:Key="InverseBoolConverter"/>

@@ -41,7 +41,7 @@
                                 <Setter TargetName="bg" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
                                 <Setter TargetName="bg" Property="Effect">
                                     <Setter.Value>
-                                        <DropShadowEffect Color="#F77254" BlurRadius="14" ShadowDepth="0" Opacity="0.65"/>
+                                        <DropShadowEffect Color="#C8995F" BlurRadius="14" ShadowDepth="0" Opacity="0.65"/>
                                     </Setter.Value>
                                 </Setter>
                                 <Setter Property="Foreground" Value="#1A1A1A"/>

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PrimeOSTuner.Core.Games;
+using PrimeOSTuner.Win.Steam;
 using PrimeOSTuner.Win.SteamGridDb;
 
 namespace PrimeOSTuner.UI.ViewModels;
@@ -13,6 +14,8 @@ public partial class GameLibraryViewModel : ObservableObject
     private readonly ISteamGridDbClient _sgdb;
     private readonly ArtCache? _art;
     private readonly SteamCdnCoverFetcher? _steamCdn;
+    private readonly ISteamAppLookup? _steamLookup;
+    private bool _autoLinkRan;
 
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private bool _showApiKeyPrompt;
@@ -24,13 +27,15 @@ public partial class GameLibraryViewModel : ObservableObject
         GameProfileStore profiles,
         ISteamGridDbClient sgdb,
         ArtCache? artCache,
-        SteamCdnCoverFetcher? steamCdn)
+        SteamCdnCoverFetcher? steamCdn,
+        ISteamAppLookup? steamLookup = null)
     {
         _registry = registry;
         _profiles = profiles;
         _sgdb = sgdb;
         _art = artCache;
         _steamCdn = steamCdn;
+        _steamLookup = steamLookup;
     }
 
     public async Task LoadAsync()
@@ -54,6 +59,32 @@ public partial class GameLibraryViewModel : ObservableObject
         IsLoading = false;
 
         _ = LoadCoversAsync();
+        _ = AutoLinkUnmatchedAsync();
+    }
+
+    /// <summary>
+    /// Background pass: for any manually-added game that has no Steam AppID, resolve
+    /// by name and persist the match. Runs once per VM lifetime; affects the next
+    /// library load (and the next game-start in Sentinel).
+    /// </summary>
+    private async Task AutoLinkUnmatchedAsync()
+    {
+        if (_autoLinkRan || _steamLookup is null) return;
+        _autoLinkRan = true;
+
+        try
+        {
+            var linked = await _registry.AutoLinkUnmatchedAsync(_steamLookup);
+            if (linked > 0)
+            {
+                // Quietly refresh the tile list so the Steam-CDN cover fetcher and
+                // Sentinel get the newly-attached AppIDs without needing a restart.
+                var dispatcher = Application.Current?.Dispatcher;
+                if (dispatcher is null || dispatcher.CheckAccess()) await LoadAsync();
+                else await dispatcher.InvokeAsync(async () => await LoadAsync());
+            }
+        }
+        catch { /* Network failure or partial match — leave the rest unlinked. */ }
     }
 
     private async Task LoadCoversAsync()

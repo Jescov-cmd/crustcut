@@ -102,7 +102,7 @@
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="10" Padding="{TemplateBinding Padding}">
                             <Border.Effect>
-                                <DropShadowEffect Color="#F77254" BlurRadius="18" ShadowDepth="0" Opacity="0.7"/>
+                                <DropShadowEffect Color="#C8995F" BlurRadius="18" ShadowDepth="0" Opacity="0.7"/>
                             </Border.Effect>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
@@ -114,7 +114,7 @@
                             <Setter TargetName="bg" Property="Background" Value="{StaticResource AccentHoverGradientBrush}"/>
                             <Setter TargetName="bg" Property="Effect">
                                 <Setter.Value>
-                                    <DropShadowEffect Color="#FF8A6A" BlurRadius="28" ShadowDepth="0" Opacity="0.95"/>
+                                    <DropShadowEffect Color="#D8AC73" BlurRadius="28" ShadowDepth="0" Opacity="0.95"/>
                                 </Setter.Value>
                             </Setter>
                         </Trigger>
@@ -246,7 +246,7 @@
                             <Setter TargetName="track" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
                             <Setter TargetName="track" Property="Effect">
                                 <Setter.Value>
-                                    <DropShadowEffect Color="#F77254" BlurRadius="14" ShadowDepth="0" Opacity="0.9"/>
+                                    <DropShadowEffect Color="#C8995F" BlurRadius="14" ShadowDepth="0" Opacity="0.9"/>
                                 </Setter.Value>
                             </Setter>
                             <Setter TargetName="thumb" Property="Fill" Value="#1A1A1A"/>

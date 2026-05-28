@@ -1,7 +1,7 @@
 <Window x:Class="PrimeOSTuner.UI.Dialogs.AddGameDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Add a game" Height="320" Width="500" WindowStartupLocation="CenterOwner"
+        Title="Add a game" Height="380" Width="500" WindowStartupLocation="CenterOwner"
         Background="{StaticResource Bg0Brush}">
     <StackPanel Margin="22">
         <TextBlock Text="Display name" Style="{StaticResource SectionLabel}"/>
@@ -22,13 +22,18 @@
         </Grid>
 
         <TextBlock Text="Steam app ID (optional)" Style="{StaticResource SectionLabel}"/>
-        <TextBox x:Name="AppIdBox" Margin="0,0,0,18" Padding="8,6"
+        <TextBlock Text="Leave blank and we'll auto-link the title to Steam so Sentinel can pull the recommended spec."
+                   Foreground="{StaticResource Text3Brush}" FontSize="11" Margin="0,0,0,4"/>
+        <TextBox x:Name="AppIdBox" Margin="0,0,0,12" Padding="8,6"
                  Background="{StaticResource Bg2Brush}" Foreground="{StaticResource Text0Brush}"
                  BorderBrush="{StaticResource StrokeBrush}"/>
 
+        <TextBlock x:Name="StatusText" Text="" Margin="0,0,0,12"
+                   Foreground="{StaticResource Text2Brush}" FontSize="12" TextWrapping="Wrap"/>
+
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="Cancel" Click="CancelClick" Margin="0,0,8,0" Padding="14,6"/>
-            <Button Content="Add" Click="OkClick" Padding="14,6"
+            <Button x:Name="OkBtn" Content="Add" Click="OkClick" Padding="14,6"
                     Background="{StaticResource AccentBrush}" Foreground="White" FontWeight="Bold"/>
         </StackPanel>
     </StackPanel>

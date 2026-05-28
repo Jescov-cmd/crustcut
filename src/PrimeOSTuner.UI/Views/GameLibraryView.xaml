@@ -24,18 +24,28 @@
                         Click="AddGameClick"/>
             </Grid>
 
-            <!-- SteamGridDB key prompt — only shown when the user has at least one non-Steam
-                 game (manually-added EXE) and no SGDB key configured. Steam games use the
-                 public Steam CDN and need no key. -->
+            <!-- Cover-art prompt for games we couldn't auto-link to Steam. Steam itself
+                 doesn't expose art for games not in its catalog, so we fall back to
+                 SteamGridDB — a separate community art database, unrelated to Valve. -->
             <Border Style="{StaticResource CardBorder}" Margin="0,0,0,16"
                     Visibility="{Binding ShowApiKeyPrompt, Converter={StaticResource BoolToVisibility}}">
                 <StackPanel>
-                    <TextBlock Text="Cover art for non-Steam games"
+                    <TextBlock Text="Cover art for games not on Steam"
                                Foreground="{StaticResource WarnBrush}"
                                FontWeight="SemiBold" FontSize="14"/>
-                    <TextBlock Text="Steam games already get cover art automatically. For manually-added games, add a SteamGridDB API key to %LOCALAPPDATA%\PrimeOSTuner\settings.json under SteamGridDbApiKey."
-                               Foreground="{StaticResource Text2Brush}"
-                               FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    <TextBlock TextWrapping="Wrap" Margin="0,4,0,0" FontSize="12"
+                               Foreground="{StaticResource Text2Brush}">
+                        <Run Text="Most games — including manually-added ones — get covers automatically from Steam's public CDN."/>
+                        <LineBreak/>
+                        <LineBreak/>
+                        <Run Text="For titles that aren't on Steam at all, "/>
+                        <Run Text="SteamGridDB" FontWeight="SemiBold" Foreground="{StaticResource Text0Brush}"/>
+                        <Run Text=" (a community art database, not run by Steam/Valve) has covers — but it needs a free API key from steamgriddb.com. Save it as "/>
+                        <Run Text="SteamGridDbApiKey" FontFamily="Consolas" Foreground="{StaticResource Text0Brush}"/>
+                        <Run Text=" in "/>
+                        <Run Text="%LOCALAPPDATA%\PrimeOSTuner\settings.json" FontFamily="Consolas" Foreground="{StaticResource Text0Brush}"/>
+                        <Run Text="."/>
+                    </TextBlock>
                 </StackPanel>
             </Border>
 

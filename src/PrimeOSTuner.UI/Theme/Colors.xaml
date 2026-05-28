@@ -19,12 +19,13 @@
     <Color x:Key="Text3">#5F5F69</Color>
     <Color x:Key="Text4">#45454D</Color>
 
-    <!-- Accent: hot pink → orange. The signature identity — kept. -->
-    <Color x:Key="AccentPink">#F7416B</Color>
-    <Color x:Key="AccentOrange">#FFA01F</Color>
-    <Color x:Key="Accent">#F77254</Color>          <!-- middle (coral), used as solid accent -->
-    <Color x:Key="AccentHover">#FF8A6A</Color>
-    <Color x:Key="AccentPressed">#D63B5A</Color>
+    <!-- Accent: warm cream → bread crust. Pulled from the Crustcut bread PNG.
+         Key names kept (AccentPink / AccentOrange) so existing references work. -->
+    <Color x:Key="AccentPink">#F0D6A4</Color>      <!-- cream highlight -->
+    <Color x:Key="AccentOrange">#8B5A2B</Color>    <!-- dark crust -->
+    <Color x:Key="Accent">#C8995F</Color>          <!-- mid tan, used as solid accent -->
+    <Color x:Key="AccentHover">#D8AC73</Color>
+    <Color x:Key="AccentPressed">#B0833F</Color>
 
     <!-- Status -->
     <Color x:Key="Good">#3ECF8E</Color>
@@ -34,6 +35,10 @@
     <!-- Brushes -->
     <SolidColorBrush x:Key="Bg0Brush"        Color="{StaticResource Bg0}"/>
     <SolidColorBrush x:Key="Bg1Brush"        Color="{StaticResource Bg1}"/>
+    <!-- Title-bar overlay tint, ~70% alpha over Bg1 — gives the title bar a translucent
+         feel when Mica backdrop is enabled (Win11+); on Win10 it falls back to a
+         slightly darker shade than Bg1 over the window's solid background. -->
+    <SolidColorBrush x:Key="TopBarBrush"     Color="#B31C1C20"/>
     <SolidColorBrush x:Key="Bg2Brush"        Color="{StaticResource Bg2}"/>
     <SolidColorBrush x:Key="Bg3Brush"        Color="{StaticResource Bg3}"/>
     <SolidColorBrush x:Key="StrokeBrush"     Color="{StaticResource Stroke}"/>
@@ -61,14 +66,14 @@
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="AccentHoverGradientBrush" StartPoint="0,0.5" EndPoint="1,0.5">
-        <GradientStop Color="#FF6388" Offset="0"/>
-        <GradientStop Color="#FF8A6A" Offset="0.55"/>
-        <GradientStop Color="#FFB142" Offset="1"/>
+        <GradientStop Color="#F8E3BD" Offset="0"/>
+        <GradientStop Color="#D8AC73" Offset="0.55"/>
+        <GradientStop Color="#A06A33" Offset="1"/>
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="AccentPressedGradientBrush" StartPoint="0,0.5" EndPoint="1,0.5">
-        <GradientStop Color="#D6315A" Offset="0"/>
-        <GradientStop Color="#D2604A" Offset="0.55"/>
-        <GradientStop Color="#E08512" Offset="1"/>
+        <GradientStop Color="#E0CA9F" Offset="0"/>
+        <GradientStop Color="#B0833F" Offset="0.55"/>
+        <GradientStop Color="#7A4D24" Offset="1"/>
     </LinearGradientBrush>
 </ResourceDictionary>

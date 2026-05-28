@@ -44,6 +44,8 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>
+    <!-- Bread logo embedded as a WPF Resource so it travels inside the single-file exe. -->
+    <Resource Include="Assets\Brand\bread.png" />
   </ItemGroup>
 
 </Project>

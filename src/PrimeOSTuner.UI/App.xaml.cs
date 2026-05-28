@@ -97,6 +97,7 @@ public partial class App : Application
                 s.AddSingleton<INetworkInterfaceClient, NetworkInterfaceClient>();
                 s.AddSingleton<ITimerResolutionClient, TimerResolutionClient>();
                 s.AddSingleton<ISteamLibraryScanner, SteamLibraryScanner>();
+                s.AddHttpClient<ISteamAppLookup, SteamAppLookup>();
                 s.AddSingleton(_ => SteamGridDbSettings.Load());
                 s.AddHttpClient<ISteamGridDbClient, SteamGridDbClient>(c =>
                 {

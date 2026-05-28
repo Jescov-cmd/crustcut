@@ -73,9 +73,13 @@ public partial class DashboardViewModel : ObservableObject, IDisposable
             {
                 BoostScore = result.Score;
                 BoostScoreTier = result.Tier;
+                // Honest framing: we PROBE the system state, so a tweak whose value
+                // already matches Windows defaults reads as "applied" without the user
+                // doing anything. The label has to make that clear — "X optimizations
+                // active" misleadingly implies the user turned them on.
                 BoostScoreSubtitle = result.Total == 0
                     ? "No tweaks available."
-                    : $"{result.Applied} of {result.Total} optimizations active";
+                    : $"{result.Applied} of {result.Total} settings already match our recommendations";
             };
             if (dispatcher is null || dispatcher.CheckAccess()) update();
             else dispatcher.Invoke(update);
