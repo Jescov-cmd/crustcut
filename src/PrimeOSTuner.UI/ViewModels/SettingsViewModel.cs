@@ -20,6 +20,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private readonly TrayIconService _tray;
     private readonly ISentinelService _sentinel;
     private readonly ProfileLifecycleService _lifecycle;
+    private readonly AppRegistrationService _registration;
     private readonly System.Timers.Timer _intervalTimer = new() { AutoReset = true };
     private bool _suspendSave;
     private double _lastRamPercent;
@@ -44,7 +45,8 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         SystemSampler sampler,
         TrayIconService tray,
         ISentinelService sentinel,
-        ProfileLifecycleService lifecycle)
+        ProfileLifecycleService lifecycle,
+        AppRegistrationService registration)
     {
         _store = store;
         _ramCleaner = ramCleaner;
@@ -52,6 +54,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         _tray = tray;
         _sentinel = sentinel;
         _lifecycle = lifecycle;
+        _registration = registration;
 
         var loaded = store.Load();
         _suspendSave = true;
@@ -65,6 +68,13 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         NotificationsEnabled = loaded.NotificationsEnabled;
         SentinelEnabled = loaded.SentinelEnabled;
         _suspendSave = false;
+
+        // Reconcile the scheduled task with the saved setting on startup. If the
+        // user upgraded from an older build where StartAtBoot wrote to HKCU\Run,
+        // their saved setting is `true` but no Task Scheduler entry exists yet —
+        // ensure one is created. Conversely, if StartAtBoot is false, make sure
+        // no task lingers from a prior session.
+        try { _registration.SetStartAtBoot(StartAtBoot); } catch { /* not fatal */ }
 
         _intervalTimer.Elapsed += async (_, _) => await RunAutoRamCleanAsync();
         ConfigureIntervalTimer();
@@ -128,23 +138,19 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
     private void ApplyStartAtBoot(bool enabled)
     {
+        // Delegate to Task Scheduler — HKCU\Run cannot UAC-elevate at startup,
+        // and Crustcut requires admin per app.manifest, so the old Run-key
+        // approach silently failed every boot.
+        _registration.SetStartAtBoot(enabled);
+
+        // Clean up any stale Run-key entry left over from older versions
+        // (PrimeOS Tuner pre-v0.4.4) — those entries point at long-gone exes
+        // and would just sit there forever otherwise.
         try
         {
             using var key = Registry.CurrentUser.OpenSubKey(RunRegistryKey, writable: true);
-            if (key is null) return;
-            if (enabled)
-            {
-                // Environment.ProcessPath is the canonical "where am I running from" lookup
-                // and works inside single-file publish (Assembly.Location returns empty there).
-                var exe = Environment.ProcessPath;
-                if (!string.IsNullOrEmpty(exe))
-                    key.SetValue(RunValueName, $"\"{exe}\"");
-            }
-            else
-            {
-                if (key.GetValue(RunValueName) is not null)
-                    key.DeleteValue(RunValueName, throwOnMissingValue: false);
-            }
+            if (key?.GetValue(RunValueName) is not null)
+                key.DeleteValue(RunValueName, throwOnMissingValue: false);
         }
         catch { }
     }

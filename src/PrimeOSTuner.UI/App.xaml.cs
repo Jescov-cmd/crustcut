@@ -319,6 +319,7 @@ public partial class App : Application
                 s.AddTransient<Views.Optimization101View>();
 
                 s.AddSingleton<Services.TrayIconService>();
+                s.AddSingleton<Services.AppRegistrationService>();
                 s.AddSingleton<MainWindow>();
             })
             .Build();
@@ -336,6 +337,10 @@ public partial class App : Application
         var lifecycle = Host.Services.GetRequiredService<ProfileLifecycleService>();
         await lifecycle.RecoverFromCrashAsync();
         lifecycle.Start();
+
+        // Register the Start Menu shortcut so Windows search finds "Crustcut".
+        // Idempotent — only writes if missing or pointing at a different exe.
+        Host.Services.GetRequiredService<Services.AppRegistrationService>().EnsureStartMenuShortcut();
 
         // Tray icon — eager-init so the icon is in the system tray immediately.
         var tray = Host.Services.GetRequiredService<Services.TrayIconService>();
