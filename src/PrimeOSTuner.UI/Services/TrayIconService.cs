@@ -119,6 +119,7 @@ public sealed class TrayIconService : IDisposable
         public DelegateCommand(Action action) => _action = action;
         public bool CanExecute(object? p) => true;
         public void Execute(object? p) => _action();
-        public event EventHandler? CanExecuteChanged;
+        // CanExecute is constant true — this command never disables. Required by ICommand.
+        public event EventHandler? CanExecuteChanged { add { } remove { } }
     }
 }
