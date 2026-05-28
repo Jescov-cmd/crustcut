@@ -34,7 +34,7 @@
                            TextWrapping="Wrap"
                            Foreground="{StaticResource Text2Brush}"
                            FontSize="12"/>
-                <TextBlock Text="Uninstalling cannot be reversed from inside PrimeOS Tuner."
+                <TextBlock Text="Uninstalling cannot be reversed from inside Crustcut."
                            Foreground="{StaticResource Text3Brush}"
                            FontSize="11" FontStyle="Italic" Margin="0,8,0,0"/>
             </StackPanel>

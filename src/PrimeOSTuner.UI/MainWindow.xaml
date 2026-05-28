@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        Title="PrimeOS Tuner"
+        Title="Crustcut"
         Height="780" Width="1240"
         MinWidth="640" MinHeight="480"
         WindowStartupLocation="CenterScreen"
@@ -93,60 +93,40 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Brand: animated morphing-blob (pink→orange gradient, slow spin + scale wobble + pink halo) -->
+                <!-- Brand: bread loaf icon (pink→orange gradient) + Crustcut wordmark.
+                     The bread shape is built from WPF paths so the gradient fills it naturally.
+                     If a custom icon image is later placed at Assets\Brand\bread.png, the
+                     PrimeOSTuner.UI.csproj <Content Include> will copy it and you can swap
+                     this Grid for an Image element pointing at it. -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,28,0">
-                    <Grid Width="18" Height="18" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
-                        <Grid.RenderTransform>
-                            <RotateTransform x:Name="BrandRotate" Angle="0"/>
-                        </Grid.RenderTransform>
-                        <Grid.Triggers>
-                            <EventTrigger RoutedEvent="Loaded">
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="BrandRotate"
-                                                         Storyboard.TargetProperty="Angle"
-                                                         From="0" To="360" Duration="0:0:12"
-                                                         RepeatBehavior="Forever"/>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
-                        </Grid.Triggers>
-                        <Ellipse RenderTransformOrigin="0.5,0.5">
-                            <Ellipse.Fill>
-                                <LinearGradientBrush StartPoint="0.15,0" EndPoint="0.85,1">
+                    <Grid Width="22" Height="22" VerticalAlignment="Center">
+                        <!-- Soft pink halo, same as before — keeps the brand recognizable -->
+                        <Ellipse Width="22" Height="22" Fill="Transparent">
+                            <Ellipse.Effect>
+                                <DropShadowEffect Color="#F7416B" BlurRadius="10" ShadowDepth="0" Opacity="0.45"/>
+                            </Ellipse.Effect>
+                        </Ellipse>
+                        <!-- Bread loaf body: rounded oval, slightly taller on top, with the accent gradient -->
+                        <Path Stretch="Uniform" Width="22" Height="22"
+                              Data="M 4,12 C 4,7  9,4  16,4  C 23,4  28,7  28,12 C 28,14 27,16 25,17 C 25,19 23,20 20,20 C 18,20 17,19 16,18 C 15,19 14,20 12,20 C 9,20 7,19 7,17 C 5,16 4,14 4,12 Z">
+                            <Path.Fill>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                     <GradientStop Color="{StaticResource AccentPink}" Offset="0"/>
                                     <GradientStop Color="{StaticResource AccentOrange}" Offset="1"/>
                                 </LinearGradientBrush>
-                            </Ellipse.Fill>
-                            <Ellipse.Effect>
-                                <DropShadowEffect Color="#F7416B" BlurRadius="12" ShadowDepth="0" Opacity="0.65"/>
-                            </Ellipse.Effect>
-                            <Ellipse.RenderTransform>
-                                <ScaleTransform x:Name="BrandScale" ScaleX="1" ScaleY="1"/>
-                            </Ellipse.RenderTransform>
-                            <Ellipse.Triggers>
-                                <EventTrigger RoutedEvent="Loaded">
-                                    <BeginStoryboard>
-                                        <!-- ScaleX and ScaleY on different durations + offset → asymmetric "morph" wobble -->
-                                        <Storyboard RepeatBehavior="Forever" AutoReverse="True">
-                                            <DoubleAnimation Storyboard.TargetName="BrandScale"
-                                                             Storyboard.TargetProperty="ScaleX"
-                                                             From="0.92" To="1.08" Duration="0:0:3"/>
-                                            <DoubleAnimation Storyboard.TargetName="BrandScale"
-                                                             Storyboard.TargetProperty="ScaleY"
-                                                             From="1.08" To="0.92" Duration="0:0:3.7"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </EventTrigger>
-                            </Ellipse.Triggers>
-                        </Ellipse>
+                            </Path.Fill>
+                        </Path>
+                        <!-- Diagonal score marks (the classic three slashes across the top of a baguette) -->
+                        <Path Stretch="Uniform" Width="22" Height="22"
+                              Stroke="#80FFFFFF" StrokeThickness="1.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              Data="M 11,8 L 13,11   M 15,7 L 17,10   M 19,8 L 21,11"/>
                     </Grid>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
-                        <TextBlock Text="PrimeOS Tuner"
+                        <TextBlock Text="Crustcut"
                                    FontFamily="Segoe UI Variable Display, Segoe UI"
-                                   FontSize="14" FontWeight="SemiBold"
+                                   FontSize="15" FontWeight="SemiBold"
                                    VerticalAlignment="Center"/>
-                        <TextBlock Text="v0.4.2"
+                        <TextBlock Text="v0.4.3"
                                    FontFamily="Segoe UI Variable Text, Segoe UI"
                                    FontSize="10"
                                    Foreground="{StaticResource Text3Brush}"

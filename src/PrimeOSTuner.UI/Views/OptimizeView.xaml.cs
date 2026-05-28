@@ -190,8 +190,8 @@ public partial class OptimizeView : UserControl
         {
             row.IsApplied = !row.IsApplied;  // revert the toggle visually
             MessageBox.Show(
-                "This tweak needs administrator rights, but PrimeOS Tuner isn't running as admin.\n\n" +
-                "Close the app, then right-click PrimeOSTuner.UI.exe and choose 'Run as administrator' (or run it from an admin terminal).",
+                "This tweak needs administrator rights, but Crustcut isn't running as admin.\n\n" +
+                "Close the app, then right-click Crustcut.exe and choose 'Run as administrator' (or run it from an admin terminal).",
                 row.Tweak.DisplayName,
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
@@ -262,7 +262,7 @@ public partial class OptimizeView : UserControl
         try
         {
             // /r restart, /t 5 = 5-second delay, /c message shown to user
-            Process.Start(new ProcessStartInfo("shutdown.exe", "/r /t 5 /c \"PrimeOS Tuner: applying changes\"")
+            Process.Start(new ProcessStartInfo("shutdown.exe", "/r /t 5 /c \"Crustcut: applying changes\"")
             {
                 CreateNoWindow = true,
                 UseShellExecute = false,

@@ -22,11 +22,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>0.4.2</Version>
-    <AssemblyVersion>0.4.2.0</AssemblyVersion>
-    <FileVersion>0.4.2.0</FileVersion>
-    <Product>PrimeOS Tuner</Product>
-    <Company>PrimeOS Tuner</Company>
+    <Version>0.4.3</Version>
+    <AssemblyVersion>0.4.3.0</AssemblyVersion>
+    <FileVersion>0.4.3.0</FileVersion>
+    <Product>Crustcut</Product>
+    <Company>Crustcut</Company>
+    <!-- AssemblyName drives the exe filename: Crustcut.exe (instead of PrimeOSTuner.UI.exe).
+         This is what shows in Task Manager's Details tab and on the taskbar. -->
+    <AssemblyName>Crustcut</AssemblyName>
+    <!-- Keep RootNamespace as the original — renaming would force-edit hundreds of files
+         for zero user-visible benefit. The C# namespace is invisible to end users. -->
+    <RootNamespace>PrimeOSTuner.UI</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

@@ -104,7 +104,7 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
                             <TextBlock Text="Start at boot" FontWeight="SemiBold" FontSize="14"/>
-                            <TextBlock Text="Run PrimeOS Tuner automatically when Windows starts."
+                            <TextBlock Text="Run Crustcut automatically when Windows starts."
                                        Foreground="{StaticResource Text2Brush}" FontSize="12" Margin="0,2,0,0"/>
                         </StackPanel>
                         <ToggleButton Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}"

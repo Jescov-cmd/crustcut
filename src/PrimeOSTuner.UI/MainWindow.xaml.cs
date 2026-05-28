@@ -9,6 +9,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Microsoft.Extensions.DependencyInjection;
+using PrimeOSTuner.UI.Services;
 using PrimeOSTuner.UI.ViewModels;
 using PrimeOSTuner.UI.Views;
 
@@ -28,6 +29,8 @@ public partial class MainWindow : Window
     public MainWindow(ShellViewModel vm, WatcherStatusViewModel watcherVm, SettingsViewModel settingsVm, SentinelViewModel sentinelVm)
     {
         InitializeComponent();
+        // Bread loaf icon — shows in taskbar, Alt-Tab, Task Manager Apps tab.
+        Icon = BreadIcon.BuildWpfImageSource(64);
         _shellVm = vm;
         _settingsVm = settingsVm;
         _sentinelVm = sentinelVm;

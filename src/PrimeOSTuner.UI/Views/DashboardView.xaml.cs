@@ -40,7 +40,7 @@ public partial class DashboardView : UserControl
             var report = await _optimizer.RunAsync();
             var msg = $"Optimization complete: {report.SuccessCount} succeeded, {report.FailureCount} failed.";
             OptimizeStatus.Text = msg;
-            Notify("PrimeOS Tuner", msg);
+            Notify("Crustcut", msg);
             if (DataContext is DashboardViewModel vm) await vm.RefreshBoostScoreAsync();
         }
         catch (Exception ex)

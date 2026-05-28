@@ -58,7 +58,7 @@ public partial class App : Application
             MessageBox.Show(
                 $"Something went wrong:\n\n{args.Exception.GetType().Name}: {args.Exception.Message}\n\n" +
                 $"The full error has been logged. Click OK to keep the app running.",
-                "PrimeOS Tuner — Error",
+                "Crustcut — Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             args.Handled = true;
         };
@@ -355,7 +355,7 @@ public partial class App : Application
             {
                 var report = await Host.Services.GetRequiredService<PrimeOSTuner.Core.Pipeline.OneClickOptimizer>().RunAsync();
                 if (settings.NotificationsEnabled)
-                    tray.ShowNotification("PrimeOS Tuner",
+                    tray.ShowNotification("Crustcut",
                         $"Optimization complete — {report.SuccessCount} succeeded, {report.FailureCount} failed.");
             }
             catch (Exception ex) { Log.Error(ex, "Tray Optimize Now failed"); }

@@ -91,7 +91,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             if (dispatcher is null || dispatcher.CheckAccess()) update();
             else dispatcher.Invoke(update);
 
-            if (NotificationsEnabled) _tray.ShowNotification("PrimeOS Tuner", "Working sets trimmed.");
+            if (NotificationsEnabled) _tray.ShowNotification("Crustcut", "Working sets trimmed.");
         }
         catch { }
     }
