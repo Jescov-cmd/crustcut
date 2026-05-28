@@ -30,9 +30,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="Assets\PresentMon\*.exe">
+    <!-- Bundle the PresentMon binary as content so it lands in both bin/ and publish/.
+         Explicit filename (not a wildcard) because the SDK's default Content glob
+         excludes .exe and the wildcard form was being filtered out by PublishSingleFile. -->
+    <Content Include="Assets\PresentMon\PresentMon-x64.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
   </ItemGroup>
 
 </Project>

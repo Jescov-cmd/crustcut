@@ -134,7 +134,9 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
             if (key is null) return;
             if (enabled)
             {
-                var exe = Environment.ProcessPath ?? System.Reflection.Assembly.GetEntryAssembly()?.Location;
+                // Environment.ProcessPath is the canonical "where am I running from" lookup
+                // and works inside single-file publish (Assembly.Location returns empty there).
+                var exe = Environment.ProcessPath;
                 if (!string.IsNullOrEmpty(exe))
                     key.SetValue(RunValueName, $"\"{exe}\"");
             }
