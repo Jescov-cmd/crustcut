@@ -26,11 +26,18 @@ public sealed class RamCleanerTweak : ITweak
 
     public Task<TweakResult> ApplyAsync(IProgress<int>? progress = null, CancellationToken ct = default)
     {
-        var protectList = _protectList.Get();
-        var attempted = protectList.Count == 0
-            ? _processes.TrimAllUserProcesses()
-            : _processes.TrimUserProcessesExcept(protectList);
-        return Task.FromResult(TweakResult.Success($"{{\"attempted\":{attempted}}}"));
+        // Heavy synchronous I/O — TrimAllUserProcesses iterates every process on the system
+        // and calls EmptyWorkingSet (which writes dirty pages). On a typical desktop that's
+        // 5–15 seconds of work. Push it to the thread pool so the UI thread keeps painting
+        // and the close/minimize buttons still respond while the trim runs.
+        return Task.Run(() =>
+        {
+            var protectList = _protectList.Get();
+            var attempted = protectList.Count == 0
+                ? _processes.TrimAllUserProcesses()
+                : _processes.TrimUserProcessesExcept(protectList);
+            return TweakResult.Success($"{{\"attempted\":{attempted}}}");
+        }, ct);
     }
 
     public Task<TweakResult> RevertAsync(string undoData, CancellationToken ct = default)
