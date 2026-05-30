@@ -20,7 +20,12 @@ namespace PrimeOSTuner.Win;
 public sealed class HardwareClient : IHardwareClient
 {
     private readonly PerformanceCounter _cpu;
-    private readonly PerformanceCounter[] _gpuCounters;
+    // GPU Engine "Utilization Percentage" instances are PER PROCESS and appear only once a
+    // process starts using the GPU. Building them once at startup missed games launched
+    // later (hence "Fortnite shows 2%"). Keep a live dictionary keyed by instance name and
+    // refresh it each sample — adding new instances, dropping gone ones.
+    private readonly Dictionary<string, PerformanceCounter> _gpuByInstance = new(StringComparer.OrdinalIgnoreCase);
+    private readonly string[] _vramInstances;
     private long _lastNetDown, _lastNetUp;
     private DateTime _lastNetSampleAt;
 
@@ -30,7 +35,7 @@ public sealed class HardwareClient : IHardwareClient
         // Prime the CPU counter — first read always returns 0.
         _ = _cpu.NextValue();
 
-        _gpuCounters = TryBuildGpuCounters();
+        _vramInstances = TryGetVramInstances();
         _lastNetSampleAt = DateTime.UtcNow;
         ReadNetworkTotals(out _lastNetDown, out _lastNetUp);
     }
@@ -48,6 +53,7 @@ public sealed class HardwareClient : IHardwareClient
         }
 
         var gpu = SampleGpuPercent();
+        var (vramUsed, vramTotal) = SampleVram();
 
         ReadNetworkTotals(out var nowDown, out var nowUp);
         var now = DateTime.UtcNow;
@@ -62,7 +68,43 @@ public sealed class HardwareClient : IHardwareClient
         _lastNetUp   = nowUp;
         _lastNetSampleAt = now;
 
-        return new HardwareSnapshot(cpu, ramUsed, ramTotal, gpu, 0.0, downBps, upBps);
+        return new HardwareSnapshot(cpu, ramUsed, ramTotal, gpu, 0.0, downBps, upBps, vramUsed, vramTotal);
+    }
+
+    private static string[] TryGetVramInstances()
+    {
+        try
+        {
+            return new PerformanceCounterCategory("GPU Adapter Memory").GetInstanceNames();
+        }
+        catch
+        {
+            return Array.Empty<string>();
+        }
+    }
+
+    /// <summary>Dedicated VRAM used / total across adapters, via the cross-vendor
+    /// "GPU Adapter Memory" counters. Returns (0,0) if unavailable.</summary>
+    private (long Used, long Total) SampleVram()
+    {
+        if (_vramInstances.Length == 0) return (0, 0);
+        long used = 0, total = 0;
+        foreach (var inst in _vramInstances)
+        {
+            try
+            {
+                using var usage = new PerformanceCounter("GPU Adapter Memory", "Dedicated Usage", inst, readOnly: true);
+                used += (long)usage.NextValue();
+            }
+            catch { }
+            try
+            {
+                using var limit = new PerformanceCounter("GPU Adapter Memory", "Dedicated Limit", inst, readOnly: true);
+                total += (long)limit.NextValue();
+            }
+            catch { }
+        }
+        return (used, total);
     }
 
     private static double SafeRead(PerformanceCounter c)
@@ -71,33 +113,49 @@ public sealed class HardwareClient : IHardwareClient
     }
 
     /// <summary>
-    /// Build a counter per GPU engine instance. The category exists on Windows 10 1709+
-    /// and isn't guaranteed on every system, so we tolerate failure and just report 0.
+    /// Total 3D-engine GPU utilization. Re-enumerates the per-process "engtype_3D"
+    /// instances each call so a game launched after startup is included, while keeping
+    /// each counter object alive across samples (the utilization counter needs a prior
+    /// reading to produce a non-zero value). Caps at 100%.
     /// </summary>
-    private static PerformanceCounter[] TryBuildGpuCounters()
+    private double SampleGpuPercent()
     {
+        string[] current;
         try
         {
-            var category = new PerformanceCounterCategory("GPU Engine");
-            var instances = category.GetInstanceNames()
+            current = new PerformanceCounterCategory("GPU Engine").GetInstanceNames()
                 .Where(n => n.Contains("engtype_3D", StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-
-            return instances
-                .Select(i => new PerformanceCounter("GPU Engine", "Utilization Percentage", i))
                 .ToArray();
         }
         catch
         {
-            return Array.Empty<PerformanceCounter>();
+            return 0;   // category not present on this Windows build
         }
-    }
 
-    private double SampleGpuPercent()
-    {
-        if (_gpuCounters.Length == 0) return 0;
+        var live = new HashSet<string>(current, StringComparer.OrdinalIgnoreCase);
+
+        // Drop counters for instances that no longer exist (process closed).
+        foreach (var gone in _gpuByInstance.Keys.Where(k => !live.Contains(k)).ToList())
+        {
+            try { _gpuByInstance[gone].Dispose(); } catch { }
+            _gpuByInstance.Remove(gone);
+        }
+
         double total = 0;
-        foreach (var c in _gpuCounters) total += SafeRead(c);
+        foreach (var inst in current)
+        {
+            if (!_gpuByInstance.TryGetValue(inst, out var counter))
+            {
+                try
+                {
+                    counter = new PerformanceCounter("GPU Engine", "Utilization Percentage", inst, readOnly: true);
+                    counter.NextValue();   // prime: first read seeds the next real value
+                    _gpuByInstance[inst] = counter;
+                }
+                catch { continue; }
+            }
+            total += SafeRead(counter);
+        }
         return Math.Min(100, total);
     }
 
@@ -122,7 +180,8 @@ public sealed class HardwareClient : IHardwareClient
     public void Dispose()
     {
         _cpu.Dispose();
-        foreach (var c in _gpuCounters) c.Dispose();
+        foreach (var c in _gpuByInstance.Values) { try { c.Dispose(); } catch { } }
+        _gpuByInstance.Clear();
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]

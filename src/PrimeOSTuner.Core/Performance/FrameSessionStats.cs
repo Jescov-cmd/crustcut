@@ -12,4 +12,5 @@ public sealed record FrameSessionStats(
     double P99FrameTimeMs,
     double P999FrameTimeMs,
     double MaxFrameTimeMs,
-    int SampleCount);
+    int SampleCount,
+    double MaxFps = 0);        // = 1000 / fastest frame time ("highest")

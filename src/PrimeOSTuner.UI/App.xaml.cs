@@ -29,9 +29,37 @@ public partial class App : Application
 {
     public IHost Host { get; private set; } = null!;
 
+    // Single-instance guard. Without it, a second launch (e.g. autostart + a manual open,
+    // or two different builds) spins up a second window AND a second system-tray icon —
+    // which is exactly the "two bread icons, only one works" symptom. If another instance
+    // already holds the mutex, this one exits before creating any UI/tray icon.
+    private static System.Threading.Mutex? _singleInstanceMutex;
+    private static System.Threading.EventWaitHandle? _showWindowSignal;
+    private const string SingleInstanceMutexName = @"Local\Crustcut.SingleInstance";
+    private const string ShowWindowEventName = @"Local\Crustcut.ShowWindow";
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        try
+        {
+            _singleInstanceMutex = new System.Threading.Mutex(initiallyOwned: true, SingleInstanceMutexName, out bool createdNew);
+            if (!createdNew)
+            {
+                // Already running in this session. Instead of silently doing nothing
+                // (confusing when the app is minimized to tray), signal the existing
+                // instance to bring its window up, then exit — no duplicate tray icon.
+                try { System.Threading.EventWaitHandle.OpenExisting(ShowWindowEventName).Set(); } catch { }
+                Shutdown();
+                return;
+            }
+            _showWindowSignal = new System.Threading.EventWaitHandle(false, System.Threading.EventResetMode.AutoReset, ShowWindowEventName);
+        }
+        catch
+        {
+            // If the mutex/event can't be created for any reason, proceed without the guard
+            // rather than failing to launch.
+        }
+
         var logsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PrimeOSTuner", "logs");
         Directory.CreateDirectory(logsDir);
 
@@ -54,6 +82,22 @@ public partial class App : Application
         };
         DispatcherUnhandledException += (_, args) =>
         {
+            // Some subsystems (notably the WMI process watcher) can raise exceptions
+            // asynchronously on a background thread — e.g. "Access denied" if WMI is
+            // restricted or the repository is unhealthy. Those are non-fatal and must NOT
+            // pop a scary dialog or take down the UI; just log and keep running.
+            var typeName = args.Exception.GetType().FullName ?? "";
+            var isBenignBackground =
+                typeName == "System.Management.ManagementException" ||
+                args.Exception is UnauthorizedAccessException;
+
+            if (isBenignBackground)
+            {
+                Log.Error(args.Exception, "Non-fatal background exception (suppressed dialog)");
+                args.Handled = true;
+                return;
+            }
+
             Log.Fatal(args.Exception, "Dispatcher unhandled exception");
             MessageBox.Show(
                 $"Something went wrong:\n\n{args.Exception.GetType().Name}: {args.Exception.Message}\n\n" +
@@ -97,6 +141,12 @@ public partial class App : Application
                 s.AddSingleton<INetworkInterfaceClient, NetworkInterfaceClient>();
                 s.AddSingleton<ITimerResolutionClient, TimerResolutionClient>();
                 s.AddSingleton<ISteamLibraryScanner, SteamLibraryScanner>();
+                s.AddSingleton<PrimeOSTuner.Win.Xbox.IXboxLibraryScanner, PrimeOSTuner.Win.Xbox.XboxLibraryScanner>();
+                // External launchers — Epic, Ubisoft, EA, GOG (aggregated by GameRegistry).
+                s.AddSingleton<PrimeOSTuner.Win.Launchers.IExternalGameScanner, PrimeOSTuner.Win.Launchers.EpicGameScanner>();
+                s.AddSingleton<PrimeOSTuner.Win.Launchers.IExternalGameScanner, PrimeOSTuner.Win.Launchers.UbisoftGameScanner>();
+                s.AddSingleton<PrimeOSTuner.Win.Launchers.IExternalGameScanner, PrimeOSTuner.Win.Launchers.EaGameScanner>();
+                s.AddSingleton<PrimeOSTuner.Win.Launchers.IExternalGameScanner, PrimeOSTuner.Win.Launchers.GogGameScanner>();
                 s.AddHttpClient<ISteamAppLookup, SteamAppLookup>();
                 s.AddSingleton(_ => SteamGridDbSettings.Load());
                 s.AddHttpClient<ISteamGridDbClient, SteamGridDbClient>(c =>
@@ -171,6 +221,7 @@ public partial class App : Application
                 // Profiles
                 s.AddSingleton(_ => new CustomProfileStore(CustomProfileStore.DefaultPath()));
                 s.AddSingleton(_ => new ActiveTweaksStore(ActiveTweaksStore.DefaultPath()));
+                s.AddSingleton(_ => new SessionTweakStore(SessionTweakStore.DefaultPath()));
                 s.AddSingleton<ProfileApplier>();
 
                 // Games
@@ -320,6 +371,7 @@ public partial class App : Application
 
                 s.AddSingleton<Services.TrayIconService>();
                 s.AddSingleton<Services.AppRegistrationService>();
+                s.AddSingleton<Services.OverlayService>();
                 s.AddSingleton<MainWindow>();
             })
             .Build();
@@ -329,14 +381,37 @@ public partial class App : Application
 
         TryCleanupOrphanFrameCsvs();
 
-        var priorityEngine = Host.Services.GetRequiredService<PriorityRuleEngine>();
-        var priorityVm = Host.Services.GetRequiredService<MemoryPriorityViewModel>();
-        await priorityVm.LoadAsync();   // populates rules + reloads engine
-        priorityEngine.Start();
+        // Each startup subsystem is isolated: one failing (e.g. the WMI process watcher
+        // throwing "Access denied" when WMI is restricted) must NOT crash the whole app
+        // startup. Previously an exception here bubbled to the dispatcher handler and the
+        // main window never came up.
+        try
+        {
+            var priorityEngine = Host.Services.GetRequiredService<PriorityRuleEngine>();
+            var priorityVm = Host.Services.GetRequiredService<MemoryPriorityViewModel>();
+            await priorityVm.LoadAsync();   // populates rules + reloads engine
+            priorityEngine.Start();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Priority engine failed to start — continuing without it");
+        }
 
-        var lifecycle = Host.Services.GetRequiredService<ProfileLifecycleService>();
-        await lifecycle.RecoverFromCrashAsync();
-        lifecycle.Start();
+        try
+        {
+            var lifecycle = Host.Services.GetRequiredService<ProfileLifecycleService>();
+            await lifecycle.RecoverFromCrashAsync();
+            lifecycle.Start();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Profile lifecycle failed to start — continuing without it");
+        }
+
+        // Enforce the user's choices: re-apply any optimizer they turned on that has
+        // drifted off (Windows reset it, a driver update reverted it, a volatile setting
+        // like timer resolution, etc.). This is what makes "I turned it on" stay true.
+        await ReapplyDriftedTweaksAsync();
 
         // Register the Start Menu shortcut so Windows search finds "Crustcut".
         // Idempotent — only writes if missing or pointing at a different exe.
@@ -349,12 +424,31 @@ public partial class App : Application
         var sentinelSvc = Host.Services.GetRequiredService<ISentinelService>();
         sentinelSvc.Enabled = settings.SentinelEnabled;
 
-        tray.ShowRequested += (_, _) =>
+        // In-game performance overlay — create the window + hotkey, show per settings.
+        try { Host.Services.GetRequiredService<Services.OverlayService>().Initialize(); }
+        catch (Exception ex) { Log.Error(ex, "Overlay failed to initialize — continuing without it"); }
+
+        void BringToFront()
         {
             window.Show();
             window.WindowState = WindowState.Normal;
             window.Activate();
-        };
+        }
+
+        tray.ShowRequested += (_, _) => BringToFront();
+
+        // When a second launch signals us (single-instance), surface the window instead of
+        // starting a duplicate. The wait callback runs on a thread-pool thread, so marshal
+        // the UI work onto the dispatcher.
+        if (_showWindowSignal is not null)
+        {
+            System.Threading.ThreadPool.RegisterWaitForSingleObject(
+                _showWindowSignal,
+                (_, _) => Dispatcher.BeginInvoke((Action)BringToFront),
+                state: null,
+                millisecondsTimeOutInterval: System.Threading.Timeout.Infinite,
+                executeOnlyOnce: false);
+        }
         tray.OptimizeRequested += async (_, _) =>
         {
             try
@@ -384,6 +478,26 @@ public partial class App : Application
         base.OnStartup(e);
     }
 
+    private async Task ReapplyDriftedTweaksAsync()
+    {
+        try
+        {
+            var store = Host.Services.GetRequiredService<SessionTweakStore>();
+            var ids = await store.LoadAsync();
+            if (ids.Count == 0) return;
+
+            var tweaks = Host.Services.GetRequiredService<IEnumerable<ITweak>>();
+            var result = await PrimeOSTuner.Core.Tweaks.DriftedTweakReapplier.ReapplyAsync(tweaks, ids);
+            if (result.Reapplied > 0 || result.Failed > 0)
+                Log.Information("Startup enforcement: re-applied {N} drifted optimizer(s), {A} already on, {F} failed",
+                    result.Reapplied, result.AlreadyApplied, result.Failed);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Drifted-tweak re-apply pass failed");
+        }
+    }
+
     private bool _exitingForReal;
     public bool IsExitingForReal => _exitingForReal;
     public void RequestRealExit() { _exitingForReal = true; Shutdown(); }
@@ -393,6 +507,9 @@ public partial class App : Application
         Log.CloseAndFlush();
         Host?.StopAsync().Wait(TimeSpan.FromSeconds(5));
         Host?.Dispose();
+        try { _singleInstanceMutex?.ReleaseMutex(); } catch { /* not owned / second instance */ }
+        _singleInstanceMutex?.Dispose();
+        _showWindowSignal?.Dispose();
         base.OnExit(e);
     }
 

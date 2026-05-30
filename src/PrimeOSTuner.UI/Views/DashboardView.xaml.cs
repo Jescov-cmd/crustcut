@@ -26,6 +26,11 @@ public partial class DashboardView : UserControl
         _settings = settings;
     }
 
+    // A performance card is a teaser — clicking it jumps to the Sentinel tab for the
+    // full per-session breakdown.
+    private void PerformanceCard_Click(object sender, RoutedEventArgs e)
+        => (Window.GetWindow(this) as MainWindow)?.NavigateTo("Sentinel");
+
     private void Notify(string title, string message)
     {
         if (_settings.NotificationsEnabled) _tray.ShowNotification(title, message);

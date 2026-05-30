@@ -4,6 +4,8 @@ using PrimeOSTuner.Core.Games;
 using PrimeOSTuner.UI.ViewModels;
 using PrimeOSTuner.Win.SteamGridDb;
 using PrimeOSTuner.Win.Steam;
+using PrimeOSTuner.Win.Xbox;
+using PrimeOSTuner.Win.Launchers;
 using Xunit;
 
 namespace PrimeOSTuner.Tests.ViewModels;
@@ -19,12 +21,19 @@ public class GameLibraryViewModelTests : IDisposable
             if (File.Exists(p)) File.Delete(p);
     }
 
+    private static IXboxLibraryScanner NoXbox()
+    {
+        var m = new Mock<IXboxLibraryScanner>();
+        m.Setup(x => x.ScanInstalledGames()).Returns(Array.Empty<XboxGame>());
+        return m.Object;
+    }
+
     [Fact]
     public async Task LoadAsync_populates_tiles_for_each_game_in_registry()
     {
         var scanner = new Mock<ISteamLibraryScanner>();
         scanner.Setup(s => s.ScanInstalledGames()).Returns(Array.Empty<SteamGame>());
-        var registry = new GameRegistry(scanner.Object, new AddedGamesStore(_addedPath));
+        var registry = new GameRegistry(scanner.Object, NoXbox(), Array.Empty<IExternalGameScanner>(), new AddedGamesStore(_addedPath));
         var profileStore = new GameProfileStore(_gpPath);
         var sgdb = new Mock<ISteamGridDbClient>();
         sgdb.SetupGet(c => c.HasApiKey).Returns(false);
@@ -41,7 +50,7 @@ public class GameLibraryViewModelTests : IDisposable
     {
         var scanner = new Mock<ISteamLibraryScanner>();
         scanner.Setup(s => s.ScanInstalledGames()).Returns(Array.Empty<SteamGame>());
-        var registry = new GameRegistry(scanner.Object, new AddedGamesStore(_addedPath));
+        var registry = new GameRegistry(scanner.Object, NoXbox(), Array.Empty<IExternalGameScanner>(), new AddedGamesStore(_addedPath));
         var profileStore = new GameProfileStore(_gpPath);
         await profileStore.SetProfileForAsync("static.valorant", "performance");
         var sgdb = new Mock<ISteamGridDbClient>();

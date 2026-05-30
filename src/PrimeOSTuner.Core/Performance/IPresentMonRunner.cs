@@ -13,6 +13,13 @@ public interface IPresentMonRunner
     /// </summary>
     Task<string?> StartAsync(int gamePid, string outputCsvPath, CancellationToken ct = default);
 
+    /// <summary>
+    /// Stream live per-frame times (ms between presents) from PresentMon's stdout, invoking
+    /// <paramref name="onFrame"/> for each frame. Completes when the game exits (or the token
+    /// is cancelled). Used for both the live FPS counter and accumulating the session's stats.
+    /// </summary>
+    Task StreamAsync(int gamePid, Action<double> onFrame, CancellationToken ct = default);
+
     /// <summary>Stop the in-flight PresentMon process, if any. Safe to call when nothing is running.</summary>
     Task StopAsync(CancellationToken ct = default);
 }

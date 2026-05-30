@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using PrimeOSTuner.Core.History;
+using PrimeOSTuner.Core.Profiles;
 using PrimeOSTuner.Core.Tweaks;
 using Serilog;
 
@@ -27,16 +28,18 @@ public partial class OptimizeView : UserControl
     };
 
     private readonly TweakHistory _history;
+    private readonly SessionTweakStore _sessionStore;
     private readonly List<TweakRowVm> _allRows;
     private readonly ObservableCollection<FilterChipVm> _chips = new();
     private string _activeKey = "all";
     private string _searchText = "";
     private readonly HashSet<string> _pendingReboot = new();
 
-    public OptimizeView(IEnumerable<ITweak> tweaks, TweakHistory history)
+    public OptimizeView(IEnumerable<ITweak> tweaks, TweakHistory history, SessionTweakStore sessionStore)
     {
         InitializeComponent();
         _history = history;
+        _sessionStore = sessionStore;
         var allTweaks = tweaks.ToList();
 
         _allRows = allTweaks
@@ -59,6 +62,65 @@ public partial class OptimizeView : UserControl
         _chips.Add(new FilterChipVm("power", "Power"));
         FilterChips.ItemsSource = _chips;
         Refilter();
+
+        // Reflect what's ACTUALLY applied on the system. Without this, every toggle
+        // showed "off" on each launch even when the tweak was applied — which read to
+        // users as "it didn't save my optimizations." Runs off the UI thread because
+        // some probes spawn powercfg; results are marshalled back via the dispatcher.
+        _ = InitializeAppliedStatesAsync();
+    }
+
+    private async Task InitializeAppliedStatesAsync()
+    {
+        try
+        {
+            var tweaks = _allRows.Select(r => r.Tweak);
+            var states = await Task.Run(() => TweakStateInitializer.ComputeAsync(tweaks, _history));
+
+            // Defensive: build the lookup without throwing on any duplicate id (last wins).
+            var byId = new Dictionary<string, TweakRowVm>(StringComparer.OrdinalIgnoreCase);
+            foreach (var r in _allRows) byId[r.Tweak.Id] = r;
+
+            int updated = 0;
+            foreach (var s in states)
+            {
+                if (!byId.TryGetValue(s.TweakId, out var row)) continue;
+                // Setting IsApplied here updates the toggle via binding but does NOT raise
+                // the ToggleButton.Click handler (that only fires on real user input), so
+                // this can't accidentally re-apply or revert anything.
+                row.UndoData = s.UndoData;
+                row.IsApplied = s.IsApplied;
+                updated++;
+            }
+
+            // Diagnostic: records exactly what the tab detected, so "it shows everything off"
+            // reports can be traced to probe results vs a display problem.
+            var appliedIds = states.Where(s => s.IsApplied).Select(s => s.TweakId).ToList();
+
+            // Backfill the startup-enforce store with everything already applied. Tweaks the
+            // user turned on in older builds (or via Apply-All/profiles) were never recorded,
+            // so when Windows quietly reverted one (classic: Game Mode after a reboot) nothing
+            // restored it. Now any applied optimizer is enforced on the next launch.
+            if (appliedIds.Count > 0)
+            {
+                try { await _sessionStore.AddManyAsync(appliedIds); }
+                catch (Exception ex) { Log.Warning(ex, "Failed to backfill session-enforce store"); }
+            }
+            Log.Information(
+                "Optimize tab loaded: {Updated} tiles updated, {Applied}/{Total} detected applied [{Ids}]",
+                updated, appliedIds.Count, states.Count, string.Join(", ", appliedIds));
+
+            // At-a-glance status so the tab never again looks like "everything reset".
+            var total = _allRows.Count;
+            StatusText.Text = appliedIds.Count == 0
+                ? $"No optimizations active yet — toggle any of the {total} tiles to apply one."
+                : $"{appliedIds.Count} of {total} optimizations active. Toggle any tile to change it.";
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to initialize Optimize tile applied-states");
+            StatusText.Text = "Toggle each tile on or off. The tile lights up while a tweak is active.";
+        }
     }
 
     private static bool IsCleanupTweak(string id) => CleanupTweakIds.Contains(id);
@@ -151,12 +213,14 @@ public partial class OptimizeView : UserControl
     {
         if (sender is not ToggleButton tb || tb.Tag is not TweakRowVm row) return;
 
+        Log.Information("Toggle {Id}: user set to {State}", row.Tweak.Id, row.IsApplied ? "ON (apply)" : "OFF (revert)");
         tb.IsEnabled = false;
         try
         {
             if (row.IsApplied)
             {
                 var result = await row.Tweak.ApplyAsync();
+                Log.Information("Apply {Id}: succeeded={Ok} err={Err}", row.Tweak.Id, result.Succeeded, result.Error);
                 if (result.Succeeded)
                 {
                     row.UndoData = result.UndoData;
@@ -164,6 +228,10 @@ public partial class OptimizeView : UserControl
                     // swallow the reboot indication.
                     if (row.Tweak.RequiresReboot) MarkPendingReboot(row.Tweak);
                     await TryAppendHistoryAsync(row.Tweak, result.UndoData);
+                    // Record that the user wants this optimizer ON. On the next launch,
+                    // startup re-applies it if Windows (or a driver/scheme change) has
+                    // quietly reverted it — so "I turned it on" stays true.
+                    await TrySessionRecordAsync(row.Tweak.Id, applied: true);
                 }
                 else
                 {
@@ -183,6 +251,8 @@ public partial class OptimizeView : UserControl
                 {
                     row.UndoData = null;
                     if (row.Tweak.RequiresReboot) MarkPendingReboot(row.Tweak);
+                    // User turned it OFF — stop enforcing it on startup.
+                    await TrySessionRecordAsync(row.Tweak.Id, applied: false);
                 }
             }
         }
@@ -216,6 +286,19 @@ public partial class OptimizeView : UserControl
         => ex is UnauthorizedAccessException
         || (ex.Message?.Contains("requires administrator", StringComparison.OrdinalIgnoreCase) ?? false)
         || (ex.Message?.Contains("Access is denied", StringComparison.OrdinalIgnoreCase) ?? false);
+
+    private async Task TrySessionRecordAsync(string tweakId, bool applied)
+    {
+        try
+        {
+            if (applied) await _sessionStore.AddAsync(tweakId);
+            else await _sessionStore.RemoveAsync(tweakId);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to record session tweak {Id} (applied={Applied})", tweakId, applied);
+        }
+    }
 
     private async Task TryAppendHistoryAsync(ITweak tweak, string? undoData)
     {

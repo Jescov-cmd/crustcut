@@ -1,4 +1,5 @@
 using System.Text.Json;
+using PrimeOSTuner.Core.Storage;
 
 namespace PrimeOSTuner.Core.Games;
 
@@ -15,12 +16,14 @@ public sealed class AddedGamesStore
             "PrimeOSTuner",
             "added-games.json");
 
+    private readonly System.Threading.SemaphoreSlim _rmw = new(1, 1);
+
     public async Task<IReadOnlyList<KnownGame>> LoadAsync()
     {
-        if (!File.Exists(_path)) return Array.Empty<KnownGame>();
         try
         {
-            var json = await File.ReadAllTextAsync(_path);
+            var json = await ResilientJsonFile.ReadTextAsync(_path);
+            if (string.IsNullOrWhiteSpace(json)) return Array.Empty<KnownGame>();
             return JsonSerializer.Deserialize<List<KnownGame>>(json) ?? new List<KnownGame>();
         }
         catch
@@ -31,21 +34,28 @@ public sealed class AddedGamesStore
 
     public async Task AddAsync(KnownGame game)
     {
-        var list = (await LoadAsync()).ToList();
-        list.RemoveAll(g => g.Id == game.Id);
-        list.Add(game);
-        await SaveAsync(list);
+        await _rmw.WaitAsync();
+        try
+        {
+            var list = (await LoadAsync()).ToList();
+            list.RemoveAll(g => g.Id == game.Id);
+            list.Add(game);
+            await SaveAsync(list);
+        }
+        finally { _rmw.Release(); }
     }
 
     public async Task RemoveAsync(string id)
     {
-        var list = (await LoadAsync()).Where(g => g.Id != id).ToList();
-        await SaveAsync(list);
+        await _rmw.WaitAsync();
+        try
+        {
+            var list = (await LoadAsync()).Where(g => g.Id != id).ToList();
+            await SaveAsync(list);
+        }
+        finally { _rmw.Release(); }
     }
 
     private async Task SaveAsync(List<KnownGame> list)
-    {
-        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
-        await File.WriteAllTextAsync(_path, JsonSerializer.Serialize(list, JsonOpts));
-    }
+        => await ResilientJsonFile.WriteTextAsync(_path, JsonSerializer.Serialize(list, JsonOpts));
 }

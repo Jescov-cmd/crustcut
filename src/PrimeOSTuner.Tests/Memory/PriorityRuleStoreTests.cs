@@ -57,4 +57,30 @@ public class PriorityRuleStoreTests
         }
         finally { if (File.Exists(path)) File.Delete(path); }
     }
+
+    [Fact]
+    public async Task Concurrent_saves_and_loads_do_not_throw_file_in_use()
+    {
+        // Regression: the UI saving while another save/load raced threw
+        // "The process cannot access the file ... because it is being used by another
+        // process." The store now serializes access, so hammering it concurrently is safe.
+        var path = Path.Combine(Path.GetTempPath(), $"primeos-test-{Guid.NewGuid():N}.json");
+        try
+        {
+            var store = new PriorityRuleStore(path);
+            var rule = new PriorityRule(@"C:\Games\cs2.exe", "CS2", PriorityLevel.High, true, true, true);
+
+            var tasks = new List<Task>();
+            for (int i = 0; i < 40; i++)
+            {
+                tasks.Add(store.SaveAsync(new[] { rule }));
+                tasks.Add(store.LoadAsync());
+            }
+
+            // Must complete without an IOException surfacing.
+            var act = async () => await Task.WhenAll(tasks);
+            await act.Should().NotThrowAsync();
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
 }

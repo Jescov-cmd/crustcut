@@ -26,37 +26,44 @@ public class FrameRecordingServiceTests : IDisposable
     private static KnownGame Game(string id = "g", string name = "Test Game") =>
         new(id, name, new[] { "test.exe" }, "12345", "C:\\Games\\Test", KnownGameSource.Steam);
 
-    [Fact]
-    public async Task OnGameStarted_calls_runner_StartAsync_with_the_pid()
+    // Stream mock that synchronously feeds the given frame times to the service's callback.
+    private static Mock<IPresentMonRunner> StreamingRunner(params double[] frameTimesMs)
     {
         var runner = new Mock<IPresentMonRunner>();
-        runner.Setup(r => r.StartAsync(1234, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-              .ReturnsAsync("dummy.csv");
-        var store = new FrameSessionStore(_storePath);
-
-        var svc = new FrameRecordingService(runner.Object, store, _tempDir);
-        svc.OnGameStarted(Game(), pid: 1234);
-        await Task.Yield();
-
-        runner.Verify(r => r.StartAsync(1234, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        runner.Setup(r => r.StreamAsync(It.IsAny<int>(), It.IsAny<Action<double>>(), It.IsAny<CancellationToken>()))
+              .Callback<int, Action<double>, CancellationToken>((_, onFrame, _) =>
+              {
+                  foreach (var ms in frameTimesMs) onFrame(ms);
+              })
+              .Returns(Task.CompletedTask);
+        return runner;
     }
 
     [Fact]
-    public async Task OnGameStopped_stops_the_runner_parses_csv_saves_a_session_and_deletes_the_csv()
+    public async Task OnGameStarted_streams_for_the_given_pid()
     {
-        // Pre-stage a valid CSV at a known path so the service can parse it.
-        var csvPath = Path.Combine(_tempDir, "session.csv");
-        File.WriteAllText(csvPath,
-            "msBetweenPresents\n16.67\n16.67\n16.67\n16.67\n16.67\n16.67\n16.67\n16.67\n16.67\n16.67\n16.67\n");
+        var runner = StreamingRunner();
+        var svc = new FrameRecordingService(runner.Object, new FrameSessionStore(_storePath), _tempDir);
 
-        var runner = new Mock<IPresentMonRunner>();
-        runner.Setup(r => r.StartAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-              .ReturnsAsync(csvPath);
+        svc.OnGameStarted(Game(), pid: 1234);
+        await Task.Yield();
+
+        runner.Verify(r => r.StreamAsync(1234, It.IsAny<Action<double>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Streamed_frames_drive_live_fps_and_a_saved_session()
+    {
+        // 11 frames at 16.67 ms ≈ 60 FPS.
+        var runner = StreamingRunner(Enumerable.Repeat(16.67, 11).ToArray());
         var store = new FrameSessionStore(_storePath);
-
         var svc = new FrameRecordingService(runner.Object, store, _tempDir);
+
         svc.OnGameStarted(Game(name: "Cyberpunk"), pid: 1234);
         await Task.Yield();
+
+        svc.CurrentFps.Should().BeApproximately(60.0, 1.0, "live FPS comes from the rolling window");
+
         await svc.OnGameStoppedAsync();
 
         runner.Verify(r => r.StopAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -64,50 +71,25 @@ public class FrameRecordingServiceTests : IDisposable
         sessions.Should().HaveCount(1);
         sessions[0].GameName.Should().Be("Cyberpunk");
         sessions[0].Stats.AvgFps.Should().BeApproximately(60.0, 0.5);
-        File.Exists(csvPath).Should().BeFalse();   // cleaned up
+        sessions[0].Stats.MaxFps.Should().BeApproximately(60.0, 0.5);
+        svc.CurrentFps.Should().Be(0, "the live counter resets when the game stops");
     }
 
     [Fact]
-    public async Task OnGameStopped_with_no_in_flight_recording_is_a_noop()
+    public async Task OnGameStopped_with_no_recording_is_a_noop()
     {
-        var runner = new Mock<IPresentMonRunner>();
-        var store = new FrameSessionStore(_storePath);
-        var svc = new FrameRecordingService(runner.Object, store, _tempDir);
-
+        var svc = new FrameRecordingService(new Mock<IPresentMonRunner>().Object, new FrameSessionStore(_storePath), _tempDir);
         await svc.OnGameStoppedAsync();
-
-        store.Load().Should().BeEmpty();
-        runner.Verify(r => r.StopAsync(It.IsAny<CancellationToken>()), Times.AtMostOnce);
+        new FrameSessionStore(_storePath).Load().Should().BeEmpty();
     }
 
     [Fact]
-    public async Task OnGameStopped_does_not_save_a_session_when_the_csv_is_empty()
+    public async Task Too_few_frames_saves_nothing()
     {
-        var csvPath = Path.Combine(_tempDir, "empty.csv");
-        File.WriteAllText(csvPath, "msBetweenPresents\n");   // header only
-
-        var runner = new Mock<IPresentMonRunner>();
-        runner.Setup(r => r.StartAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-              .ReturnsAsync(csvPath);
+        var runner = StreamingRunner(16.67, 16.67, 16.67);   // only 3 frames
         var store = new FrameSessionStore(_storePath);
-
         var svc = new FrameRecordingService(runner.Object, store, _tempDir);
-        svc.OnGameStarted(Game(), pid: 1234);
-        await Task.Yield();
-        await svc.OnGameStoppedAsync();
 
-        store.Load().Should().BeEmpty();
-    }
-
-    [Fact]
-    public async Task OnGameStarted_with_runner_returning_null_does_not_throw()
-    {
-        var runner = new Mock<IPresentMonRunner>();
-        runner.Setup(r => r.StartAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-              .ReturnsAsync((string?)null);
-        var store = new FrameSessionStore(_storePath);
-
-        var svc = new FrameRecordingService(runner.Object, store, _tempDir);
         svc.OnGameStarted(Game(), pid: 1234);
         await Task.Yield();
         await svc.OnGameStoppedAsync();

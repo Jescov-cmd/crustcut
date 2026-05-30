@@ -7,7 +7,9 @@ public sealed record HardwareSnapshot(
     double GpuPercent,
     double GpuTempC,
     long NetworkDownBps,
-    long NetworkUpBps);
+    long NetworkUpBps,
+    long VramUsedBytes = 0,
+    long VramTotalBytes = 0);
 
 public interface IHardwareClient : IDisposable
 {

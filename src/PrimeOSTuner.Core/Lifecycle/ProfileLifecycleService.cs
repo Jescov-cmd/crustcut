@@ -83,8 +83,31 @@ public sealed class ProfileLifecycleService
 
     private async void OnGameStarted(object? sender, KnownGame game)
     {
+        try { await HandleGameStartedAsync(game); }
+        catch { /* a game launch must never surface a background error */ }
+    }
+
+    /// <summary>Awaitable core of the GameStarted handler — the event wrapper is fire-and-forget,
+    /// but this lets callers (and tests) drive it deterministically.</summary>
+    public async Task HandleGameStartedAsync(KnownGame game, CancellationToken ct = default)
+    {
         try
         {
+            var pid = ResolvePid(game);
+            lock (_stateGate) { _currentGame = game; _currentPid = pid; }
+
+            // Sentinel watching + frame/FPS recording run for ANY detected game — they don't
+            // require a profile. (Previously these were gated behind a profile assignment,
+            // which is why Sentinel "did nothing" and the FPS overlay stayed blank for games
+            // the user hadn't assigned a profile to.)
+            try { _sentinel?.OnGameStarted(game, pid); }
+            catch { /* Sentinel must never break a game launch */ }
+
+            try { _recorder?.OnGameStarted(game, pid); }
+            catch { /* recording must never break a game launch */ }
+
+            // The optimization profile (and background-app suspension) only apply if the user
+            // assigned one to this game.
             var modeName = await _profiles.GetProfileForAsync(game.Id);
             if (modeName is null) return;
             if (!_profileLookup.TryGetValue(modeName, out var profile)) return;
@@ -95,15 +118,6 @@ public sealed class ProfileLifecycleService
 
             try { _suspender?.SuspendBackgroundApps(); }
             catch { /* freezing optional apps must never break a game launch */ }
-
-            var pid = ResolvePid(game);
-            lock (_stateGate) { _currentGame = game; _currentPid = pid; }
-
-            try { _sentinel?.OnGameStarted(game, pid); }
-            catch { /* Sentinel must never break a game launch */ }
-
-            try { _recorder?.OnGameStarted(game, pid); }
-            catch { /* recording must never break a game launch */ }
         }
         catch
         {
@@ -111,6 +125,13 @@ public sealed class ProfileLifecycleService
     }
 
     private async void OnGameStopped(object? sender, GameStoppedArgs e)
+    {
+        try { await HandleGameStoppedAsync(e); }
+        catch { /* never surface a background error on game exit */ }
+    }
+
+    /// <summary>Awaitable core of the GameStopped handler.</summary>
+    public async Task HandleGameStoppedAsync(GameStoppedArgs e, CancellationToken ct = default)
     {
         try
         {

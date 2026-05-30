@@ -1,4 +1,5 @@
 using System.Text.Json;
+using PrimeOSTuner.Core.Storage;
 
 namespace PrimeOSTuner.Core.Profiles;
 
@@ -17,18 +18,19 @@ public sealed class CustomProfileStore
 
     public async Task<ModeProfile> LoadAsync()
     {
-        if (!File.Exists(_path))
+        var json = await ResilientJsonFile.ReadTextAsync(_path);
+        if (string.IsNullOrWhiteSpace(json))
             return new ModeProfile("custom", "Custom Mode", "Your hand-picked tweak set.", Array.Empty<string>());
 
-        var json = await File.ReadAllTextAsync(_path);
-        var ids = JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
+        List<string> ids;
+        try { ids = JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>(); }
+        catch (JsonException) { ids = new List<string>(); }
         return new ModeProfile("custom", "Custom Mode", "Your hand-picked tweak set.", ids);
     }
 
     public async Task SaveAsync(IEnumerable<string> tweakIds)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
         var json = JsonSerializer.Serialize(tweakIds.ToList(), JsonOpts);
-        await File.WriteAllTextAsync(_path, json);
+        await ResilientJsonFile.WriteTextAsync(_path, json);
     }
 }

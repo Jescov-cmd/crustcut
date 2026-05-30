@@ -237,6 +237,76 @@
       "valueKind": "DWord",
       "appliedData": "4",
       "riskNote": null
+    },
+    {
+      "id": "game.network-throttling",
+      "displayName": "Disable network throttling (gaming)",
+      "description": "Removes Windows' multimedia network throttle that caps packet processing at ~10 per ms. Lowers latency and jitter in online games on fast connections.",
+      "category": "network",
+      "requiresElevation": true,
+      "requiresReboot": false,
+      "hive": "LocalMachine",
+      "key": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile",
+      "valueName": "NetworkThrottlingIndex",
+      "valueKind": "DWord",
+      "appliedData": "0xFFFFFFFF",
+      "riskNote": null
+    },
+    {
+      "id": "game.mpo-disable",
+      "displayName": "Disable Multi-Plane Overlay (fix stutter/flicker)",
+      "description": "Turns off the DWM Multi-Plane Overlay feature, a common cause of flickering, black-screen flashes and micro-stutter on multi-monitor and G-Sync/FreeSync setups.",
+      "category": "fps",
+      "requiresElevation": true,
+      "requiresReboot": true,
+      "hive": "LocalMachine",
+      "key": "SOFTWARE\\Microsoft\\Windows\\Dwm",
+      "valueName": "OverlayTestMode",
+      "valueKind": "DWord",
+      "appliedData": "5",
+      "riskNote": null
+    },
+    {
+      "id": "core.background-apps-disable",
+      "displayName": "Disable background apps",
+      "description": "Stops Store/UWP apps from running in the background. Frees CPU, RAM and network for the foreground game.",
+      "category": "system",
+      "requiresElevation": false,
+      "requiresReboot": false,
+      "hive": "CurrentUser",
+      "key": "Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications",
+      "valueName": "GlobalUserDisabled",
+      "valueKind": "DWord",
+      "appliedData": "1",
+      "riskNote": null
+    },
+    {
+      "id": "core.delivery-optimization-disable",
+      "displayName": "Disable Update upload (Delivery Optimization)",
+      "description": "Stops Windows from uploading update files to other PCs over the internet in the background — keeps that bandwidth for your game.",
+      "category": "network",
+      "requiresElevation": true,
+      "requiresReboot": false,
+      "hive": "LocalMachine",
+      "key": "SOFTWARE\\Policies\\Microsoft\\Windows\\DeliveryOptimization",
+      "valueName": "DODownloadMode",
+      "valueKind": "DWord",
+      "appliedData": "0",
+      "riskNote": null
+    },
+    {
+      "id": "game.fth-disable",
+      "displayName": "Disable Fault Tolerant Heap",
+      "description": "Turns off the Windows heap-monitoring layer that can silently slow down game executables it has flagged after a past crash.",
+      "category": "fps",
+      "requiresElevation": true,
+      "requiresReboot": true,
+      "hive": "LocalMachine",
+      "key": "SOFTWARE\\Microsoft\\FTH",
+      "valueName": "Enabled",
+      "valueKind": "DWord",
+      "appliedData": "0",
+      "riskNote": "Removes an automatic mitigation for repeatedly-crashing apps. Re-enable if a program becomes unstable."
     }
   ]
 }

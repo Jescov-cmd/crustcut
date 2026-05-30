@@ -163,24 +163,105 @@
                                       IsChecked="{Binding NotificationsEnabled, Mode=TwoWay}"
                                       VerticalAlignment="Center"/>
                     </Grid>
+                </StackPanel>
+            </Border>
 
-                    <Border Background="{StaticResource StrokeBrush}" Height="1" Margin="0,16,0,16"/>
-
+            <!-- ================================ Performance overlay ================================ -->
+            <TextBlock Text="PERFORMANCE OVERLAY" Style="{StaticResource SectionLabel}"/>
+            <Border Style="{StaticResource CardBorder}" Margin="0,0,0,18">
+                <StackPanel>
+                    <!-- Master toggle -->
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Sentinel (performance watcher)" FontWeight="SemiBold" FontSize="14"/>
-                            <TextBlock Text="Compares the running game's live resource use to its Steam spec. Surfaces a subtle red dot on the Sentinel tab when something looks wrong."
+                            <TextBlock Text="In-game performance overlay" FontWeight="SemiBold" FontSize="14"/>
+                            <TextBlock Text="A clean, see-through on-screen display of your live CPU / GPU / RAM / VRAM while you play — powered by Sentinel."
                                        Foreground="{StaticResource Text2Brush}" FontSize="12"
                                        TextWrapping="Wrap" Margin="0,2,0,0"/>
                         </StackPanel>
                         <ToggleButton Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}"
-                                      IsChecked="{Binding SentinelEnabled, Mode=TwoWay}"
+                                      IsChecked="{Binding OverlayEnabled, Mode=TwoWay}"
                                       VerticalAlignment="Center"/>
                     </Grid>
+
+                    <!-- Everything below is only relevant when the overlay is on. -->
+                    <StackPanel IsEnabled="{Binding OverlayEnabled}">
+                        <Border Background="{StaticResource StrokeBrush}" Height="1" Margin="0,16,0,16"/>
+
+                        <!-- Reposition + hotkey -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Position" FontWeight="SemiBold" FontSize="14"/>
+                                <TextBlock FontSize="12" Foreground="{StaticResource Text2Brush}"
+                                           TextWrapping="Wrap" Margin="0,2,0,0">
+                                    Press <Run Text="Ctrl + Shift + O" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold"/>
+                                    anytime (even mid-game) to enter edit mode, drag it where you want, then press it again to lock.
+                                </TextBlock>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Reposition"
+                                    Command="{Binding RepositionOverlayCommand}"
+                                    VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <Border Background="{StaticResource StrokeBrush}" Height="1" Margin="0,16,0,16"/>
+
+                        <!-- Only in game -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Only show while a game is running" FontWeight="SemiBold" FontSize="14"/>
+                                <TextBlock Text="Hide the overlay on the desktop; show it only when a detected game is open."
+                                           Foreground="{StaticResource Text2Brush}" FontSize="12" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <ToggleButton Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}"
+                                          IsChecked="{Binding OverlayOnlyInGame, Mode=TwoWay}"
+                                          VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <Border Background="{StaticResource StrokeBrush}" Height="1" Margin="0,16,0,16"/>
+
+                        <!-- Metrics -->
+                        <TextBlock Text="What to show" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,8"/>
+                        <WrapPanel>
+                            <CheckBox Content="FPS"     Foreground="{StaticResource Text0Brush}" Margin="0,0,20,8"
+                                      IsChecked="{Binding OverlayShowFps, Mode=TwoWay}"/>
+                            <CheckBox Content="CPU"     Foreground="{StaticResource Text0Brush}" Margin="0,0,20,8"
+                                      IsChecked="{Binding OverlayShowCpu, Mode=TwoWay}"/>
+                            <CheckBox Content="GPU"     Foreground="{StaticResource Text0Brush}" Margin="0,0,20,8"
+                                      IsChecked="{Binding OverlayShowGpu, Mode=TwoWay}"/>
+                            <CheckBox Content="RAM"     Foreground="{StaticResource Text0Brush}" Margin="0,0,20,8"
+                                      IsChecked="{Binding OverlayShowRam, Mode=TwoWay}"/>
+                            <CheckBox Content="VRAM"    Foreground="{StaticResource Text0Brush}" Margin="0,0,20,8"
+                                      IsChecked="{Binding OverlayShowVram, Mode=TwoWay}"/>
+                            <CheckBox Content="Network" Foreground="{StaticResource Text0Brush}" Margin="0,0,20,8"
+                                      IsChecked="{Binding OverlayShowNet, Mode=TwoWay}"/>
+                        </WrapPanel>
+
+                        <Border Background="{StaticResource StrokeBrush}" Height="1" Margin="0,8,0,16"/>
+
+                        <!-- Size -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="220"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Text size" Foreground="{StaticResource Text2Brush}"
+                                       VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <Slider Grid.Column="1" Minimum="0.8" Maximum="1.6" TickFrequency="0.1"
+                                    IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                                    Value="{Binding OverlayScale, Mode=TwoWay}"/>
+                        </Grid>
+                    </StackPanel>
                 </StackPanel>
             </Border>
 

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using PrimeOSTuner.Core.Storage;
 
 namespace PrimeOSTuner.Core.Education;
 
@@ -21,21 +22,24 @@ public sealed class GuideCompletionStore
 
     public async Task<IReadOnlySet<string>> LoadAsync()
     {
-        if (!File.Exists(_path))
-            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        var json = await File.ReadAllTextAsync(_path);
+        var json = await ResilientJsonFile.ReadTextAsync(_path);
         if (string.IsNullOrWhiteSpace(json))
             return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        var ids = JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
-        return new HashSet<string>(ids, StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            var ids = JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
+            return new HashSet<string>(ids, StringComparer.OrdinalIgnoreCase);
+        }
+        catch (JsonException)
+        {
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
     }
 
     public async Task SaveAsync(IEnumerable<string> completedIds)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
         var json = JsonSerializer.Serialize(completedIds.ToList(), JsonOpts);
-        await File.WriteAllTextAsync(_path, json);
+        await ResilientJsonFile.WriteTextAsync(_path, json);
     }
 }

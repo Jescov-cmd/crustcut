@@ -12,12 +12,13 @@
     <Color x:Key="Stroke">#16FFFFFF</Color>
     <Color x:Key="StrokeSoft">#0EFFFFFF</Color>
 
-    <!-- Text — cool off-white, clear hierarchy -->
-    <Color x:Key="Text0">#F3F3F6</Color>
-    <Color x:Key="Text1">#C6C6CF</Color>
-    <Color x:Key="Text2">#8E8E9A</Color>
-    <Color x:Key="Text3">#5F5F69</Color>
-    <Color x:Key="Text4">#45454D</Color>
+    <!-- Text — cool off-white, clear hierarchy. Secondary/tertiary greys lifted for
+         readability on the dark surfaces (descriptions & labels were a touch dim). -->
+    <Color x:Key="Text0">#F5F5F8</Color>
+    <Color x:Key="Text1">#D0D0D9</Color>
+    <Color x:Key="Text2">#A2A2AE</Color>
+    <Color x:Key="Text3">#7A7A86</Color>
+    <Color x:Key="Text4">#54545E</Color>
 
     <!-- Accent: warm cream → bread crust. Pulled from the Crustcut bread PNG.
          Key names kept (AccentPink / AccentOrange) so existing references work. -->

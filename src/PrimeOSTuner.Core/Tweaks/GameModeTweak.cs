@@ -22,8 +22,11 @@ public sealed class GameModeTweak : ITweak
 
     public Task<TweakState> ProbeAsync(CancellationToken ct = default)
     {
+        // These are REG_DWORD values — Windows' Game Bar stores and rewrites them
+        // as DWORDs. Reading them as strings returns null (so the tile always showed
+        // "not applied" after a reboot once Game Bar normalized the type).
         foreach (var name in ValueNames)
-            if (_registry.ReadString(RegistryHive.CurrentUser, SubKey, name) != "1")
+            if (_registry.ReadDword(RegistryHive.CurrentUser, SubKey, name) != 1)
                 return Task.FromResult(TweakState.NotApplied);
         return Task.FromResult(TweakState.Applied);
     }
@@ -32,7 +35,7 @@ public sealed class GameModeTweak : ITweak
     {
         var backups = new List<RegistryBackup>();
         foreach (var name in ValueNames)
-            backups.Add(_registry.WriteString(RegistryHive.CurrentUser, SubKey, name, "1"));
+            backups.Add(_registry.WriteDword(RegistryHive.CurrentUser, SubKey, name, 1));
         return Task.FromResult(TweakResult.Success(JsonSerializer.Serialize(backups)));
     }
 

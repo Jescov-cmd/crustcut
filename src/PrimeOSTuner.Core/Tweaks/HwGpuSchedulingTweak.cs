@@ -22,13 +22,16 @@ public sealed class HwGpuSchedulingTweak : ITweak
 
     public Task<TweakState> ProbeAsync(CancellationToken ct = default)
     {
-        var v = _registry.ReadString(RegistryHive.LocalMachine, SubKey, ValueName);
-        return Task.FromResult(v == "2" ? TweakState.Applied : TweakState.NotApplied);
+        // HwSchMode is a REG_DWORD (2 = on). Writing/reading it as a string left a
+        // value the GPU driver ignores — so HAGS never actually turned on even though
+        // the tile claimed "applied". Read it as a DWORD to match Windows.
+        var v = _registry.ReadDword(RegistryHive.LocalMachine, SubKey, ValueName);
+        return Task.FromResult(v == 2 ? TweakState.Applied : TweakState.NotApplied);
     }
 
     public Task<TweakResult> ApplyAsync(IProgress<int>? progress = null, CancellationToken ct = default)
     {
-        var backup = _registry.WriteString(RegistryHive.LocalMachine, SubKey, ValueName, "2");
+        var backup = _registry.WriteDword(RegistryHive.LocalMachine, SubKey, ValueName, 2);
         return Task.FromResult(TweakResult.Success(JsonSerializer.Serialize(backup)));
     }
 
@@ -42,7 +45,7 @@ public sealed class HwGpuSchedulingTweak : ITweak
 
     public Task<string> PreviewAsync(CancellationToken ct = default)
     {
-        var current = _registry.ReadString(RegistryHive.LocalMachine, SubKey, ValueName) ?? "(unset)";
+        var current = _registry.ReadDword(RegistryHive.LocalMachine, SubKey, ValueName)?.ToString() ?? "(unset)";
         return Task.FromResult($"Will set HKLM\\{SubKey}\\{ValueName} from '{current}' to '2'. Reboot required.");
     }
 }

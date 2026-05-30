@@ -12,6 +12,12 @@ public interface IPowerPlanClient
     void SetActiveAcValueIndex(string subgroup, string setting, int value);
     /// <summary>Reads the AC index for a setting, or null if powercfg cannot return it.</summary>
     int? GetActiveAcValueIndex(string subgroup, string setting);
+    /// <summary>
+    /// Reads the active scheme's AC setting index directly from the registry by GUID.
+    /// Needed for HIDDEN settings (e.g. CPU core parking / CPMINCORES) that
+    /// <c>powercfg /query</c> refuses to return. Returns null if not explicitly set.
+    /// </summary>
+    int? GetActiveSchemeSettingIndexFromRegistry(string subgroupGuid, string settingGuid);
     /// <summary>Runs powercfg with the given args and returns stdout; throws on non-zero exit.</summary>
     string RunPowercfg(string args);
 }

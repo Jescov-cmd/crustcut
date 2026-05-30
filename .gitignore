@@ -55,3 +55,8 @@ Desktop.ini
 *~
 *.bak
 *.tmp
+
+# Design scratch / mockups (kept locally, not part of the source)
+coolicons-preview.png
+primeos-layouts.html
+primeos-restyle-mockup.html

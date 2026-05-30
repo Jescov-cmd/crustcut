@@ -97,6 +97,10 @@ public partial class MainWindow : Window
         if (sender is Button { Tag: string tab }) ShowTab(tab);
     }
 
+    /// <summary>Programmatic tab switch for in-page links (e.g. a Dashboard performance
+    /// card jumping to the Sentinel tab).</summary>
+    public void NavigateTo(string tab) => ShowTab(tab);
+
     private void TabsScroll_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
         if (sender is ScrollViewer sv)

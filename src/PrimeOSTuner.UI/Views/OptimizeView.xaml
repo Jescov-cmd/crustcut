@@ -65,7 +65,11 @@
         <DataTemplate x:Key="TweakTileTemplate">
             <Border Style="{StaticResource OptimizerTile}"
                     Width="280" Height="180"
-                    Margin="0,0,12,12">
+                    Margin="0,0,12,12"
+                    ToolTip="{Binding Tweak.Description}"
+                    ToolTipService.InitialShowDelay="350"
+                    ToolTipService.ShowDuration="30000"
+                    ToolTipService.BetweenShowDelay="0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -161,7 +165,8 @@
                   HorizontalScrollBarVisibility="Disabled" Padding="0,0,16,0">
         <StackPanel Margin="0,0,0,32">
             <TextBlock Text="Optimize" Style="{StaticResource HeaderText}" Margin="0,0,0,8"/>
-            <TextBlock Text="Toggle each tile on or off. The tile lights up while a tweak is active."
+            <TextBlock x:Name="StatusText"
+                       Text="Checking your system…"
                        Style="{StaticResource SubHeaderText}" Margin="0,0,0,20"/>
 
             <!-- Reboot-required banner: shown after a tweak whose change needs a restart is toggled -->

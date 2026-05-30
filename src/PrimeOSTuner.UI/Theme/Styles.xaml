@@ -47,6 +47,36 @@
         </Style.Triggers>
     </Style>
 
+    <!-- Tooltips. WPF's default tooltip is a light system style, so on this dark theme
+         the text was effectively white-on-white and unreadable. This makes every tooltip
+         a dark rounded card with bright, WRAPPING text so the full description shows and
+         is legible. Applies app-wide (implicit style). -->
+    <Style TargetType="ToolTip">
+        <Setter Property="Foreground" Value="{StaticResource Text0Brush}"/>
+        <Setter Property="MaxWidth" Value="360"/>
+        <Setter Property="HasDropShadow" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border Background="{StaticResource Bg3Brush}"
+                            BorderBrush="{StaticResource StrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12,9"
+                            SnapsToDevicePixels="True">
+                        <TextBlock Text="{TemplateBinding Content}"
+                                   Foreground="{StaticResource Text0Brush}"
+                                   FontFamily="Segoe UI Variable Text, Segoe UI"
+                                   FontSize="12"
+                                   LineHeight="17"
+                                   TextWrapping="Wrap"
+                                   MaxWidth="336"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Standard button: flat, calm, soft translucent border -->
     <Style TargetType="Button">
         <Setter Property="Foreground" Value="{StaticResource Text0Brush}"/>
@@ -182,14 +212,14 @@
         </Setter>
     </Style>
 
-    <!-- Active nav button: subtle accent tint + accent left bar -->
+    <!-- Active nav button: subtle warm-crust tint + accent left bar (bread palette) -->
     <Style x:Key="NavBtnActive" TargetType="Button" BasedOn="{StaticResource NavBtn}">
-        <Setter Property="BorderBrush" Value="#7A2D40"/>
+        <Setter Property="BorderBrush" Value="#8B5A2B"/>
         <Setter Property="Background">
             <Setter.Value>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#46202C" Offset="0"/>
-                    <GradientStop Color="#33181F" Offset="1"/>
+                    <GradientStop Color="#3A2A18" Offset="0"/>
+                    <GradientStop Color="#2A1E12" Offset="1"/>
                 </LinearGradientBrush>
             </Setter.Value>
         </Setter>
@@ -451,7 +481,7 @@
                             <Setter TargetName="bg" Property="Background" Value="#333333"/>
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="bg" Property="Background" Value="#46202C"/>
+                            <Setter TargetName="bg" Property="Background" Value="#3A2A18"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -518,6 +548,58 @@
             <Setter.Value>
                 <ControlTemplate TargetType="RepeatButton">
                     <Border Background="Transparent"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Slider: thin dark track with an accent fill up to a soft round thumb (horizontal).
+         Without this, the lone overlay text-size slider rendered in default light Aero
+         chrome that clashed with the dark theme. -->
+    <Style TargetType="Slider">
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid VerticalAlignment="Center">
+                        <Border Height="4" CornerRadius="2" VerticalAlignment="Center"
+                                Background="{StaticResource Bg3Brush}"/>
+                        <Track x:Name="PART_Track">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Command="Slider.DecreaseLarge" Focusable="False" IsTabStop="False">
+                                    <RepeatButton.Template>
+                                        <ControlTemplate TargetType="RepeatButton">
+                                            <Border Height="4" CornerRadius="2" VerticalAlignment="Center"
+                                                    Background="{StaticResource AccentBrush}"/>
+                                        </ControlTemplate>
+                                    </RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.DecreaseRepeatButton>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Command="Slider.IncreaseLarge" Focusable="False" IsTabStop="False">
+                                    <RepeatButton.Template>
+                                        <ControlTemplate TargetType="RepeatButton">
+                                            <Border Background="Transparent"/>
+                                        </ControlTemplate>
+                                    </RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.IncreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb>
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Ellipse Width="16" Height="16" Fill="{StaticResource Text0Brush}">
+                                                <Ellipse.Effect>
+                                                    <DropShadowEffect Color="Black" BlurRadius="4" ShadowDepth="1" Opacity="0.4"/>
+                                                </Ellipse.Effect>
+                                            </Ellipse>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                        </Track>
+                    </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

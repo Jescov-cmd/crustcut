@@ -1,4 +1,5 @@
 using System.Text.Json;
+using PrimeOSTuner.Core.Storage;
 
 namespace PrimeOSTuner.Core.Settings;
 
@@ -17,10 +18,10 @@ public sealed class AppSettingsStore
 
     public AppSettings Load()
     {
-        if (!File.Exists(_path)) return new AppSettings();
         try
         {
-            var json = File.ReadAllText(_path);
+            var json = ResilientJsonFile.ReadText(_path);
+            if (string.IsNullOrWhiteSpace(json)) return new AppSettings();
             return JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
         }
         catch
@@ -31,7 +32,6 @@ public sealed class AppSettingsStore
 
     public void Save(AppSettings settings)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
-        File.WriteAllText(_path, JsonSerializer.Serialize(settings, JsonOpts));
+        ResilientJsonFile.WriteText(_path, JsonSerializer.Serialize(settings, JsonOpts));
     }
 }

@@ -37,4 +37,27 @@ public class PowerPlanTweakTests
         result.Succeeded.Should().BeTrue();
         client.Verify(c => c.SetActivePlan(BalancedGuid), Times.Once);
     }
+
+    // Regression: Apply activates a DUPLICATED Ultimate Performance scheme whose GUID is
+    // NOT the template GUID. The probe must match by NAME, or the tile always reads "off".
+    [Fact]
+    public async Task Probe_reports_Applied_when_active_scheme_is_named_Ultimate_Performance_even_with_a_different_guid()
+    {
+        var duplicatedUltimate = Guid.Parse("9d3904d8-f70d-4c4f-8e43-3e828f88ac33");
+        var client = new Mock<IPowerPlanClient>();
+        client.Setup(c => c.GetActivePlan()).Returns(new PowerPlan(duplicatedUltimate, "Ultimate Performance"));
+
+        var tweak = new PowerPlanTweak(client.Object);
+        (await tweak.ProbeAsync()).Should().Be(TweakState.Applied);
+    }
+
+    [Fact]
+    public async Task Probe_reports_NotApplied_when_active_scheme_is_Balanced()
+    {
+        var client = new Mock<IPowerPlanClient>();
+        client.Setup(c => c.GetActivePlan()).Returns(new PowerPlan(BalancedGuid, "Balanced"));
+
+        var tweak = new PowerPlanTweak(client.Object);
+        (await tweak.ProbeAsync()).Should().Be(TweakState.NotApplied);
+    }
 }

@@ -22,6 +22,7 @@ public static class FrameTimeStatsCalculator
         var p99  = Percentile(valid, 0.99);
         var p999 = Percentile(valid, 0.999);
         var max  = valid[^1];
+        var min  = valid[0];   // fastest frame → highest FPS
 
         return new FrameSessionStats(
             AvgFps: avgFps,
@@ -31,7 +32,8 @@ public static class FrameTimeStatsCalculator
             P99FrameTimeMs: p99,
             P999FrameTimeMs: p999,
             MaxFrameTimeMs: max,
-            SampleCount: valid.Length);
+            SampleCount: valid.Length,
+            MaxFps: 1000.0 / min);
     }
 
     // Percentile on a pre-sorted ascending array. Uses floor(pct * N) so that

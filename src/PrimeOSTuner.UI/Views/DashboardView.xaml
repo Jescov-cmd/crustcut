@@ -124,7 +124,7 @@
             <TextBlock Text="PERFORMANCE"
                        Style="{StaticResource SectionLabel}"
                        Margin="0,24,0,8"/>
-            <TextBlock Text="Recent gaming sessions captured by PresentMon. Apply a tweak, play again, compare the cards."
+            <TextBlock Text="Average FPS from your recent gaming sessions. Click a card to open the full breakdown in Sentinel."
                        Foreground="{StaticResource Text3Brush}"
                        FontSize="11" Margin="0,0,0,12"
                        TextWrapping="Wrap"/>
@@ -153,8 +153,13 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
+                        <!-- Compact teaser: just the average FPS. Click to open the full
+                             breakdown (highest / 1% low / etc.) on the Sentinel tab. -->
                         <Border Style="{StaticResource CardBorder}"
-                                Width="220" Height="120" Margin="0,0,12,12">
+                                Width="200" Height="120" Margin="0,0,12,12"
+                                Cursor="Hand"
+                                ToolTip="Click to see the full breakdown in Sentinel"
+                                MouseLeftButtonUp="PerformanceCard_Click">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -168,18 +173,11 @@
                                            Foreground="{StaticResource Text0Brush}"
                                            TextTrimming="CharacterEllipsis"/>
 
-                                <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,4">
-                                    <TextBlock Text="{Binding AvgFpsDisplay}"
-                                               FontFamily="Segoe UI Variable Display, Segoe UI"
-                                               FontSize="22" FontWeight="Bold"
-                                               Foreground="{StaticResource AccentBrush}"/>
-                                    <TextBlock Text="{Binding OnePctLowDisplay}"
-                                               Foreground="{StaticResource Text2Brush}"
-                                               FontSize="11"/>
-                                    <TextBlock Text="{Binding ZeroPointOnePctDisplay}"
-                                               Foreground="{StaticResource Text3Brush}"
-                                               FontSize="11"/>
-                                </StackPanel>
+                                <TextBlock Grid.Row="1" VerticalAlignment="Center"
+                                           Text="{Binding AvgFpsDisplay}"
+                                           FontFamily="Segoe UI Variable Display, Segoe UI"
+                                           FontSize="26" FontWeight="Bold"
+                                           Foreground="{StaticResource AccentBrush}"/>
 
                                 <Grid Grid.Row="2">
                                     <Grid.ColumnDefinitions>
@@ -189,11 +187,12 @@
                                     <TextBlock Grid.Column="0"
                                                Text="{Binding StartedAtDisplay}"
                                                Foreground="{StaticResource Text3Brush}"
-                                               FontSize="10"/>
+                                               FontSize="10" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="1"
-                                               Text="{Binding DurationDisplay}"
-                                               Foreground="{StaticResource Text3Brush}"
-                                               FontSize="10"/>
+                                               Text="Details →"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="10" FontWeight="SemiBold"
+                                               VerticalAlignment="Center"/>
                                 </Grid>
                             </Grid>
                         </Border>

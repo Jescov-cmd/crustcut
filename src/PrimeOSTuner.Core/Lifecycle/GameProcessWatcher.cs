@@ -10,6 +10,7 @@ public sealed class GameProcessWatcher : IGameProcessWatcher, IDisposable
     private readonly int _pollIntervalMs;
     private readonly System.Timers.Timer _timer;
     private readonly Dictionary<string, KnownGame> _running = new();
+    private int _ticking;   // 0 = idle, 1 = a tick is in progress (re-entrancy guard)
 
     public event EventHandler<KnownGame>? GameStarted;
     public event EventHandler<GameStoppedArgs>? GameStopped;
@@ -25,7 +26,16 @@ public sealed class GameProcessWatcher : IGameProcessWatcher, IDisposable
         _processSnapshotProvider = processSnapshotProvider ?? DefaultSnapshot;
         _pollIntervalMs = pollIntervalMs;
         _timer = new System.Timers.Timer(_pollIntervalMs) { AutoReset = true };
-        _timer.Elapsed += async (_, _) => { try { await TickAsync(); } catch { } };
+        _timer.Elapsed += async (_, _) =>
+        {
+            // Skip this tick if the previous one is still running. An AutoReset timer fires
+            // on a thread-pool thread without waiting, so a slow tick (large Steam library /
+            // slow disk) could otherwise overlap and corrupt the _running dictionary.
+            if (System.Threading.Interlocked.CompareExchange(ref _ticking, 1, 0) != 0) return;
+            try { await TickAsync(); }
+            catch { }
+            finally { System.Threading.Interlocked.Exchange(ref _ticking, 0); }
+        };
     }
 
     public void Start()

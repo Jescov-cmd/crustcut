@@ -1,4 +1,5 @@
 using System.Text.Json;
+using PrimeOSTuner.Core.Storage;
 
 namespace PrimeOSTuner.Core.Profiles;
 
@@ -17,22 +18,17 @@ public sealed class ActiveTweaksStore
 
     public async Task<ActiveTweaksRecord?> LoadAsync()
     {
-        if (!File.Exists(_path)) return null;
-        var json = await File.ReadAllTextAsync(_path);
+        var json = await ResilientJsonFile.ReadTextAsync(_path);
         if (string.IsNullOrWhiteSpace(json)) return null;
-        return JsonSerializer.Deserialize<ActiveTweaksRecord>(json);
+        try { return JsonSerializer.Deserialize<ActiveTweaksRecord>(json); }
+        catch (JsonException) { return null; }
     }
 
     public async Task SaveAsync(ActiveTweaksRecord record)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
         var json = JsonSerializer.Serialize(record, JsonOpts);
-        await File.WriteAllTextAsync(_path, json);
+        await ResilientJsonFile.WriteTextAsync(_path, json);
     }
 
-    public Task ClearAsync()
-    {
-        if (File.Exists(_path)) File.Delete(_path);
-        return Task.CompletedTask;
-    }
+    public Task ClearAsync() => ResilientJsonFile.DeleteAsync(_path);
 }

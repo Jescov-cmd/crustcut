@@ -32,8 +32,12 @@ public sealed class AppxClient : IAppxClient
 
     public async Task RemoveAsync(string packageFullName, CancellationToken ct = default)
     {
-        // -ErrorAction Stop forces non-zero exit on failure so RunPowerShellAsync throws.
-        var script = $"Get-AppxPackage -Name '{packageFullName}' | Remove-AppxPackage -ErrorAction Stop";
+        // Use Remove-AppxPackage's -Package parameter, which takes the FULL package name.
+        // The old `Get-AppxPackage -Name '<fullName>'` matched NOTHING (-Name filters the
+        // short Name, not the full name), so the pipeline removed nothing and the uninstall
+        // silently no-op'd — the app "succeeded" but the package was never removed.
+        // -ErrorAction Stop forces a non-zero exit on failure so RunPowerShellAsync throws.
+        var script = $"Remove-AppxPackage -Package '{packageFullName}' -ErrorAction Stop";
         await RunPowerShellAsync(script, ct);
     }
 

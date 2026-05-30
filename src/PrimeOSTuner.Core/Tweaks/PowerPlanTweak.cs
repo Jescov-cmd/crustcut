@@ -5,11 +5,10 @@ namespace PrimeOSTuner.Core.Tweaks;
 public sealed class PowerPlanTweak : ITweak
 {
     private readonly IPowerPlanClient _client;
-    private static readonly Guid UltimateGuid = new("e9a42b02-d5df-448d-aa00-03f14749eb61");
 
     public string Id => "core.power-plan";
     public string DisplayName => "Use the fastest power plan";
-    public string Description => "Switches to the High Performance power plan. CPU stays near base clock instead of throttling down at idle; on laptops this also means warmer and louder.";
+    public string Description => "Switches to the Ultimate Performance power plan. CPU stays near base clock instead of throttling down at idle; on laptops this also means warmer and louder.";
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
     public bool RequiresReboot => false;
@@ -18,8 +17,13 @@ public sealed class PowerPlanTweak : ITweak
 
     public Task<TweakState> ProbeAsync(CancellationToken ct = default)
     {
+        // Apply activates a DUPLICATED Ultimate Performance scheme, which gets its OWN GUID
+        // (not the template GUID below). Matching on the template GUID meant the tile always
+        // read "not applied" even with Ultimate Performance active — so match by name.
         var active = _client.GetActivePlan();
-        return Task.FromResult(active.Guid == UltimateGuid ? TweakState.Applied : TweakState.NotApplied);
+        return Task.FromResult(
+            active.Name.Equals("Ultimate Performance", StringComparison.OrdinalIgnoreCase)
+                ? TweakState.Applied : TweakState.NotApplied);
     }
 
     public Task<TweakResult> ApplyAsync(IProgress<int>? progress = null, CancellationToken ct = default)

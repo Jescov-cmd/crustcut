@@ -9,4 +9,6 @@ public sealed record SystemSample(
     double GpuPercent,
     double GpuTempC,
     long NetworkDownBps,
-    long NetworkUpBps);
+    long NetworkUpBps,
+    long VramUsedBytes = 0,
+    long VramTotalBytes = 0);

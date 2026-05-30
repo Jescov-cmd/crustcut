@@ -30,7 +30,8 @@ public sealed class SystemSampler : IDisposable
                 s.CpuPercent, ramPct,
                 s.RamUsedBytes, s.RamTotalBytes,
                 s.GpuPercent, s.GpuTempC,
-                s.NetworkDownBps, s.NetworkUpBps));
+                s.NetworkDownBps, s.NetworkUpBps,
+                s.VramUsedBytes, s.VramTotalBytes));
         }
         catch { /* one bad sample shouldn't kill the stream */ }
     }

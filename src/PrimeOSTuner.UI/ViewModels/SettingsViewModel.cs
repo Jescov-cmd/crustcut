@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using PrimeOSTuner.Core.Lifecycle;
 using PrimeOSTuner.Core.Monitoring;
@@ -21,6 +22,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     private readonly ISentinelService _sentinel;
     private readonly ProfileLifecycleService _lifecycle;
     private readonly AppRegistrationService _registration;
+    private readonly OverlayService _overlay;
     private readonly System.Timers.Timer _intervalTimer = new() { AutoReset = true };
     private bool _suspendSave;
     private double _lastRamPercent;
@@ -37,6 +39,17 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _notificationsEnabled = true;
     [ObservableProperty] private bool _sentinelEnabled = true;
 
+    // Performance overlay (in-game OSD)
+    [ObservableProperty] private bool _overlayEnabled;
+    [ObservableProperty] private bool _overlayOnlyInGame = true;
+    [ObservableProperty] private bool _overlayShowFps = true;
+    [ObservableProperty] private bool _overlayShowCpu = true;
+    [ObservableProperty] private bool _overlayShowGpu = true;
+    [ObservableProperty] private bool _overlayShowRam = true;
+    [ObservableProperty] private bool _overlayShowVram = true;
+    [ObservableProperty] private bool _overlayShowNet;
+    [ObservableProperty] private double _overlayScale = 1.0;
+
     [ObservableProperty] private string _ramStatusMessage = "";
 
     public SettingsViewModel(
@@ -46,7 +59,8 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         TrayIconService tray,
         ISentinelService sentinel,
         ProfileLifecycleService lifecycle,
-        AppRegistrationService registration)
+        AppRegistrationService registration,
+        OverlayService overlay)
     {
         _store = store;
         _ramCleaner = ramCleaner;
@@ -55,8 +69,14 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         _sentinel = sentinel;
         _lifecycle = lifecycle;
         _registration = registration;
+        _overlay = overlay;
 
         var loaded = store.Load();
+        // Diagnostic: if these read back as defaults when the user expected saved values,
+        // the settings file was missing/unreadable (e.g. clobbered by a second instance).
+        Serilog.Log.Information(
+            "Settings loaded: StartAtBoot={SAB} StartMin={SM} MinToTray={MTT} Sentinel={SEN} RamInterval={RI}",
+            loaded.StartAtBoot, loaded.StartMinimized, loaded.MinimizeToTrayOnClose, loaded.SentinelEnabled, loaded.RamAutoOptimizeOnInterval);
         _suspendSave = true;
         RamAutoOptimizeOnInterval = loaded.RamAutoOptimizeOnInterval;
         RamAutoIntervalMinutes = loaded.RamAutoIntervalMinutes;
@@ -67,6 +87,15 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         MinimizeToTrayOnClose = loaded.MinimizeToTrayOnClose;
         NotificationsEnabled = loaded.NotificationsEnabled;
         SentinelEnabled = loaded.SentinelEnabled;
+        OverlayEnabled = loaded.OverlayEnabled;
+        OverlayOnlyInGame = loaded.OverlayOnlyInGame;
+        OverlayShowFps = loaded.OverlayShowFps;
+        OverlayShowCpu = loaded.OverlayShowCpu;
+        OverlayShowGpu = loaded.OverlayShowGpu;
+        OverlayShowRam = loaded.OverlayShowRam;
+        OverlayShowVram = loaded.OverlayShowVram;
+        OverlayShowNet = loaded.OverlayShowNet;
+        OverlayScale = loaded.OverlayScale;
         _suspendSave = false;
 
         // Reconcile the scheduled task with the saved setting on startup. If the
@@ -177,21 +206,53 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
         }
     }
 
+    // Overlay settings: save, then push the change to the live overlay.
+    private void SaveAndRefreshOverlay() { SaveIfNeeded(); _overlay.RefreshFromSettings(); }
+    partial void OnOverlayEnabledChanged(bool value) => SaveAndRefreshOverlay();
+    partial void OnOverlayOnlyInGameChanged(bool value) => SaveAndRefreshOverlay();
+    partial void OnOverlayShowFpsChanged(bool value) => SaveAndRefreshOverlay();
+    partial void OnOverlayShowCpuChanged(bool value) => SaveAndRefreshOverlay();
+    partial void OnOverlayShowGpuChanged(bool value) => SaveAndRefreshOverlay();
+    partial void OnOverlayShowRamChanged(bool value) => SaveAndRefreshOverlay();
+    partial void OnOverlayShowVramChanged(bool value) => SaveAndRefreshOverlay();
+    partial void OnOverlayShowNetChanged(bool value) => SaveAndRefreshOverlay();
+    partial void OnOverlayScaleChanged(double value) => SaveAndRefreshOverlay();
+
+    /// <summary>Show the overlay and enter edit mode so the user can drag it where they want.</summary>
+    [RelayCommand]
+    private void RepositionOverlay()
+    {
+        if (!OverlayEnabled) OverlayEnabled = true;   // turning it on also saves + refreshes
+        _overlay.EnterEditMode();
+    }
+
     private void SaveIfNeeded()
     {
         if (_suspendSave) return;
-        _store.Save(new AppSettings
-        {
-            RamAutoOptimizeOnInterval = RamAutoOptimizeOnInterval,
-            RamAutoIntervalMinutes = RamAutoIntervalMinutes,
-            RamAutoOptimizeOnThreshold = RamAutoOptimizeOnThreshold,
-            RamThresholdPercent = RamThresholdPercent,
-            StartAtBoot = StartAtBoot,
-            StartMinimized = StartMinimized,
-            MinimizeToTrayOnClose = MinimizeToTrayOnClose,
-            NotificationsEnabled = NotificationsEnabled,
-            SentinelEnabled = SentinelEnabled,
-        });
+        // Load-mutate-save so we only touch the fields this VM owns — fields managed
+        // elsewhere (e.g. the overlay's position/metric settings) are preserved.
+        var s = _store.Load();
+        s.RamAutoOptimizeOnInterval = RamAutoOptimizeOnInterval;
+        s.RamAutoIntervalMinutes = RamAutoIntervalMinutes;
+        s.RamAutoOptimizeOnThreshold = RamAutoOptimizeOnThreshold;
+        s.RamThresholdPercent = RamThresholdPercent;
+        s.StartAtBoot = StartAtBoot;
+        s.StartMinimized = StartMinimized;
+        s.MinimizeToTrayOnClose = MinimizeToTrayOnClose;
+        s.NotificationsEnabled = NotificationsEnabled;
+        // SentinelEnabled is owned by the Sentinel tab now — don't write it here, or we'd
+        // clobber a change made there. (Still loaded at startup for the service toggle.)
+        // Overlay fields the Settings tab also exposes:
+        s.OverlayEnabled = OverlayEnabled;
+        s.OverlayShowFps = OverlayShowFps;
+        s.OverlayShowCpu = OverlayShowCpu;
+        s.OverlayShowGpu = OverlayShowGpu;
+        s.OverlayShowRam = OverlayShowRam;
+        s.OverlayShowVram = OverlayShowVram;
+        s.OverlayShowNet = OverlayShowNet;
+        s.OverlayOnlyInGame = OverlayOnlyInGame;
+        s.OverlayScale = OverlayScale;
+        _store.Save(s);
     }
 
     public void Dispose()

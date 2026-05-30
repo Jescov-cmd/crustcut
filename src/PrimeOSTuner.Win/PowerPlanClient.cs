@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using Microsoft.Win32;
 
 namespace PrimeOSTuner.Win;
 
@@ -61,6 +62,20 @@ public sealed class PowerPlanClient : IPowerPlanClient
             return int.Parse(m.Groups[1].Value, System.Globalization.NumberStyles.HexNumber);
         }
         catch { return null; }
+    }
+
+    public int? GetActiveSchemeSettingIndexFromRegistry(string subgroupGuid, string settingGuid)
+    {
+        var scheme = GetActivePlan().Guid.ToString("D");
+        using var key = Registry.LocalMachine.OpenSubKey(
+            $@"SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes\{scheme}\{subgroupGuid}\{settingGuid}");
+        var v = key?.GetValue("ACSettingIndex");
+        return v switch
+        {
+            int i => i,
+            long l => unchecked((int)l),
+            _ => null
+        };
     }
 
     public string RunPowercfg(string args)

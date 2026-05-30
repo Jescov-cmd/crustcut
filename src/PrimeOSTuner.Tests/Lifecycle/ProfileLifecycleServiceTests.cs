@@ -56,9 +56,7 @@ public class ProfileLifecycleServiceTests : IDisposable
             },
             applier);
 
-        service.Start();
-        watcher.Raise(w => w.GameStarted += null, this, Game);
-        await Task.Delay(100);
+        await service.HandleGameStartedAsync(Game);
 
         var record = await activeStore.LoadAsync();
         record.Should().NotBeNull();
@@ -86,11 +84,10 @@ public class ProfileLifecycleServiceTests : IDisposable
             },
             applier);
 
-        service.Start();
-        watcher.Raise(w => w.GameStarted += null, this, Game);
-        await Task.Delay(50);
-        watcher.Raise(w => w.GameStopped += null, this, new GameStoppedArgs(Game, "exit"));
-        await Task.Delay(100);
+        await service.HandleGameStartedAsync(Game);
+        (await activeStore.LoadAsync()).Should().NotBeNull("the profile should be applied + recorded");
+
+        await service.HandleGameStoppedAsync(new GameStoppedArgs(Game, "exit"));
 
         tweak.Verify(t => t.RevertAsync("undo-game.game-mode", default), Times.Once);
         (await activeStore.LoadAsync()).Should().BeNull();

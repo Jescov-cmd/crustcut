@@ -38,6 +38,14 @@ public sealed class UltimatePerformanceTweak : ITweak, ICategorizedTweak
 
     public Task<TweakResult> ApplyAsync(IProgress<int>? progress = null, CancellationToken ct = default)
     {
+        // Idempotent: if an Ultimate Performance scheme already exists, reuse it instead
+        // of duplicating. The old code ran /duplicatescheme on every apply, so repeated
+        // applies spawned a pile of identical "Ultimate Performance" schemes.
+        var existing = _power.ListPlans()
+            .FirstOrDefault(p => p.Name.Equals("Ultimate Performance", StringComparison.OrdinalIgnoreCase));
+        if (existing is not null)
+            return Task.FromResult(TweakResult.Success(JsonSerializer.Serialize(existing.Guid.ToString("D"))));
+
         var output = _power.RunPowercfg($"/duplicatescheme {UltimateGuid}");
         var match = GuidRx.Match(output);
         if (!match.Success)
@@ -47,9 +55,19 @@ public sealed class UltimatePerformanceTweak : ITweak, ICategorizedTweak
 
     public Task<TweakResult> RevertAsync(string undoData, CancellationToken ct = default)
     {
-        var guid = JsonSerializer.Deserialize<string>(undoData)
-            ?? throw new InvalidOperationException("Invalid undo data");
-        _power.RunPowercfg($"/delete {guid}");
+        // Remove every Ultimate Performance scheme present (older builds could create
+        // several). Skip the active scheme — powercfg can't delete it — and treat a
+        // "doesn't exist" failure as success, since the goal is simply "none present".
+        Guid? active = null;
+        try { active = _power.GetActivePlan().Guid; } catch { /* best effort */ }
+
+        foreach (var plan in _power.ListPlans()
+                     .Where(p => p.Name.Equals("Ultimate Performance", StringComparison.OrdinalIgnoreCase)))
+        {
+            if (active == plan.Guid) continue;
+            try { _power.RunPowercfg($"/delete {plan.Guid:D}"); }
+            catch { /* already gone, or in use — ignore; revert is best-effort cleanup */ }
+        }
         return Task.FromResult(TweakResult.Success());
     }
 

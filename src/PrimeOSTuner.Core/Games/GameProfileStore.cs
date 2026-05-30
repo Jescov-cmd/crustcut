@@ -1,4 +1,5 @@
 using System.Text.Json;
+using PrimeOSTuner.Core.Storage;
 
 namespace PrimeOSTuner.Core.Games;
 
@@ -17,10 +18,10 @@ public sealed class GameProfileStore
 
     public async Task<IReadOnlyList<GameProfileAssignment>> LoadAsync()
     {
-        if (!File.Exists(_path)) return Array.Empty<GameProfileAssignment>();
         try
         {
-            var json = await File.ReadAllTextAsync(_path);
+            var json = await ResilientJsonFile.ReadTextAsync(_path);
+            if (string.IsNullOrWhiteSpace(json)) return Array.Empty<GameProfileAssignment>();
             return JsonSerializer.Deserialize<List<GameProfileAssignment>>(json) ?? new();
         }
         catch
@@ -49,8 +50,5 @@ public sealed class GameProfileStore
     }
 
     private async Task SaveAsync(List<GameProfileAssignment> list)
-    {
-        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
-        await File.WriteAllTextAsync(_path, JsonSerializer.Serialize(list, JsonOpts));
-    }
+        => await ResilientJsonFile.WriteTextAsync(_path, JsonSerializer.Serialize(list, JsonOpts));
 }

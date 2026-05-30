@@ -4,7 +4,12 @@ public enum KnownGameSource
 {
     Steam,
     StaticCatalog,
-    UserAdded
+    UserAdded,
+    Xbox,
+    Epic,
+    Ubisoft,
+    Ea,
+    Gog
 }
 
 public sealed record KnownGame(

@@ -16,6 +16,9 @@ public partial class GameLibraryViewModel : ObservableObject
     private readonly SteamCdnCoverFetcher? _steamCdn;
     private readonly ISteamAppLookup? _steamLookup;
     private bool _autoLinkRan;
+    // Memoize name → Steam AppID so re-opening the Library doesn't re-hit Steam's search
+    // API for every non-Steam game each time (risks throttling + slow cover loads).
+    private readonly Dictionary<string, string?> _resolvedAppIdByName = new(StringComparer.OrdinalIgnoreCase);
 
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private bool _showApiKeyPrompt;
@@ -96,10 +99,29 @@ public partial class GameLibraryViewModel : ObservableObject
             try
             {
                 string? path = null;
+                var appId = tile.Game.SteamAppId;
+
+                // Xbox / Epic / manually-added games have no Steam AppID. Resolve one by
+                // name so they get free Steam-CDN cover art (most are on Steam too), no
+                // SteamGridDB key required. Memoized so re-opening the Library is cheap.
+                if (string.IsNullOrEmpty(appId) && _steamLookup is not null)
+                {
+                    var key = tile.Game.DisplayName;
+                    if (_resolvedAppIdByName.TryGetValue(key, out var cached))
+                    {
+                        appId = cached;
+                    }
+                    else
+                    {
+                        try { appId = (await _steamLookup.ResolveAsync(key))?.AppId; }
+                        catch { appId = null; /* name didn't resolve — fall through to SGDB / blank */ }
+                        _resolvedAppIdByName[key] = appId;
+                    }
+                }
 
                 // Primary: Steam's public CDN. No API key, no rate limits.
-                if (_steamCdn is not null && !string.IsNullOrEmpty(tile.Game.SteamAppId))
-                    path = await _steamCdn.FetchCoverAsync(tile.Game.SteamAppId);
+                if (_steamCdn is not null && !string.IsNullOrEmpty(appId))
+                    path = await _steamCdn.FetchCoverAsync(appId);
 
                 // Fallback: SteamGridDB lookup-by-name for games without a Steam app id
                 // (manually-added EXEs, Epic-only titles). Only available if the user
