@@ -33,6 +33,10 @@ public partial class MainWindow : Window
         InitializeComponent();
         // Bread loaf icon — shows in taskbar, Alt-Tab, Task Manager Apps tab.
         Icon = BreadIcon.BuildWpfImageSource(64);
+        // Show the REAL build version (read from the assembly) so the corner label can never
+        // drift out of sync with the actual release again.
+        var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        if (ver is not null) VersionText.Text = $"v{ver.Major}.{ver.Minor}.{ver.Build}";
         _shellVm = vm;
         _settingsVm = settingsVm;
         _sentinelVm = sentinelVm;
