@@ -25,9 +25,9 @@
     <!-- Embeds the bread icon into the exe so Explorer, taskbar, Alt-Tab,
          Start Menu, and Windows search all show the right logo. -->
     <ApplicationIcon>Assets\Brand\bread.ico</ApplicationIcon>
-    <Version>0.6.0</Version>
-    <AssemblyVersion>0.6.0.0</AssemblyVersion>
-    <FileVersion>0.6.0.0</FileVersion>
+    <Version>0.6.1</Version>
+    <AssemblyVersion>0.6.1.0</AssemblyVersion>
+    <FileVersion>0.6.1.0</FileVersion>
     <Product>Crustcut</Product>
     <Company>Crustcut</Company>
     <!-- AssemblyName drives the exe filename: Crustcut.exe (instead of PrimeOSTuner.UI.exe).

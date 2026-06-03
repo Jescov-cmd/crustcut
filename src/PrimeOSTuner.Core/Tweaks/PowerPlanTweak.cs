@@ -38,9 +38,25 @@ public sealed class PowerPlanTweak : ITweak
     {
         if (!Guid.TryParse(undoData, out var previous))
             return Task.FromResult(TweakResult.Failure("Invalid undo data"));
-        _client.SetActivePlan(previous);
+
+        // The saved "previous" plan can be gone — the user deleted it, or a Windows update
+        // removed an OEM plan. powercfg /setactive on a missing GUID fails with "Invalid
+        // Parameters" and the whole revert throws, making it impossible to turn the tweak
+        // off (error popup, toggle snaps back on). Fall back to a real, existing plan
+        // (prefer Balanced) so turning it off always works.
+        var plans = _client.ListPlans();
+        var target = plans.Any(p => p.Guid == previous) ? previous : (PickFallback(plans) ?? previous);
+
+        _client.SetActivePlan(target);
         return Task.FromResult(TweakResult.Success());
     }
+
+    // A sane plan to return to when the originally-saved one no longer exists: Balanced if
+    // present, else any non-Ultimate plan, else whatever's available.
+    private static Guid? PickFallback(IReadOnlyList<PowerPlan> plans) =>
+        (plans.FirstOrDefault(p => p.Name.Equals("Balanced", StringComparison.OrdinalIgnoreCase))
+         ?? plans.FirstOrDefault(p => !p.Name.Equals("Ultimate Performance", StringComparison.OrdinalIgnoreCase))
+         ?? plans.FirstOrDefault())?.Guid;
 
     public Task<string> PreviewAsync(CancellationToken ct = default)
     {

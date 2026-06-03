@@ -242,6 +242,7 @@ public partial class OptimizeView : UserControl
             else if (row.UndoData is not null)
             {
                 var revert = await row.Tweak.RevertAsync(row.UndoData);
+                Log.Information("Revert {Id}: succeeded={Ok} err={Err}", row.Tweak.Id, revert.Succeeded, revert.Error);
                 if (!revert.Succeeded)
                 {
                     row.IsApplied = true;
@@ -258,15 +259,26 @@ public partial class OptimizeView : UserControl
         }
         catch (Exception ex) when (IsAdminRequired(ex))
         {
+            Log.Warning(ex, "Toggle {Id} hit access-denied path (elevated={Elev}): {Type}: {Msg}",
+                row.Tweak.Id, IsElevated(), ex.GetType().Name, ex.Message);
             row.IsApplied = !row.IsApplied;  // revert the toggle visually
-            MessageBox.Show(
-                "This tweak needs administrator rights, but Crustcut isn't running as admin.\n\n" +
-                "Close the app, then right-click Crustcut.exe and choose 'Run as administrator' (or run it from an admin terminal).",
-                row.Tweak.DisplayName,
-                MessageBoxButton.OK, MessageBoxImage.Warning);
+
+            // Crustcut runs elevated (requireAdministrator). So an access-denied here is NOT a
+            // "you forgot to run as admin" problem — it's Windows refusing the change because
+            // the value is tamper-protected or managed by policy (e.g. some Win11 taskbar
+            // settings). Telling the user to "run as administrator" would be wrong and useless.
+            var (text, title) = IsElevated()
+                ? ("Windows blocked this change. This setting is protected or managed by a policy " +
+                   "(for example some Windows 11 taskbar options), so it can't be changed this way — " +
+                   "even as administrator.", $"{row.Tweak.DisplayName} — blocked by Windows")
+                : ("This tweak needs administrator rights, but Crustcut isn't running as admin.\n\n" +
+                   "Close the app, then right-click Crustcut.exe and choose 'Run as administrator'.",
+                   row.Tweak.DisplayName);
+            MessageBox.Show(text, title, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         catch (Exception ex)
         {
+            Log.Warning(ex, "Toggle {Id} threw", row.Tweak.Id);
             row.IsApplied = !row.IsApplied;
             MessageBox.Show(
                 $"{ex.GetType().Name}: {ex.Message}",
@@ -282,6 +294,17 @@ public partial class OptimizeView : UserControl
     // Detects "you need admin" errors regardless of the specific exception type.
     // UnauthorizedAccessException is the registry path; InvalidOperationException with
     // "requires administrator" text is the powercfg path.
+    private static bool IsElevated()
+    {
+        try
+        {
+            using var id = System.Security.Principal.WindowsIdentity.GetCurrent();
+            return new System.Security.Principal.WindowsPrincipal(id)
+                .IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+        }
+        catch { return false; }
+    }
+
     private static bool IsAdminRequired(Exception ex)
         => ex is UnauthorizedAccessException
         || (ex.Message?.Contains("requires administrator", StringComparison.OrdinalIgnoreCase) ?? false)

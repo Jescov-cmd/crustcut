@@ -50,7 +50,16 @@ public sealed class RegistryClient : IRegistryClient
         if (prev is int i) prevDword = i;
         else if (prev is long l) prevDword = unchecked((int)l);  // QWord truncation matches ReadDword
         else if (prev is not null) prevString = prev.ToString();
-        key.SetValue(valueName, newValue, RegistryValueKind.DWord);
+
+        // Idempotent: only write when the value isn't already exactly what we want. Some
+        // values are tamper-protected by Windows (e.g. the Win11 taskbar 'TaskbarDa'), where
+        // SetValue throws "Attempted to perform an unauthorized operation" EVEN when re-writing
+        // the identical value — which made re-applying an already-applied tweak fail with a
+        // misleading "needs administrator" error. Skipping the no-op write avoids that and is
+        // harmless everywhere else.
+        if (prevDword != newValue || prevKind != RegistryValueKind.DWord)
+            key.SetValue(valueName, newValue, RegistryValueKind.DWord);
+
         return new RegistryBackup(hive, subKey, valueName, prevString, prevDword, prevKind);
     }
 

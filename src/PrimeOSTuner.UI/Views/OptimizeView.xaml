@@ -2,15 +2,9 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
-        <!-- Tile that gets a gradient border when its tweak is applied -->
-        <Style x:Key="OptimizerTile" TargetType="Border" BasedOn="{StaticResource CardBorder}">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsApplied}" Value="True">
-                    <Setter Property="BorderBrush" Value="{StaticResource AccentGradientBrush}"/>
-                    <Setter Property="BorderThickness" Value="2"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+        <!-- Optimizer tile. When applied, the active state is conveyed by the "ACTIVE" badge
+             and the glowing toggle switch only — no gold ring around the whole tile. -->
+        <Style x:Key="OptimizerTile" TargetType="Border" BasedOn="{StaticResource CardBorder}"/>
 
         <!-- Filter chip: pill RadioButton with accent-gradient fill when checked -->
         <Style x:Key="FilterChipStyle" TargetType="RadioButton">

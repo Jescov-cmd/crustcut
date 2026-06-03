@@ -113,6 +113,32 @@ public class RegistryClientTests : IDisposable
     }
 
     [Fact]
+    public void WriteDword_is_idempotent_when_value_already_matches()
+    {
+        const string testSubKey = SubKey + @"\WriteDword_is_idempotent_when_value_already_matches";
+        Registry.CurrentUser.DeleteSubKeyTree(testSubKey, throwOnMissingSubKey: false);
+        try
+        {
+            var client = new RegistryClient();
+            client.WriteDword(RegistryHive.CurrentUser, testSubKey, "Flag", 0);
+
+            // Re-writing the SAME value must succeed and report the current value as previous.
+            // Guards the real-world case where Windows tamper-protects an already-correct value
+            // (Win11 'TaskbarDa') and SetValue would throw "unauthorized operation" if we wrote
+            // it again — which used to surface as a bogus "needs administrator" error.
+            var backup = client.WriteDword(RegistryHive.CurrentUser, testSubKey, "Flag", 0);
+
+            backup.PreviousDword.Should().Be(0);
+            backup.PreviousKind.Should().Be(RegistryValueKind.DWord);
+            client.ReadDword(RegistryHive.CurrentUser, testSubKey, "Flag").Should().Be(0);
+        }
+        finally
+        {
+            Registry.CurrentUser.DeleteSubKeyTree(testSubKey, throwOnMissingSubKey: false);
+        }
+    }
+
+    [Fact]
     public void RestoreFromBackup_restores_dword()
     {
         const string testSubKey = SubKey + @"\RestoreFromBackup_restores_dword";
