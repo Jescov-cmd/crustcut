@@ -2,9 +2,12 @@ using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class PowerPlanTweak : ITweak
+public sealed class PowerPlanTweak : ITweak, ICategorizedTweak
 {
     private readonly IPowerPlanClient _client;
+
+    public string Category => "power";
+    public string? RiskNote => "Runs hotter: keeps the CPU near full clock instead of idling down, so expect more heat and fan noise — especially on laptops.";
 
     public string Id => "core.power-plan";
     public string DisplayName => "Use the fastest power plan";

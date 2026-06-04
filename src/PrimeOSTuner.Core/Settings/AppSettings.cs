@@ -22,6 +22,10 @@ public sealed class AppSettings
     // Sentinel
     public bool SentinelEnabled { get; set; } = true;
 
+    // Game Boost — the last-activated mode ("", "basic", "performance", "aggressive").
+    // Persisted so the toggle remembers it was on after a restart.
+    public string GameBoostMode { get; set; } = "";
+
     // In-game performance overlay (RTSS-style OSD, powered by Sentinel metrics).
     public bool OverlayEnabled { get; set; } = false;
     public double OverlayX { get; set; } = 24;

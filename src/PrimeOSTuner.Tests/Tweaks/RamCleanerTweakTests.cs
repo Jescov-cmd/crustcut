@@ -15,19 +15,21 @@ public class RamCleanerTweakTests
         var client = new Mock<IProcessClient>();
         client.Setup(c => c.TrimAllUserProcesses()).Returns(123);
 
-        var tweak = new RamCleanerTweak(client.Object, new EmptyRamCleanerProtectList());
+        var trimmer = new Mock<IWorkingSetTrimmer>();
+        var tweak = new RamCleanerTweak(client.Object, new EmptyRamCleanerProtectList(), trimmer.Object);
         var result = await tweak.ApplyAsync();
 
         result.Succeeded.Should().BeTrue();
         result.UndoData.Should().Contain("123");
         client.Verify(c => c.TrimAllUserProcesses(), Times.Once);
         client.Verify(c => c.TrimUserProcessesExcept(It.IsAny<IReadOnlyCollection<string>>()), Times.Never);
+        trimmer.Verify(t => t.EmptyStandbyList(), Times.Once);
     }
 
     [Fact]
     public async Task Probe_always_returns_NotApplied_since_RAM_refills()
     {
-        var tweak = new RamCleanerTweak(Mock.Of<IProcessClient>(), new EmptyRamCleanerProtectList());
+        var tweak = new RamCleanerTweak(Mock.Of<IProcessClient>(), new EmptyRamCleanerProtectList(), Mock.Of<IWorkingSetTrimmer>());
         (await tweak.ProbeAsync()).Should().Be(TweakState.NotApplied);
     }
 
@@ -39,7 +41,7 @@ public class RamCleanerTweakTests
         var protectList = new Mock<IRamCleanerProtectList>();
         protectList.Setup(p => p.Get()).Returns(new[] { @"C:\Discord\Discord.exe" });
 
-        var tweak = new RamCleanerTweak(client.Object, protectList.Object);
+        var tweak = new RamCleanerTweak(client.Object, protectList.Object, Mock.Of<IWorkingSetTrimmer>());
         var result = await tweak.ApplyAsync();
 
         result.Succeeded.Should().BeTrue();

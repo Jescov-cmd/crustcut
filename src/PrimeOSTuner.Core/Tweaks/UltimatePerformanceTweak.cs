@@ -17,7 +17,7 @@ public sealed class UltimatePerformanceTweak : ITweak, ICategorizedTweak
     public string DisplayName => "Enable Ultimate Performance power plan";
     public string Description => "Adds Microsoft's hidden Ultimate Performance power plan to Windows. On its own this changes nothing — it just makes the plan available. Use \"Use the fastest power plan\" to actually switch to it.";
     public string Category => "power";
-    public string? RiskNote => null;
+    public string? RiskNote => "Runs hotter: the Ultimate Performance plan keeps components at high power for max speed, which means more heat and fan noise.";
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
     public bool RequiresReboot => false;

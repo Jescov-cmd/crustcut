@@ -32,5 +32,6 @@ public class SafeRamCleanerTests
         trimmer.Verify(t => t.TrimWorkingSet(4),   Times.Never);
         trimmer.Verify(t => t.TrimWorkingSet(500), Times.Never);
         trimmer.Verify(t => t.FlushFileCache(), Times.Once);
+        trimmer.Verify(t => t.EmptyStandbyList(), Times.Once);
     }
 }

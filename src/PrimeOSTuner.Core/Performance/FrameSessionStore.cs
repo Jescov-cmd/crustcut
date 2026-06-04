@@ -5,6 +5,9 @@ namespace PrimeOSTuner.Core.Performance;
 public sealed class FrameSessionStore : IFrameSessionStore
 {
     private const int MaxEntries = 50;
+    // Frame sessions are short-lived telemetry — keep only the last day so the history
+    // (and the file) doesn't accumulate stale runs.
+    private static readonly TimeSpan MaxAge = TimeSpan.FromHours(24);
     private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = false };
 
     private readonly string _path;
@@ -28,7 +31,7 @@ public sealed class FrameSessionStore : IFrameSessionStore
             {
                 var json = File.ReadAllText(_path);
                 var list = JsonSerializer.Deserialize<List<FrameSession>>(json) ?? new();
-                return list;
+                return FreshOnly(list);
             }
             catch
             {
@@ -41,12 +44,21 @@ public sealed class FrameSessionStore : IFrameSessionStore
     {
         lock (_gate)
         {
-            var existing = LoadInternalLocked();
+            // Pruning stale (>24h) sessions on every save keeps the file from growing and
+            // drops yesterday's runs automatically.
+            var existing = FreshOnly(LoadInternalLocked()).ToList();
             existing.Insert(0, session);
             while (existing.Count > MaxEntries) existing.RemoveAt(existing.Count - 1);
             WriteAtomicLocked(existing);
         }
         Updated?.Invoke(this, EventArgs.Empty);
+    }
+
+    // Keep only sessions newer than MaxAge. StartedAt is stored in UTC.
+    private static List<FrameSession> FreshOnly(IEnumerable<FrameSession> list)
+    {
+        var cutoff = DateTime.UtcNow - MaxAge;
+        return list.Where(s => s.StartedAt >= cutoff).ToList();
     }
 
     private List<FrameSession> LoadInternalLocked()

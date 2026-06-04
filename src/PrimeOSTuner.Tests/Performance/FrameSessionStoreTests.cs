@@ -30,7 +30,7 @@ public class FrameSessionStoreTests : IDisposable
     public void Save_then_Load_round_trips_a_session()
     {
         var store = new FrameSessionStore(_tempPath);
-        var session = MakeSession("Cyberpunk", new DateTime(2026, 5, 26, 12, 0, 0));
+        var session = MakeSession("Cyberpunk", DateTime.UtcNow);
 
         store.Save(session);
         var loaded = new FrameSessionStore(_tempPath).Load();
@@ -44,8 +44,8 @@ public class FrameSessionStoreTests : IDisposable
     public void Save_orders_newest_first()
     {
         var store = new FrameSessionStore(_tempPath);
-        var older = MakeSession("Older", new DateTime(2026, 5, 25, 10, 0, 0));
-        var newer = MakeSession("Newer", new DateTime(2026, 5, 26, 10, 0, 0));
+        var older = MakeSession("Older", DateTime.UtcNow.AddHours(-2));
+        var newer = MakeSession("Newer", DateTime.UtcNow.AddHours(-1));
 
         store.Save(older);
         store.Save(newer);
@@ -58,10 +58,20 @@ public class FrameSessionStoreTests : IDisposable
     {
         var store = new FrameSessionStore(_tempPath);
         for (int i = 0; i < 60; i++)
-            store.Save(MakeSession($"Game{i}", new DateTime(2026, 1, 1).AddMinutes(i)));
+            store.Save(MakeSession($"Game{i}", DateTime.UtcNow.AddSeconds(i)));
 
         store.Load().Should().HaveCount(50);
         store.Load()[0].GameName.Should().Be("Game59");   // newest
+    }
+
+    [Fact]
+    public void Load_drops_sessions_older_than_24h()
+    {
+        var store = new FrameSessionStore(_tempPath);
+        store.Save(MakeSession("Fresh", DateTime.UtcNow.AddHours(-1)));
+        store.Save(MakeSession("Stale", DateTime.UtcNow.AddHours(-30)));   // older than 24h
+
+        store.Load().Select(s => s.GameName).Should().ContainSingle().Which.Should().Be("Fresh");
     }
 
     [Fact]

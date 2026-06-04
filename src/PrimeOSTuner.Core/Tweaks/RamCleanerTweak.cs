@@ -7,18 +7,20 @@ public sealed class RamCleanerTweak : ITweak
 {
     private readonly IProcessClient _processes;
     private readonly IRamCleanerProtectList _protectList;
+    private readonly IWorkingSetTrimmer _trimmer;
 
     public string Id => "core.ram-cleaner";
-    public string DisplayName => "Trim process working sets";
-    public string Description => "Asks each user process to release memory pages it isn't actively using. Mostly helps memory-leaking games (some Unreal Engine titles); otherwise neutral or mildly counterproductive — modern Windows manages this on its own.";
+    public string DisplayName => "Free up RAM now";
+    public string Description => "Trims every app's working set, flushes the file cache, and purges the standby (cached) memory list — releasing RAM Windows is holding for things you're not using. Windows re-caches on demand, so it's safe; great after closing a game or heavy app.";
     public bool RequiresElevation => false;
     public bool IsDestructive => false;
     public bool RequiresReboot => false;
 
-    public RamCleanerTweak(IProcessClient processes, IRamCleanerProtectList protectList)
+    public RamCleanerTweak(IProcessClient processes, IRamCleanerProtectList protectList, IWorkingSetTrimmer trimmer)
     {
         _processes = processes;
         _protectList = protectList;
+        _trimmer = trimmer;
     }
 
     public Task<TweakState> ProbeAsync(CancellationToken ct = default)
@@ -36,6 +38,9 @@ public sealed class RamCleanerTweak : ITweak
             var attempted = protectList.Count == 0
                 ? _processes.TrimAllUserProcesses()
                 : _processes.TrimUserProcessesExcept(protectList);
+            // The big RAM-reclaim step: drop the file cache + standby (cached) list.
+            _trimmer.FlushFileCache();
+            _trimmer.EmptyStandbyList();
             return TweakResult.Success($"{{\"attempted\":{attempted}}}");
         }, ct);
     }

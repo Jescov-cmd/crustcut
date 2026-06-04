@@ -2,8 +2,11 @@ using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class CpuCoreParkingTweak : ITweak
+public sealed class CpuCoreParkingTweak : ITweak, ICategorizedTweak
 {
+    public string Category => "power";
+    public string? RiskNote => "Runs hotter: keeps every CPU core awake instead of letting idle ones sleep, so the system stays warmer and the fans spin up more — especially at the desktop.";
+
     private const string Subgroup = "SUB_PROCESSOR";
     private const string Setting = "CPMINCORES";
     private const int TargetValue = 100;

@@ -35,6 +35,9 @@ public sealed class SafeRamCleaner
         }
 
         _trimmer.FlushFileCache();
+        // Free the standby (cached) list too — this is the big RAM-reclaim step, releasing
+        // memory Windows is holding as "just in case" file cache for things you're not using.
+        _trimmer.EmptyStandbyList();
         return Task.CompletedTask;
     }
 }

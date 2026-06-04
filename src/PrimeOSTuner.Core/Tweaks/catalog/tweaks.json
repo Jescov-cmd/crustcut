@@ -194,7 +194,7 @@
       "valueName": "ACSettingIndex",
       "valueKind": "DWord",
       "appliedData": "0",
-      "riskNote": null
+      "riskNote": "Runs slightly hotter: keeps PCIe devices (GPU, NVMe) at full power instead of idling down."
     },
     {
       "id": "core.power-throttling-disable",
@@ -208,7 +208,7 @@
       "valueName": "PowerThrottlingOff",
       "valueKind": "DWord",
       "appliedData": "1",
-      "riskNote": null
+      "riskNote": "Runs hotter: lets background apps run at full speed instead of being throttled, so the system stays warmer and fans spin up more."
     },
     {
       "id": "core.modern-standby-disable",
