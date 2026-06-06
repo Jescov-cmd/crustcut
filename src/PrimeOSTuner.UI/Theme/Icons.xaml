@@ -8,7 +8,7 @@
     -->
 
     <SolidColorBrush x:Key="IconBrush" Color="#E6FFFFFF"/>
-    <SolidColorBrush x:Key="IconAccentBrush" Color="#C8995F"/>
+    <SolidColorBrush x:Key="IconAccentBrush" Color="#A07E52"/>
 
     <!-- DASHBOARD — gauge -->
     <DrawingImage x:Key="IconDashboard">

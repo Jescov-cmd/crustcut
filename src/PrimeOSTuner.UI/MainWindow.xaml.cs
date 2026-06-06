@@ -139,8 +139,8 @@ public partial class MainWindow : Window
 
         if (_tabs != null)
         {
-            var activeStyle = (Style)FindResource("TopTabActive");
-            var inactiveStyle = (Style)FindResource("TopTab");
+            var activeStyle = (Style)FindResource("NavRailActive");
+            var inactiveStyle = (Style)FindResource("NavRail");
             foreach (var (key, btn) in _tabs)
                 btn.Style = key == tab ? activeStyle : inactiveStyle;
         }

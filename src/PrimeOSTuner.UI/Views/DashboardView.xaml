@@ -8,10 +8,10 @@
             <TextBlock Text="Your PC at a glance"
                        Style="{StaticResource SubHeaderText}" Margin="0,0,0,20"/>
 
-            <!-- Active profile banner (only when applied) -->
+            <!-- Active profile banner (only when applied) — subtle Win11 accent, not a ring -->
             <Border Style="{StaticResource CardBorder}" Margin="0,0,0,16"
-                    BorderBrush="{StaticResource AccentGradientBrush}"
-                    BorderThickness="2"
+                    BorderBrush="{StaticResource AccentBrush}"
+                    BorderThickness="1"
                     Visibility="{Binding HasActiveProfile, Converter={StaticResource BoolToVisibility}}">
                 <StackPanel>
                     <TextBlock Text="ACTIVE PROFILE" Style="{StaticResource SectionLabel}"
@@ -27,7 +27,7 @@
             </Border>
 
             <!-- Tile grid -->
-            <WrapPanel HorizontalAlignment="Center">
+            <WrapPanel HorizontalAlignment="Left">
 
                 <!-- Boost Score tile -->
                 <Border Style="{StaticResource CardBorder}" Width="280" Height="180" Margin="0,0,12,12">

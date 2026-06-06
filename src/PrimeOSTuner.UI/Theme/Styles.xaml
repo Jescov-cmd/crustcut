@@ -33,12 +33,12 @@
         <Setter Property="Margin" Value="0,0,0,8"/>
     </Style>
 
-    <!-- Card: flat calm surface, soft translucent border, generous padding -->
+    <!-- Card: Windows 11-style surface — 8px radius, thin border, generous padding. -->
     <Style x:Key="CardBorder" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource Bg1Brush}"/>
         <Setter Property="BorderBrush" Value="{StaticResource StrokeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="13"/>
+        <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Padding" Value="20"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
@@ -132,7 +132,7 @@
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="10" Padding="{TemplateBinding Padding}">
                             <Border.Effect>
-                                <DropShadowEffect Color="#C8995F" BlurRadius="18" ShadowDepth="0" Opacity="0.7"/>
+                                <DropShadowEffect Color="#000000" BlurRadius="10" ShadowDepth="2" Opacity="0.35"/>
                             </Border.Effect>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
@@ -144,7 +144,7 @@
                             <Setter TargetName="bg" Property="Background" Value="{StaticResource AccentHoverGradientBrush}"/>
                             <Setter TargetName="bg" Property="Effect">
                                 <Setter.Value>
-                                    <DropShadowEffect Color="#D8AC73" BlurRadius="28" ShadowDepth="0" Opacity="0.95"/>
+                                    <DropShadowEffect Color="#000000" BlurRadius="14" ShadowDepth="2" Opacity="0.45"/>
                                 </Setter.Value>
                             </Setter>
                         </Trigger>
@@ -214,7 +214,7 @@
 
     <!-- Active nav button: subtle warm-crust tint + accent left bar (bread palette) -->
     <Style x:Key="NavBtnActive" TargetType="Button" BasedOn="{StaticResource NavBtn}">
-        <Setter Property="BorderBrush" Value="#8B5A2B"/>
+        <Setter Property="BorderBrush" Value="#785029"/>
         <Setter Property="Background">
             <Setter.Value>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -272,13 +272,8 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="track" Property="Background" Value="{StaticResource AccentGradientBrush}"/>
+                            <Setter TargetName="track" Property="Background" Value="{StaticResource AccentBrush}"/>
                             <Setter TargetName="track" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
-                            <Setter TargetName="track" Property="Effect">
-                                <Setter.Value>
-                                    <DropShadowEffect Color="#C8995F" BlurRadius="14" ShadowDepth="0" Opacity="0.9"/>
-                                </Setter.Value>
-                            </Setter>
                             <Setter TargetName="thumb" Property="Fill" Value="#1A1A1A"/>
                             <Setter TargetName="thumb" Property="Width" Value="16"/>
                             <Setter TargetName="thumb" Property="Height" Value="16"/>

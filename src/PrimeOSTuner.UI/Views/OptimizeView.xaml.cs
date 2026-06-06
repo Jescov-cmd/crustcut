@@ -287,6 +287,12 @@ public partial class OptimizeView : UserControl
         }
         finally
         {
+            // The tile must report what's ACTUALLY on the system, not just the switch the
+            // user flicked. Re-probe after every toggle so "ACTIVE" means detected-active —
+            // if an apply silently didn't take (or a revert failed), the toggle snaps back to
+            // the true state instead of lying.
+            try { row.IsApplied = await row.Tweak.ProbeAsync() == TweakState.Applied; }
+            catch { /* if the probe itself fails, leave the optimistic state as-is */ }
             tb.IsEnabled = true;
         }
     }

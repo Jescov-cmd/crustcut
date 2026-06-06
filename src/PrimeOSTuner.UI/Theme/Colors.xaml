@@ -20,13 +20,13 @@
     <Color x:Key="Text3">#7A7A86</Color>
     <Color x:Key="Text4">#54545E</Color>
 
-    <!-- Accent: warm cream → bread crust. Pulled from the Crustcut bread PNG.
-         Key names kept (AccentPink / AccentOrange) so existing references work. -->
-    <Color x:Key="AccentPink">#F0D6A4</Color>      <!-- cream highlight -->
-    <Color x:Key="AccentOrange">#8B5A2B</Color>    <!-- dark crust -->
-    <Color x:Key="Accent">#C8995F</Color>          <!-- mid tan, used as solid accent -->
-    <Color x:Key="AccentHover">#D8AC73</Color>
-    <Color x:Key="AccentPressed">#B0833F</Color>
+    <!-- Accent: muted bread crust — toned DOWN from the old bright tan for a calmer,
+         Windows 11-like feel. Key names kept (AccentPink / AccentOrange) so references work. -->
+    <Color x:Key="AccentPink">#D4BE96</Color>      <!-- soft cream highlight (muted) -->
+    <Color x:Key="AccentOrange">#785029</Color>    <!-- deep crust -->
+    <Color x:Key="Accent">#A07E52</Color>          <!-- muted bronze-tan, solid accent -->
+    <Color x:Key="AccentHover">#B38E5F</Color>
+    <Color x:Key="AccentPressed">#856840</Color>
 
     <!-- Status -->
     <Color x:Key="Good">#3ECF8E</Color>
@@ -67,14 +67,14 @@
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="AccentHoverGradientBrush" StartPoint="0,0.5" EndPoint="1,0.5">
-        <GradientStop Color="#F8E3BD" Offset="0"/>
-        <GradientStop Color="#D8AC73" Offset="0.55"/>
-        <GradientStop Color="#A06A33" Offset="1"/>
+        <GradientStop Color="#DCC8A1" Offset="0"/>
+        <GradientStop Color="#B38E5F" Offset="0.55"/>
+        <GradientStop Color="#8A5C2C" Offset="1"/>
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="AccentPressedGradientBrush" StartPoint="0,0.5" EndPoint="1,0.5">
-        <GradientStop Color="#E0CA9F" Offset="0"/>
-        <GradientStop Color="#B0833F" Offset="0.55"/>
-        <GradientStop Color="#7A4D24" Offset="1"/>
+        <GradientStop Color="#C7B388" Offset="0"/>
+        <GradientStop Color="#856840" Offset="0.55"/>
+        <GradientStop Color="#684420" Offset="1"/>
     </LinearGradientBrush>
 </ResourceDictionary>

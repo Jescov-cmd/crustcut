@@ -23,7 +23,8 @@ public partial class MemoryPriorityView : UserControl
         _vm = vm;
         _games = games;
         DataContext = vm;
-        Loaded += async (_, _) => { if (_vm.Rules.Count == 0) await _vm.LoadAsync(); ApplyFilter(); };
+        // Refresh on every open so uninstalled apps drop off and new ones appear.
+        Loaded += async (_, _) => { await _vm.RefreshAsync(); ApplyFilter(); };
     }
 
     private void ApplyFilter()

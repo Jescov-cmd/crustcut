@@ -105,6 +105,33 @@ public partial class MemoryPriorityViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Called every time the Memory Priority tab is opened: reloads from disk, DROPS rules
+    /// whose target .exe no longer exists (uninstalled/deleted software), then re-scans for
+    /// newly installed/running apps. Keeps the list honest instead of showing stale entries.
+    /// </summary>
+    public async Task RefreshAsync()
+    {
+        var stored = await _store.LoadAsync();
+        Rules.Clear();
+        foreach (var r in stored)
+            if (TargetExists(r.ExePath)) Rules.Add(new PriorityRuleVm(r));
+
+        if (Rules.Count == 0)
+        {
+            await AutoPopulateAsync();      // persists internally
+        }
+        else
+        {
+            await RescanRunningAppsAsync();  // add new apps (persists if any added)
+            await PersistAsync();            // persist the pruning + resync the engine
+        }
+    }
+
+    // A rule's target is considered gone if it has a path that no longer points to a file.
+    private static bool TargetExists(string? exePath) =>
+        !string.IsNullOrWhiteSpace(exePath) && File.Exists(exePath);
+
+    /// <summary>
     /// Re-scan everything (running + installed) and add any new user-installed apps
     /// not already in the rules list. Called from the "Re-scan apps" button.
     /// </summary>
