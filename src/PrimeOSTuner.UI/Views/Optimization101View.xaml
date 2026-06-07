@@ -46,7 +46,7 @@
                                             <Setter TargetName="chip" Property="Background" Value="#15FFFFFF"/>
                                         </Trigger>
                                         <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="chip" Property="Background" Value="#22FFFFFF"/>
+                                            <Setter TargetName="chip" Property="Background" Value="#2EC98A4B"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -89,7 +89,7 @@
                                         </Trigger>
                                         <Trigger Property="IsSelected" Value="True">
                                             <Setter TargetName="card" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
-                                            <Setter TargetName="card" Property="Background" Value="#12FFFFFF"/>
+                                            <Setter TargetName="card" Property="Background" Value="#1FC98A4B"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>

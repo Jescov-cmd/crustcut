@@ -50,6 +50,37 @@ public class TweakHistoryTests : IDisposable
     }
 
     [Fact]
+    public async Task Load_prunes_entries_older_than_retention_and_persists()
+    {
+        var history = new TweakHistory(_tempPath, TimeSpan.FromHours(24));
+        await history.AppendAsync(new HistoryEntry(
+            Guid.NewGuid(), "old", "Old", DateTime.UtcNow.AddHours(-25), null, false));
+        await history.AppendAsync(new HistoryEntry(
+            Guid.NewGuid(), "fresh", "Fresh", DateTime.UtcNow.AddMinutes(-5), null, false));
+
+        var entries = (await history.LoadAsync()).ToList();
+        entries.Should().ContainSingle();
+        entries[0].TweakId.Should().Be("fresh");
+
+        // The prune is written back: a reader with no retention sees only the fresh entry.
+        var persisted = (await new TweakHistory(_tempPath).LoadAsync()).ToList();
+        persisted.Should().ContainSingle();
+        persisted[0].TweakId.Should().Be("fresh");
+    }
+
+    [Fact]
+    public async Task Clear_removes_all_entries()
+    {
+        var history = new TweakHistory(_tempPath);
+        await history.AppendAsync(new HistoryEntry(
+            Guid.NewGuid(), "a", "A", DateTime.UtcNow, null, false));
+
+        await history.ClearAsync();
+
+        (await history.LoadAsync()).Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task MarkReverted_updates_entry_in_place()
     {
         var history = new TweakHistory(_tempPath);

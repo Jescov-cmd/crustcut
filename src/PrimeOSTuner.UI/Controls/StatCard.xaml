@@ -14,8 +14,8 @@
                        Foreground="{StaticResource AccentBrush}"/>
             <TextBlock x:Name="SubTextBlock" Grid.Row="2" FontSize="11" Opacity="0.55"/>
             <Canvas x:Name="SparkHost" Grid.Row="3" Height="40" Margin="0,8,0,0" ClipToBounds="True">
-                <Path x:Name="SparkFill" Fill="#33F77254"/>
-                <Path x:Name="SparkLine" Stroke="{StaticResource AccentBrush}"
+                <Path x:Name="SparkFill" Fill="{StaticResource ChartAreaBrush}"/>
+                <Path x:Name="SparkLine" Stroke="{StaticResource ChartLineBrush}"
                       StrokeThickness="2" StrokeLineJoin="Round"
                       StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
             </Canvas>

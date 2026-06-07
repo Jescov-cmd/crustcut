@@ -29,11 +29,11 @@ public partial class BoostScoreRing : UserControl
         ring.ScoreText.Text = v.ToString();
         ring.UpdateArc(v);
 
-        var gradient = Application.Current?.Resources["AccentGradientBrush"] as Brush
-                       ?? Application.Current?.Resources["AccentBrush"] as Brush
-                       ?? Brushes.Coral;
-        ring.Arc.Stroke = gradient;
-        ring.ScoreText.Foreground = Application.Current?.Resources["AccentBrush"] as Brush ?? Brushes.Coral;
+        var ringBrush = Application.Current?.Resources["RingGradientBrush"] as Brush
+                        ?? Application.Current?.Resources["AccentBrush"] as Brush
+                        ?? Brushes.Silver;
+        ring.Arc.Stroke = ringBrush;
+        ring.ScoreText.Foreground = ringBrush;
     }
 
     private void UpdateArc(int score)

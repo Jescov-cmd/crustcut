@@ -21,7 +21,8 @@ public partial class MainWindow : Window
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
     private const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
-    private const int DWMSBT_MAINWINDOW = 2;  // Mica
+    private const int DWMSBT_MAINWINDOW = 2;       // Mica (blurred wallpaper)
+    private const int DWMSBT_TRANSIENTWINDOW = 3;  // Acrylic — blurs whatever is BEHIND the window
 
     private readonly ShellViewModel _shellVm;
     private readonly SettingsViewModel _settingsVm;
@@ -87,11 +88,8 @@ public partial class MainWindow : Window
             var hwnd = new WindowInteropHelper(this).Handle;
             int useDark = 1;
             DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref useDark, sizeof(int));
-            // Mica backdrop — Win11 22H2+. Older Windows silently ignores; the
-            // TopBarBrush already has a built-in tint so the title bar still looks
-            // intentional on Win10.
-            int backdrop = DWMSBT_MAINWINDOW;
-            DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE, ref backdrop, sizeof(int));
+            // NOTE: no DWM system backdrop here — the window uses AllowsTransparency=True for a
+            // genuine see-through-to-the-desktop layered window, and a DWM backdrop would fight it.
         }
         catch { }
     }

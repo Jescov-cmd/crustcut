@@ -9,6 +9,7 @@
         WindowStyle="None"
         ResizeMode="CanResize"
         Background="Transparent"
+        AllowsTransparency="True"
         FontFamily="Segoe UI Variable Text, Segoe UI"
         TextOptions.TextFormattingMode="Ideal"
         TextOptions.TextRenderingMode="ClearType">
@@ -88,7 +89,9 @@
         </Style>
     </Window.Resources>
 
-    <Grid Background="{StaticResource Bg0Brush}">
+    <!-- Crust base: a near-black gradient lit by a warm tan/bread glow. The dark frosted nav
+         rail / cards float on top with their own glass + glossy highlights. -->
+    <Grid Background="{StaticResource AppBgBrush}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="224"/>
             <ColumnDefinition Width="*"/>
@@ -110,7 +113,7 @@
                                FontFamily="Segoe UI Variable Display, Segoe UI"
                                FontSize="16" FontWeight="SemiBold"
                                VerticalAlignment="Center" Margin="10,0,0,0"/>
-                    <TextBlock x:Name="VersionText" Text="v0.6.3"
+                    <TextBlock x:Name="VersionText" Text="v0.6.5"
                                FontFamily="Segoe UI Variable Text, Segoe UI"
                                FontSize="10" Foreground="{StaticResource Text3Brush}"
                                Margin="6,3,0,0" VerticalAlignment="Center"/>
@@ -308,8 +311,9 @@
                 </Grid>
             </Border>
 
-            <!-- Page host -->
-            <Border Grid.Row="1" Background="{StaticResource Bg0Brush}">
+            <!-- Page host — transparent so the window's dark tan-glow base shows here; the
+                 frosted glass panels float on top of it. -->
+            <Border Grid.Row="1" Background="Transparent">
                 <ContentControl x:Name="PageHost" Margin="32,24,32,32"/>
             </Border>
         </Grid>

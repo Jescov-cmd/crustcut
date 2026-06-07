@@ -125,7 +125,8 @@ public partial class App : Application
                 s.AddSingleton<IServiceClient, ServiceClient>();
 
                 // Core
-                s.AddSingleton(_ => new TweakHistory(TweakHistory.DefaultPath()));
+                // History self-expires after 24h (pruned on load) so it doesn't grow unbounded.
+                s.AddSingleton(_ => new TweakHistory(TweakHistory.DefaultPath(), TimeSpan.FromHours(24)));
                 s.AddSingleton<SystemSampler>();
                 s.AddSingleton<PowerPlanTweak>();
                 s.AddSingleton<RamCleanerTweak>();

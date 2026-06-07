@@ -7,8 +7,10 @@
         Path data taken verbatim from Lucide v1.14 SVGs.
     -->
 
+    <!-- Dark "Crust" theme (v0.6.5): icons are warm off-white so they read on the dark rail;
+         the "accent" variant is the wheat tan used for emphasis icons (lightning, mode gauges). -->
     <SolidColorBrush x:Key="IconBrush" Color="#E6FFFFFF"/>
-    <SolidColorBrush x:Key="IconAccentBrush" Color="#A07E52"/>
+    <SolidColorBrush x:Key="IconAccentBrush" Color="#E6B97A"/>
 
     <!-- DASHBOARD — gauge -->
     <DrawingImage x:Key="IconDashboard">

@@ -11,12 +11,16 @@ namespace PrimeOSTuner.Core.History;
 public sealed class TweakHistory
 {
     private readonly string _filePath;
+    private readonly TimeSpan? _retention;
     private readonly SemaphoreSlim _lock = new(1, 1);
     private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = false };
 
-    public TweakHistory(string filePath)
+    /// <param name="retention">If set, entries older than this are dropped (and the file
+    /// rewritten) whenever history is loaded — e.g. 24h means history self-expires after a day.</param>
+    public TweakHistory(string filePath, TimeSpan? retention = null)
     {
         _filePath = filePath;
+        _retention = retention;
     }
 
     public static string DefaultPath() =>
@@ -44,6 +48,14 @@ public sealed class TweakHistory
         finally { _lock.Release(); }
     }
 
+    /// <summary>Removes all history entries.</summary>
+    public async Task ClearAsync()
+    {
+        await _lock.WaitAsync();
+        try { await SaveAsync(new List<HistoryEntry>()); }
+        finally { _lock.Release(); }
+    }
+
     public async Task MarkRevertedAsync(Guid entryId)
     {
         await _lock.WaitAsync();
@@ -67,7 +79,21 @@ public sealed class TweakHistory
         if (!File.Exists(_filePath)) return new List<HistoryEntry>();
         var json = await File.ReadAllTextAsync(_filePath);
         if (string.IsNullOrWhiteSpace(json)) return new List<HistoryEntry>();
-        return JsonSerializer.Deserialize<List<HistoryEntry>>(json, JsonOpts) ?? new List<HistoryEntry>();
+        var entries = JsonSerializer.Deserialize<List<HistoryEntry>>(json, JsonOpts) ?? new List<HistoryEntry>();
+
+        // Self-expiry: drop entries older than the retention window and persist the trim so the
+        // file doesn't grow unbounded.
+        if (_retention is { } retention)
+        {
+            var cutoff = DateTime.UtcNow - retention;
+            var kept = entries.Where(e => e.AppliedAtUtc >= cutoff).ToList();
+            if (kept.Count != entries.Count)
+            {
+                await SaveAsync(kept);
+                return kept;
+            }
+        }
+        return entries;
     }
 
     private async Task SaveAsync(List<HistoryEntry> entries)

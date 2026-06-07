@@ -41,9 +41,9 @@
                                 <Setter Property="Foreground" Value="{StaticResource Text0Brush}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="bg" Property="Background" Value="{StaticResource AccentGradientBrush}"/>
+                                <Setter TargetName="bg" Property="Background" Value="{StaticResource PrimaryButtonBrush}"/>
                                 <Setter TargetName="bg" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
-                                <Setter Property="Foreground" Value="#1A1A1A"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -96,9 +96,11 @@
                        Source="{Binding CoverImagePath}"
                        Stretch="UniformToFill"/>
                 <Border Background="#80000000" VerticalAlignment="Bottom" Height="80" CornerRadius="0,0,0,0"/>
+                <!-- Title + mode sit over the dark scrim on the cover art, so they stay LIGHT
+                     regardless of the light app theme. -->
                 <StackPanel VerticalAlignment="Bottom" Margin="10,0,10,10">
-                    <TextBlock Text="{Binding DisplayName}" Foreground="{StaticResource Text0Brush}" FontWeight="Bold" FontSize="14" TextWrapping="Wrap"/>
-                    <TextBlock Text="{Binding AssignedMode}" Foreground="{StaticResource AccentBrush}" FontSize="11"/>
+                    <TextBlock Text="{Binding DisplayName}" Foreground="#FFFFFF" FontWeight="Bold" FontSize="14" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding AssignedMode}" Foreground="#E6B97A" FontSize="11"/>
                 </StackPanel>
             </Grid>
 

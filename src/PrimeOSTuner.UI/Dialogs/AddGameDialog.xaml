@@ -33,8 +33,8 @@
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="Cancel" Click="CancelClick" Margin="0,0,8,0" Padding="14,6"/>
-            <Button x:Name="OkBtn" Content="Add" Click="OkClick" Padding="14,6"
-                    Background="{StaticResource AccentBrush}" Foreground="White" FontWeight="Bold"/>
+            <Button x:Name="OkBtn" Content="Add" Click="OkClick"
+                    Style="{StaticResource PrimaryActionButton}"/>
         </StackPanel>
     </StackPanel>
 </Window>

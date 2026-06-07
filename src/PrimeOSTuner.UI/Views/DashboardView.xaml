@@ -56,21 +56,25 @@
                     </Grid>
                 </Border>
 
-                <!-- Optimize Now tile -->
-                <Border Style="{StaticResource CardBorder}" Width="280" Height="180" Margin="0,0,12,12">
+                <!-- Optimize Now tile — the flagship "hero" card: a glowing crust gradient panel,
+                     warm cream text for legibility on the deep tan fill. -->
+                <Border Style="{StaticResource CardBorder}" Width="280" Height="180" Margin="0,0,12,12"
+                        Background="{StaticResource HeroGradientBrush}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Text="ONE-CLICK OPTIMIZE" Style="{StaticResource SectionLabel}"/>
+                        <TextBlock Grid.Row="0" Text="ONE-CLICK OPTIMIZE" Style="{StaticResource SectionLabel}"
+                                   Foreground="#F4E2C2"/>
                         <StackPanel Grid.Row="1" VerticalAlignment="Center">
                             <TextBlock Text="Apply safe tweaks"
                                        FontFamily="Segoe UI Variable Display, Segoe UI"
-                                       FontSize="18" FontWeight="SemiBold"/>
+                                       FontSize="18" FontWeight="SemiBold"
+                                       Foreground="#FCF5E9"/>
                             <TextBlock Text="Auto-creates restore point"
-                                       Foreground="{StaticResource Text2Brush}"
+                                       Foreground="#EAD8B8"
                                        FontSize="11" Margin="0,4,0,0"/>
                         </StackPanel>
                         <Button Grid.Row="2"

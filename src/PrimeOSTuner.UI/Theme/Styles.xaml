@@ -33,16 +33,24 @@
         <Setter Property="Margin" Value="0,0,0,8"/>
     </Style>
 
-    <!-- Card: Windows 11-style surface — 8px radius, thin border, generous padding. -->
+    <!-- Card: frosted white-glass panel — high-alpha frosted fill + bright thin edge, lifted off
+         the pink/lavender background by a soft plum drop shadow (the shadow, not the border, is
+         what separates it from the bg on a light theme). 14px radius for the soft glass feel. -->
     <Style x:Key="CardBorder" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource Bg1Brush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource StrokeBrush}"/>
+        <Setter Property="Background" Value="{StaticResource GlassFill}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CardEdgeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="CornerRadius" Value="14"/>
         <Setter Property="Padding" Value="20"/>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect Color="{StaticResource ShadowColor}" BlurRadius="28"
+                                  ShadowDepth="9" Direction="270" Opacity="0.42"/>
+            </Setter.Value>
+        </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="BorderBrush" Value="#2EFFFFFF"/>
+                <Setter Property="BorderBrush" Value="{StaticResource GlassBorder}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -77,10 +85,11 @@
         </Setter>
     </Style>
 
-    <!-- Standard button: flat, calm, soft translucent border -->
+    <!-- Standard button: glossy raised — a lit-from-top gradient face, a bright top sheen line,
+         and a soft drop shadow so it sits proud of the surface. -->
     <Style TargetType="Button">
         <Setter Property="Foreground" Value="{StaticResource Text0Brush}"/>
-        <Setter Property="Background" Value="{StaticResource Bg2Brush}"/>
+        <Setter Property="Background" Value="{StaticResource ButtonFaceBrush}"/>
         <Setter Property="BorderBrush" Value="{StaticResource StrokeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI"/>
@@ -90,20 +99,28 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="bg"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="9" Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
+                    <Grid>
+                        <Border x:Name="bg"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="9" Padding="{TemplateBinding Padding}">
+                            <Border.Effect>
+                                <DropShadowEffect Color="{StaticResource ShadowColor}" BlurRadius="11" ShadowDepth="3" Opacity="0.6"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <Border x:Name="hl" CornerRadius="9,9,0,0" Height="1" VerticalAlignment="Top"
+                                Margin="3,1,3,0" Background="{StaticResource GlassHighlight}" IsHitTestVisible="False"/>
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bg" Property="Background" Value="{StaticResource Bg3Brush}"/>
+                            <Setter TargetName="bg" Property="Background" Value="{StaticResource ButtonFaceHoverBrush}"/>
                             <Setter TargetName="bg" Property="BorderBrush" Value="#33FFFFFF"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="bg" Property="Background" Value="{StaticResource Bg1Brush}"/>
+                            <Setter TargetName="hl" Property="Visibility" Value="Collapsed"/>
                             <Setter Property="Foreground" Value="{StaticResource Text2Brush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
@@ -115,13 +132,14 @@
         </Setter>
     </Style>
 
-    <!-- Accent button: gradient body + top highlight + soft halo -->
+    <!-- Primary action button: filled pink→purple accent, white label, bright top sheen line and
+         a soft shadow so it floats above the glass. -->
     <Style x:Key="PrimaryActionButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-        <Setter Property="Foreground" Value="#1A1A1A"/>
-        <Setter Property="BorderBrush" Value="{StaticResource AccentPressedBrush}"/>
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+        <Setter Property="BorderBrush" Value="{StaticResource GlassBorder}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Padding" Value="22,8"/>
-        <Setter Property="Background" Value="{StaticResource AccentGradientBrush}"/>
+        <Setter Property="Padding" Value="22,9"/>
+        <Setter Property="Background" Value="{StaticResource PrimaryButtonBrush}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -129,24 +147,19 @@
                         <Border x:Name="bg"
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="10" Padding="{TemplateBinding Padding}">
+                                BorderThickness="1"
+                                CornerRadius="9" Padding="{TemplateBinding Padding}">
                             <Border.Effect>
-                                <DropShadowEffect Color="#000000" BlurRadius="10" ShadowDepth="2" Opacity="0.35"/>
+                                <DropShadowEffect Color="#000000" BlurRadius="12" ShadowDepth="2" Opacity="0.4"/>
                             </Border.Effect>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-                        <Border x:Name="hl" CornerRadius="10,10,0,0" Height="1" VerticalAlignment="Top"
-                                Margin="2,1,2,0" Background="#66FFFFFF" IsHitTestVisible="False"/>
+                        <Border x:Name="hl" CornerRadius="9,9,0,0" Height="1" VerticalAlignment="Top"
+                                Margin="3,1,3,0" Background="{StaticResource GlassHighlight}" IsHitTestVisible="False"/>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bg" Property="Background" Value="{StaticResource AccentHoverGradientBrush}"/>
-                            <Setter TargetName="bg" Property="Effect">
-                                <Setter.Value>
-                                    <DropShadowEffect Color="#000000" BlurRadius="14" ShadowDepth="2" Opacity="0.45"/>
-                                </Setter.Value>
-                            </Setter>
+                            <Setter TargetName="bg" Property="Background" Value="{StaticResource PrimaryButtonHoverBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="bg" Property="Background" Value="{StaticResource AccentPressedGradientBrush}"/>
@@ -154,7 +167,6 @@
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.5"/>
-                            <Setter TargetName="bg" Property="Effect" Value="{x:Null}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -256,14 +268,14 @@
                     <Grid>
                         <Border x:Name="track"
                                 CornerRadius="11"
-                                Background="#1A1A1A"
-                                BorderBrush="#525252"
+                                Background="#26262A"
+                                BorderBrush="#3A3A40"
                                 BorderThickness="1.5"/>
                         <Ellipse x:Name="thumb"
                                  Width="12" Height="12"
                                  HorizontalAlignment="Left"
                                  Margin="4,0,0,0"
-                                 Fill="#B9B9B9"
+                                 Fill="#8E8E96"
                                  RenderTransformOrigin="0.5,0.5">
                             <Ellipse.RenderTransform>
                                 <TranslateTransform x:Name="thumbX" X="0"/>
@@ -272,9 +284,9 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="track" Property="Background" Value="{StaticResource AccentBrush}"/>
+                            <Setter TargetName="track" Property="Background" Value="{StaticResource PrimaryButtonBrush}"/>
                             <Setter TargetName="track" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
-                            <Setter TargetName="thumb" Property="Fill" Value="#1A1A1A"/>
+                            <Setter TargetName="thumb" Property="Fill" Value="#FFFFFF"/>
                             <Setter TargetName="thumb" Property="Width" Value="16"/>
                             <Setter TargetName="thumb" Property="Height" Value="16"/>
                             <Setter TargetName="thumb" Property="Margin" Value="2,0,0,0"/>
@@ -300,7 +312,7 @@
                             </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="track" Property="BorderBrush" Value="#7A7A7A"/>
+                            <Setter TargetName="track" Property="BorderBrush" Value="#55555C"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -329,9 +341,9 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="bg" Property="Background" Value="{StaticResource AccentBrush}"/>
+                            <Setter TargetName="bg" Property="Background" Value="{StaticResource PrimaryButtonBrush}"/>
                             <Setter TargetName="bg" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
-                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="Foreground" Value="#FFFFFF"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="bg" Property="Background" Value="{StaticResource Bg2Brush}"/>
@@ -359,7 +371,7 @@
                                     Background="Transparent"
                                     BorderBrush="{StaticResource Text2Brush}" BorderThickness="1.5"/>
                             <TextBlock x:Name="check" Text="&#xE73E;" FontFamily="Segoe Fluent Icons"
-                                       FontSize="12" Foreground="White"
+                                       FontSize="12" Foreground="#F0F0F4"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
                                        Visibility="Collapsed"/>
                         </Grid>
@@ -413,7 +425,7 @@
                                             CornerRadius="8"/>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="bg" Property="BorderBrush" Value="#525252"/>
+                                            <Setter TargetName="bg" Property="BorderBrush" Value="#55555C"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -448,7 +460,7 @@
                                     Margin="0,4,0,0"
                                     MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
                                 <Border.Effect>
-                                    <DropShadowEffect Color="Black" BlurRadius="12" ShadowDepth="3" Opacity="0.5"/>
+                                    <DropShadowEffect Color="{StaticResource ShadowColor}" BlurRadius="18" ShadowDepth="4" Opacity="0.22"/>
                                 </Border.Effect>
                                 <ScrollViewer MaxHeight="240">
                                     <ItemsPresenter/>
@@ -473,10 +485,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
-                            <Setter TargetName="bg" Property="Background" Value="#333333"/>
+                            <Setter TargetName="bg" Property="Background" Value="#2EFFFFFF"/>
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="bg" Property="Background" Value="#3A2A18"/>
+                            <Setter TargetName="bg" Property="Background" Value="#2E2E33"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

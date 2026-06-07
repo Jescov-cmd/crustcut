@@ -8,13 +8,13 @@
                  StrokeThickness="8"/>
         <Path x:Name="Arc" StrokeThickness="8" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
             <Path.Effect>
-                <DropShadowEffect Color="#A07E52" BlurRadius="14" ShadowDepth="0" Opacity="0.45"/>
+                <DropShadowEffect Color="#E0B070" BlurRadius="16" ShadowDepth="0" Opacity="0.5"/>
             </Path.Effect>
         </Path>
         <TextBlock x:Name="ScoreText" Text="0" FontSize="28" FontWeight="Bold"
                    HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock.Effect>
-                <DropShadowEffect Color="#D4BE96" BlurRadius="12" ShadowDepth="0" Opacity="0.4"/>
+                <DropShadowEffect Color="#E0B070" BlurRadius="10" ShadowDepth="0" Opacity="0.2"/>
             </TextBlock.Effect>
         </TextBlock>
     </Grid>

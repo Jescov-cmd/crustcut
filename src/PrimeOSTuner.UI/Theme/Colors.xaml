@@ -1,45 +1,52 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- Dark palette — calm surfaces, soft translucent strokes. v0.4 restyle. -->
+    <!-- "Crust" dark theme (v0.6.5) — a near-black base lit by a warm tan/bread gradient glow,
+         dark frosted-glass cards, all-tan/bread accents, and glossy raised 3D controls.
+         Semantic keys (Bg*, Text*, Accent*, Glass*) are unchanged so the whole app re-themes. -->
 
-    <!-- Backgrounds: deep base, gentle elevation steps -->
-    <Color x:Key="Bg0">#131315</Color>
-    <Color x:Key="Bg1">#1C1C20</Color>
-    <Color x:Key="Bg2">#232327</Color>
-    <Color x:Key="Bg3">#2C2C32</Color>
+    <!-- Control surfaces — neutral near-black (Windows 11 black), gentle elevation steps.
+         NO warm tint: the tan is reserved for accents only. -->
+    <Color x:Key="Bg0">#0E0E10</Color>   <!-- app base -->
+    <Color x:Key="Bg1">#18181B</Color>   <!-- textbox / popup -->
+    <Color x:Key="Bg2">#202023</Color>   <!-- button / secondary surface -->
+    <Color x:Key="Bg3">#2A2A2E</Color>   <!-- hover surface -->
 
-    <!-- Strokes: translucent white so edges read softly on any surface -->
-    <Color x:Key="Stroke">#16FFFFFF</Color>
-    <Color x:Key="StrokeSoft">#0EFFFFFF</Color>
+    <!-- Strokes: translucent white so edges read softly on the dark warm surfaces -->
+    <Color x:Key="Stroke">#1AFFFFFF</Color>
+    <Color x:Key="StrokeSoft">#10FFFFFF</Color>
 
-    <!-- Text — cool off-white, clear hierarchy. Secondary/tertiary greys lifted for
-         readability on the dark surfaces (descriptions & labels were a touch dim). -->
-    <Color x:Key="Text0">#F5F5F8</Color>
-    <Color x:Key="Text1">#D0D0D9</Color>
-    <Color x:Key="Text2">#A2A2AE</Color>
-    <Color x:Key="Text3">#7A7A86</Color>
-    <Color x:Key="Text4">#54545E</Color>
+    <!-- Text — neutral off-white, clear hierarchy on the black base. -->
+    <Color x:Key="Text0">#F3F3F5</Color>
+    <Color x:Key="Text1">#D2D2D6</Color>
+    <Color x:Key="Text2">#9C9CA2</Color>
+    <Color x:Key="Text3">#6E6E74</Color>
+    <Color x:Key="Text4">#4A4A50</Color>
 
-    <!-- Accent: muted bread crust — toned DOWN from the old bright tan for a calmer,
-         Windows 11-like feel. Key names kept (AccentPink / AccentOrange) so references work. -->
-    <Color x:Key="AccentPink">#D4BE96</Color>      <!-- soft cream highlight (muted) -->
-    <Color x:Key="AccentOrange">#785029</Color>    <!-- deep crust -->
-    <Color x:Key="Accent">#A07E52</Color>          <!-- muted bronze-tan, solid accent -->
-    <Color x:Key="AccentHover">#B38E5F</Color>
-    <Color x:Key="AccentPressed">#856840</Color>
+    <!-- Accent: warm bread — wheat (light end) → crust → deep crust. The solid Accent is the
+         crust mid-tone used for accent text/elements. -->
+    <Color x:Key="AccentPink">#E6B97A</Color>     <!-- light wheat (gradient start) -->
+    <Color x:Key="AccentOrange">#8A5A2C</Color>   <!-- deep crust (gradient end) -->
+    <Color x:Key="Accent">#C98A4B</Color>         <!-- crust, accent text/elements -->
+    <Color x:Key="AccentHover">#D89A58</Color>
+    <Color x:Key="AccentPressed">#A8702F</Color>
 
     <!-- Status -->
     <Color x:Key="Good">#3ECF8E</Color>
     <Color x:Key="Warn">#FFB84D</Color>
     <Color x:Key="Danger">#FF6B6B</Color>
 
+    <!-- App background: flat neutral black (no gradient, no warm tint). -->
+    <SolidColorBrush x:Key="AppBgBrush" Color="#0A0A0C"/>
+    <!-- Kept under the old key so any lingering reference still resolves. -->
+    <SolidColorBrush x:Key="FrostTanBrush" Color="#0A0A0C"/>
+    <!-- Flat neutral dark behind the page. -->
+    <SolidColorBrush x:Key="ContentBgBrush" Color="#0E0E10"/>
+
     <!-- Brushes -->
     <SolidColorBrush x:Key="Bg0Brush"        Color="{StaticResource Bg0}"/>
     <SolidColorBrush x:Key="Bg1Brush"        Color="{StaticResource Bg1}"/>
-    <!-- Title-bar overlay tint, ~70% alpha over Bg1 — gives the title bar a translucent
-         feel when Mica backdrop is enabled (Win11+); on Win10 it falls back to a
-         slightly darker shade than Bg1 over the window's solid background. -->
-    <SolidColorBrush x:Key="TopBarBrush"     Color="#B31C1C20"/>
+    <!-- Nav rail / caption strip: a neutral dark panel, slightly translucent. -->
+    <SolidColorBrush x:Key="TopBarBrush"     Color="#D618181B"/>
     <SolidColorBrush x:Key="Bg2Brush"        Color="{StaticResource Bg2}"/>
     <SolidColorBrush x:Key="Bg3Brush"        Color="{StaticResource Bg3}"/>
     <SolidColorBrush x:Key="StrokeBrush"     Color="{StaticResource Stroke}"/>
@@ -55,26 +62,106 @@
     <SolidColorBrush x:Key="AccentHoverBrush"   Color="{StaticResource AccentHover}"/>
     <SolidColorBrush x:Key="AccentPressedBrush" Color="{StaticResource AccentPressed}"/>
 
+    <!-- ===== Frosted glass material (tuned for the DARK base) ===== -->
+    <!-- Translucent top-lit white panel; on the dark base this reads as frosted glass. -->
+    <LinearGradientBrush x:Key="GlassFill" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#28FFFFFF" Offset="0"/>
+        <GradientStop Color="#07FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="GlassFillActive" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#40FFFFFF" Offset="0"/>
+        <GradientStop Color="#24FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="GlassFillHover" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#52FFFFFF" Offset="0"/>
+        <GradientStop Color="#30FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="GlassBorder"     Color="#5CFFFFFF"/>   <!-- bright glass edge -->
+    <SolidColorBrush x:Key="GlassBorderSoft" Color="#24FFFFFF"/>   <!-- subtle glass edge -->
+    <SolidColorBrush x:Key="GlassHighlight"  Color="#A6FFFFFF"/>   <!-- top sheen line (3D) -->
+
+    <!-- Raised card edge: bright at the top, fading down the sides — gives panels a beveled,
+         lifted feel (top catches the light, bottom falls into shadow). -->
+    <LinearGradientBrush x:Key="CardEdgeBrush" StartPoint="0.5,0" EndPoint="0.5,1">
+        <GradientStop Color="#5AFFFFFF" Offset="0"/>
+        <GradientStop Color="#1AFFFFFF" Offset="0.5"/>
+        <GradientStop Color="#0A000000" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Card shadow colour — black, for depth on the dark base. -->
+    <Color x:Key="ShadowColor">#000000</Color>
+
     <SolidColorBrush x:Key="GoodBrush"   Color="{StaticResource Good}"/>
     <SolidColorBrush x:Key="WarnBrush"   Color="{StaticResource Warn}"/>
     <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource Danger}"/>
 
-    <!-- Pink → orange horizontal gradient. The signature accent of the app. -->
+    <!-- ===== Signature bread gradients ===== -->
+    <!-- Wheat → crust → deep crust. The signature accent of the app. -->
     <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0.5" EndPoint="1,0.5">
         <GradientStop Color="{StaticResource AccentPink}"   Offset="0"/>
         <GradientStop Color="{StaticResource Accent}"       Offset="0.55"/>
         <GradientStop Color="{StaticResource AccentOrange}" Offset="1"/>
     </LinearGradientBrush>
 
+    <LinearGradientBrush x:Key="AccentGradientAbs" StartPoint="0,0" EndPoint="240,0" MappingMode="Absolute">
+        <GradientStop Color="{StaticResource AccentPink}"   Offset="0"/>
+        <GradientStop Color="{StaticResource Accent}"       Offset="0.5"/>
+        <GradientStop Color="{StaticResource AccentOrange}" Offset="1"/>
+    </LinearGradientBrush>
+
     <LinearGradientBrush x:Key="AccentHoverGradientBrush" StartPoint="0,0.5" EndPoint="1,0.5">
-        <GradientStop Color="#DCC8A1" Offset="0"/>
-        <GradientStop Color="#B38E5F" Offset="0.55"/>
-        <GradientStop Color="#8A5C2C" Offset="1"/>
+        <GradientStop Color="#F0C98A" Offset="0"/>
+        <GradientStop Color="#D89A58" Offset="0.55"/>
+        <GradientStop Color="#9A6630" Offset="1"/>
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="AccentPressedGradientBrush" StartPoint="0,0.5" EndPoint="1,0.5">
-        <GradientStop Color="#C7B388" Offset="0"/>
-        <GradientStop Color="#856840" Offset="0.55"/>
-        <GradientStop Color="#684420" Offset="1"/>
+        <GradientStop Color="#C9A36A" Offset="0"/>
+        <GradientStop Color="#A8702F" Offset="0.55"/>
+        <GradientStop Color="#7A4E22" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Primary button: glossy raised tan. VERTICAL light-top → dark-bottom so it reads as a
+         lit, pressable face; white label sits on it legibly. -->
+    <LinearGradientBrush x:Key="PrimaryButtonBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#EAAE68" Offset="0"/>
+        <GradientStop Color="#8E5E2A" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="PrimaryButtonHoverBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#F4BC76" Offset="0"/>
+        <GradientStop Color="#9C6A32" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Standard button face: glossy raised neutral dark — a lit-from-top gradient. -->
+    <LinearGradientBrush x:Key="ButtonFaceBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#303034" Offset="0"/>
+        <GradientStop Color="#161618" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="ButtonFaceHoverBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#3C3C42" Offset="0"/>
+        <GradientStop Color="#1E1E21" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Boost-score ring: glowing wheat → crust orb arc. -->
+    <LinearGradientBrush x:Key="RingGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#E8C088" Offset="0"/>
+        <GradientStop Color="#C98A4B" Offset="0.5"/>
+        <GradientStop Color="#8A5A2C" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Hero card fill: a rich glowing crust gradient (the flagship Dashboard tile). -->
+    <LinearGradientBrush x:Key="HeroGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#CE9450" Offset="0"/>
+        <GradientStop Color="#6E4623" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Deepest panel — for the occasional contrast element. -->
+    <SolidColorBrush x:Key="DarkPanelBrush" Color="#141416"/>
+
+    <!-- Chart sparklines: wheat line over a soft honey area wash. -->
+    <SolidColorBrush x:Key="ChartLineBrush" Color="#E0B070"/>
+    <LinearGradientBrush x:Key="ChartAreaBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#4DC98A4B" Offset="0"/>
+        <GradientStop Color="#08C98A4B" Offset="1"/>
     </LinearGradientBrush>
 </ResourceDictionary>

@@ -31,9 +31,9 @@
                                 <Setter Property="Foreground" Value="{StaticResource Text0Brush}"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="bg" Property="Background" Value="{StaticResource AccentBrush}"/>
-                                <Setter TargetName="bg" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
-                                <Setter Property="Foreground" Value="#1A1A1A"/>
+                                <Setter TargetName="bg" Property="Background" Value="{StaticResource GlassFillActive}"/>
+                                <Setter TargetName="bg" Property="BorderBrush" Value="{StaticResource GlassBorder}"/>
+                                <Setter Property="Foreground" Value="#F0F0F4"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -102,7 +102,7 @@
                                 CornerRadius="6" Padding="8,3"
                                 BorderThickness="1"
                                 BorderBrush="{StaticResource AccentBrush}"
-                                Background="#1F1916"
+                                Background="#221A14"
                                 Visibility="{Binding Tweak.RequiresReboot, Converter={StaticResource BoolToVisibility}}"
                                 ToolTip="Windows needs to restart for this change to fully take effect.">
                             <TextBlock Text="REBOOT" FontSize="10" FontWeight="SemiBold"
@@ -113,7 +113,7 @@
                                 CornerRadius="6" Padding="8,3"
                                 BorderThickness="1"
                                 BorderBrush="#FFA01F"
-                                Background="#1F1916"
+                                Background="#221A14"
                                 VerticalAlignment="Center"
                                 Visibility="{Binding HasRisk, Converter={StaticResource BoolToVisibility}}"
                                 ToolTip="{Binding RiskNote}">
@@ -160,8 +160,8 @@
 
             <!-- Reboot-required banner: shown after a tweak whose change needs a restart is toggled -->
             <Border x:Name="RebootBanner" Visibility="Collapsed"
-                    BorderBrush="{StaticResource AccentGradientBrush}"
-                    BorderThickness="2" CornerRadius="10"
+                    BorderBrush="{StaticResource AccentBrush}"
+                    BorderThickness="1" CornerRadius="10"
                     Background="#221A14" Padding="16,12" Margin="0,0,0,18">
                 <Grid>
                     <Grid.ColumnDefinitions>

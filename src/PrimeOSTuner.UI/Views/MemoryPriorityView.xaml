@@ -40,9 +40,9 @@
                                 <Setter Property="Foreground" Value="{StaticResource Text0Brush}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="bg" Property="Background" Value="{StaticResource AccentGradientBrush}"/>
+                                <Setter TargetName="bg" Property="Background" Value="{StaticResource PrimaryButtonBrush}"/>
                                 <Setter TargetName="bg" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
-                                <Setter Property="Foreground" Value="#1A1A1A"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -169,9 +169,9 @@
                                                     <Setter TargetName="bg" Property="Background" Value="{StaticResource Bg3Brush}"/>
                                                 </Trigger>
                                                 <Trigger Property="IsChecked" Value="True">
-                                                    <Setter TargetName="bg" Property="Background" Value="{StaticResource AccentGradientBrush}"/>
+                                                    <Setter TargetName="bg" Property="Background" Value="{StaticResource PrimaryButtonBrush}"/>
                                                     <Setter TargetName="bg" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
-                                                    <Setter Property="Foreground" Value="#1A1A1A"/>
+                                                    <Setter Property="Foreground" Value="#FFFFFF"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -249,7 +249,7 @@
                                                 <Setter Property="Background" Value="#0DFFFFFF"/>
                                             </Trigger>
                                             <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                <Setter Property="Background" Value="#33F77254"/>
+                                                <Setter Property="Background" Value="#26C98A4B"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
