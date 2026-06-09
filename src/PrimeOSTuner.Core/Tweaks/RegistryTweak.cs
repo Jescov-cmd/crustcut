@@ -4,7 +4,7 @@ using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class RegistryTweak : ITweak, ICategorizedTweak
+public sealed class RegistryTweak : ITweak, ICategorizedTweak, ISelfRevertingTweak
 {
     private readonly RegistryTweakDefinition _def;
     private readonly IRegistryClient _registry;
@@ -67,6 +67,22 @@ public sealed class RegistryTweak : ITweak, ICategorizedTweak
 
     public Task<string> PreviewAsync(CancellationToken ct = default)
         => Task.FromResult($"Will set {_def.Hive}\\{_def.Key}\\{_def.ValueName} to '{_def.AppliedData}' ({_def.ValueKind}).");
+
+    /// <summary>
+    /// Fallback revert when no undo data is available: restore the "value absent" state, which
+    /// makes ProbeAsync report NotApplied (ReadDword/ReadString return null → NotApplied). This
+    /// reuses RestoreFromBackup's delete path via a synthetic "did not exist" backup, so the
+    /// toggle can always be turned off. (These are "disable X" tweaks that create a value which
+    /// wasn't present by default, so removing it correctly restores the Windows default.)
+    /// </summary>
+    public Task<TweakResult> RevertToDefaultAsync(CancellationToken ct = default)
+    {
+        var deleteBackup = new RegistryBackup(
+            _def.ParsedHive, _def.Key, _def.ValueName,
+            PreviousString: null, PreviousDword: null, PreviousKind: RegistryValueKind.Unknown);
+        _registry.RestoreFromBackup(deleteBackup);
+        return Task.FromResult(TweakResult.Success());
+    }
 
     private static int ParseDword(string raw)
     {

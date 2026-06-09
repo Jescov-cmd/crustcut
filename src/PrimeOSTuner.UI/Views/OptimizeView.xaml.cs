@@ -29,17 +29,19 @@ public partial class OptimizeView : UserControl
 
     private readonly TweakHistory _history;
     private readonly SessionTweakStore _sessionStore;
+    private readonly PendingUndoStore _pendingUndo;
     private readonly List<TweakRowVm> _allRows;
     private readonly ObservableCollection<FilterChipVm> _chips = new();
     private string _activeKey = "all";
     private string _searchText = "";
     private readonly HashSet<string> _pendingReboot = new();
 
-    public OptimizeView(IEnumerable<ITweak> tweaks, TweakHistory history, SessionTweakStore sessionStore)
+    public OptimizeView(IEnumerable<ITweak> tweaks, TweakHistory history, SessionTweakStore sessionStore, PendingUndoStore pendingUndo)
     {
         InitializeComponent();
         _history = history;
         _sessionStore = sessionStore;
+        _pendingUndo = pendingUndo;
         var allTweaks = tweaks.ToList();
 
         _allRows = allTweaks
@@ -75,7 +77,7 @@ public partial class OptimizeView : UserControl
         try
         {
             var tweaks = _allRows.Select(r => r.Tweak);
-            var states = await Task.Run(() => TweakStateInitializer.ComputeAsync(tweaks, _history));
+            var states = await Task.Run(() => TweakStateInitializer.ComputeAsync(tweaks, _history, _pendingUndo));
 
             // Defensive: build the lookup without throwing on any duplicate id (last wins).
             var byId = new Dictionary<string, TweakRowVm>(StringComparer.OrdinalIgnoreCase);
@@ -228,6 +230,9 @@ public partial class OptimizeView : UserControl
                     // swallow the reboot indication.
                     if (row.Tweak.RequiresReboot) MarkPendingReboot(row.Tweak);
                     await TryAppendHistoryAsync(row.Tweak, result.UndoData);
+                    // Durable undo: survives a history clear / 24h expiry, so this stays
+                    // revertable later. SetIfAbsent preserves the pristine first-apply value.
+                    try { await _pendingUndo.SetIfAbsentAsync(row.Tweak.Id, result.UndoData); } catch { }
                     // Record that the user wants this optimizer ON. On the next launch,
                     // startup re-applies it if Windows (or a driver/scheme change) has
                     // quietly reverted it — so "I turned it on" stays true.
@@ -239,9 +244,34 @@ public partial class OptimizeView : UserControl
                     MessageBox.Show($"Failed: {result.Error}", row.Tweak.DisplayName);
                 }
             }
-            else if (row.UndoData is not null)
+            else  // user toggled OFF
             {
-                var revert = await row.Tweak.RevertAsync(row.UndoData);
+                TweakResult revert;
+                if (row.UndoData is not null)
+                {
+                    revert = await row.Tweak.RevertAsync(row.UndoData);
+                }
+                else if (row.Tweak is ISelfRevertingTweak selfRevert)
+                {
+                    // No stored undo (applied before tracking, outside the app, or history
+                    // cleared/expired) — fall back to restoring the default so the toggle can't
+                    // get stuck ON.
+                    Log.Information("Revert {Id}: no undo data, using self-revert to default", row.Tweak.Id);
+                    revert = await selfRevert.RevertToDefaultAsync();
+                }
+                else
+                {
+                    // Can't revert without undo and there's no default-revert path. Tell the
+                    // user instead of silently snapping the toggle back on.
+                    row.IsApplied = true;
+                    MessageBox.Show(
+                        "Crustcut doesn't have the undo information for this optimizer (it was " +
+                        "applied before tracking, or outside the app). Turn it on again, then off, " +
+                        "to reset it.",
+                        row.Tweak.DisplayName, MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
                 Log.Information("Revert {Id}: succeeded={Ok} err={Err}", row.Tweak.Id, revert.Succeeded, revert.Error);
                 if (!revert.Succeeded)
                 {
@@ -251,6 +281,7 @@ public partial class OptimizeView : UserControl
                 else
                 {
                     row.UndoData = null;
+                    try { await _pendingUndo.RemoveAsync(row.Tweak.Id); } catch { }
                     if (row.Tweak.RequiresReboot) MarkPendingReboot(row.Tweak);
                     // User turned it OFF — stop enforcing it on startup.
                     await TrySessionRecordAsync(row.Tweak.Id, applied: false);

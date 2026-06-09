@@ -16,8 +16,14 @@ public static class TweakStateInitializer
     public static async Task<IReadOnlyList<TweakInitialState>> ComputeAsync(
         IEnumerable<ITweak> tweaks,
         TweakHistory history,
+        PendingUndoStore? undoStore = null,
         CancellationToken ct = default)
     {
+        // The persistent undo store is the authoritative source of revert data — it survives
+        // history clears and the 24h history expiry. History is only a fallback for tweaks
+        // applied before the store existed.
+        var undoMap = undoStore is not null ? await undoStore.LoadAsync() : null;
+
         // Recover the EARLIEST apply's undo data per tweak (resetting at each revert).
         // This matters because re-applying an already-applied tweak captures the applied
         // value as its "previous" — so the LATEST undo is often poisoned (reverting to it
@@ -46,7 +52,12 @@ public static class TweakStateInitializer
             catch { state = TweakState.Unknown; }
 
             var applied = state == TweakState.Applied;
-            var undo = applied && pristineUndo.TryGetValue(t.Id, out var u) ? u : null;
+            string? undo = null;
+            if (applied)
+            {
+                if (undoMap is not null && undoMap.TryGetValue(t.Id, out var su)) undo = su;
+                if (undo is null && pristineUndo.TryGetValue(t.Id, out var hu)) undo = hu;
+            }
             result.Add(new TweakInitialState(t.Id, applied, undo));
         }
         return result;

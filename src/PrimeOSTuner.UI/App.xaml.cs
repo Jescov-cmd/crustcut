@@ -223,6 +223,9 @@ public partial class App : Application
                 s.AddSingleton(_ => new CustomProfileStore(CustomProfileStore.DefaultPath()));
                 s.AddSingleton(_ => new ActiveTweaksStore(ActiveTweaksStore.DefaultPath()));
                 s.AddSingleton(_ => new SessionTweakStore(SessionTweakStore.DefaultPath()));
+                // Durable per-tweak undo data — kept separate from History so it survives a
+                // history clear / 24h expiry, keeping applied tweaks revertable.
+                s.AddSingleton(_ => new PendingUndoStore(PendingUndoStore.DefaultPath()));
                 s.AddSingleton<ProfileApplier>();
 
                 // Games

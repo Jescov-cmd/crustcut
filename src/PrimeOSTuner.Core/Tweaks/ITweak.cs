@@ -19,3 +19,14 @@ public interface ITweak
     Task<TweakResult> RevertAsync(string undoData, CancellationToken ct = default);
     Task<string> PreviewAsync(CancellationToken ct = default);
 }
+
+/// <summary>
+/// A tweak that can revert to its default/off state WITHOUT stored undo data. Used as a
+/// fallback so a tweak can always be turned off even when its undo data is unavailable
+/// (applied before tracking existed, applied outside the app, or history cleared/expired) —
+/// instead of the toggle silently snapping back on.
+/// </summary>
+public interface ISelfRevertingTweak
+{
+    Task<TweakResult> RevertToDefaultAsync(CancellationToken ct = default);
+}
