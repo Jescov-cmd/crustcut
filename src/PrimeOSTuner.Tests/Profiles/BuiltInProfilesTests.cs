@@ -76,7 +76,7 @@ public class BuiltInProfilesTests
             "core.ceip-disable", "core.activity-history",
             "core.advertising-id", "core.location-tracking",
             "core.feedback-diagnostics", "core.typing-personalization",
-            "core.usb-selective-suspend", "core.pcie-aspm-disable",
+            "core.usb-selective-suspend",
             "core.power-throttling-disable", "core.modern-standby-disable",
             "core.ndu-disable",
         };

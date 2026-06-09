@@ -183,20 +183,6 @@
       "riskNote": null
     },
     {
-      "id": "core.pcie-aspm-disable",
-      "displayName": "Disable PCIe link-state power management",
-      "description": "Keeps PCIe devices (GPUs, NVMe) at full power.",
-      "category": "power",
-      "requiresElevation": true,
-      "requiresReboot": false,
-      "hive": "LocalMachine",
-      "key": "SYSTEM\\CurrentControlSet\\Control\\Power\\PowerSettings\\501a4d13-42af-4429-9fd1-a8218c268e20\\ee12f906-d277-404b-b6da-e5fa1a576df5",
-      "valueName": "ACSettingIndex",
-      "valueKind": "DWord",
-      "appliedData": "0",
-      "riskNote": "Runs slightly hotter: keeps PCIe devices (GPU, NVMe) at full power instead of idling down."
-    },
-    {
       "id": "core.power-throttling-disable",
       "displayName": "Disable Power Throttling",
       "description": "Stops Windows from throttling background processes' CPU.",
