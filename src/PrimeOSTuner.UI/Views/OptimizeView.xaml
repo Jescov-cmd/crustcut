@@ -108,14 +108,27 @@
                             <TextBlock Text="REBOOT" FontSize="10" FontWeight="SemiBold"
                                        Foreground="{StaticResource AccentBrush}"/>
                         </Border>
-                        <!-- "CAUTION" pill — only visible when the tweak has a RiskNote -->
+                        <!-- "HEAT" pill — heat-specific warning for tweaks that run the system
+                             hotter (e.g. the high-performance power plans). -->
+                        <Border Margin="6,0,0,0"
+                                CornerRadius="6" Padding="8,3"
+                                BorderThickness="1"
+                                BorderBrush="#FF7A33"
+                                Background="#2A1810"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding CausesHeat, Converter={StaticResource BoolToVisibility}}"
+                                ToolTip="{Binding RiskNote}">
+                            <TextBlock Text="⚠ HEAT" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="#FFB37A"/>
+                        </Border>
+                        <!-- "CAUTION" pill — non-heat risks only (heat has its own pill above) -->
                         <Border Margin="6,0,0,0"
                                 CornerRadius="6" Padding="8,3"
                                 BorderThickness="1"
                                 BorderBrush="#FFA01F"
                                 Background="#221A14"
                                 VerticalAlignment="Center"
-                                Visibility="{Binding HasRisk, Converter={StaticResource BoolToVisibility}}"
+                                Visibility="{Binding HasOtherRisk, Converter={StaticResource BoolToVisibility}}"
                                 ToolTip="{Binding RiskNote}">
                             <TextBlock Text="⚠ CAUTION" FontSize="10" FontWeight="SemiBold"
                                        Foreground="#FFD580"/>

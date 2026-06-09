@@ -414,6 +414,18 @@ public sealed class TweakRowVm : INotifyPropertyChanged
     public string? RiskNote { get; }
     public bool HasRisk => !string.IsNullOrEmpty(RiskNote);
 
+    // A heat-causing tweak is one whose risk note warns it runs the system hotter (the power
+    // plan tweaks). Detected from the note text so any future "runs hotter" tweak is covered
+    // without a per-tweak flag.
+    public bool CausesHeat =>
+        RiskNote is not null &&
+        (RiskNote.Contains("hotter", System.StringComparison.OrdinalIgnoreCase) ||
+         RiskNote.Contains("heat", System.StringComparison.OrdinalIgnoreCase) ||
+         RiskNote.Contains("thermal", System.StringComparison.OrdinalIgnoreCase));
+
+    // Generic caution pill shows only for non-heat risks — heat gets its own badge.
+    public bool HasOtherRisk => HasRisk && !CausesHeat;
+
     private static (string Key, string Label) CategoryFor(ITweak tweak)
     {
         if (tweak is ICategorizedTweak cat)
