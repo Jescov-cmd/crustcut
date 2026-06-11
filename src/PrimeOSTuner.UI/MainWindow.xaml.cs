@@ -155,6 +155,7 @@ public partial class MainWindow : Window
             "Optimization101" => sp.GetRequiredService<Optimization101View>(),
             "History"      => sp.GetRequiredService<HistoryView>(),
             "Sentinel"     => sp.GetRequiredService<SentinelView>(),
+            "Diagnosis"    => sp.GetRequiredService<DiagnosisView>(),
             "Settings"     => sp.GetRequiredService<SettingsView>(),
             _ => new TextBlock
             {

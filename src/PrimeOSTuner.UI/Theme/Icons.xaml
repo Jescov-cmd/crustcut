@@ -368,6 +368,20 @@
         </DrawingImage.Drawing>
     </DrawingImage>
 
+    <!-- DIAGNOSIS — activity / heartbeat (Lucide) -->
+    <DrawingImage x:Key="IconDiagnosis">
+        <DrawingImage.Drawing>
+            <GeometryDrawing>
+                <GeometryDrawing.Pen>
+                    <Pen Brush="{StaticResource IconBrush}" Thickness="2" StartLineCap="Round" EndLineCap="Round" LineJoin="Round"/>
+                </GeometryDrawing.Pen>
+                <GeometryDrawing.Geometry>
+                    <PathGeometry Figures="M 22,12 H 19.52 a 2,2 0 0 0 -1.93,1.46 L 15.24,21.82 a 0.25,0.25 0 0 1 -0.48,0 L 9.24,2.18 a 0.25,0.25 0 0 0 -0.48,0 L 6.41,10.54 A 2,2 0 0 1 4.49,12 H 2"/>
+                </GeometryDrawing.Geometry>
+            </GeometryDrawing>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
     <!-- SENTINEL — eye (Lucide) -->
     <DrawingImage x:Key="IconSentinel">
         <DrawingImage.Drawing>

@@ -362,6 +362,11 @@ public partial class App : Application
                 s.AddTransient<Views.SettingsView>();
                 s.AddSingleton<BloatwareViewModel>();
                 s.AddTransient<Views.BloatwareView>();
+
+                // Diagnosis tab
+                s.AddSingleton<PrimeOSTuner.Core.Diagnosis.IDiagnosisProbes, PrimeOSTuner.Core.Diagnosis.DiagnosisProbes>();
+                s.AddSingleton<PrimeOSTuner.Core.Diagnosis.DiagnosisService>();
+                s.AddSingleton<Views.DiagnosisView>();
                 s.AddSingleton<MemoryPriorityViewModel>();
                 s.AddTransient<Views.MemoryPriorityView>();
                 s.AddTransient<Views.MaintenanceView>();

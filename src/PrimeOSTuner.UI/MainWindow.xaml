@@ -225,6 +225,12 @@
                                 </Ellipse>
                             </Grid>
                         </Button>
+                        <Button x:Name="NavDiagnosis" Tag="Diagnosis" Click="NavButton_Click" Style="{StaticResource NavRail}">
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="{StaticResource IconDiagnosis}" Width="18" Height="18" Margin="0,0,12,0"/>
+                                <TextBlock Text="Diagnosis" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                         <Button x:Name="NavSettings" Tag="Settings" Click="NavButton_Click" Style="{StaticResource NavRail}">
                             <StackPanel Orientation="Horizontal">
                                 <Image Source="{StaticResource IconSettings}" Width="18" Height="18" Margin="0,0,12,0"/>

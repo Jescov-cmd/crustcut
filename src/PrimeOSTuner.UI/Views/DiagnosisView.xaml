@@ -1,0 +1,63 @@
+<UserControl x:Class="PrimeOSTuner.UI.Views.DiagnosisView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,16,0">
+        <StackPanel Margin="0,0,0,32">
+            <TextBlock Text="Diagnosis" Style="{StaticResource HeaderText}" Margin="0,0,0,8"/>
+            <TextBlock Text="Find out why your PC feels slow — scan now, or see problems caught while you were gaming."
+                       Style="{StaticResource SubHeaderText}" Margin="0,0,0,20"/>
+
+            <Border Style="{StaticResource CardBorder}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="ON-DEMAND SCAN" Style="{StaticResource SectionLabel}"/>
+                    <TextBlock Text="Runs ~10 seconds of checks: CPU throttling under load, background hogs, RAM, disk, power plan, GPU driver."
+                               Foreground="{StaticResource Text2Brush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                    <Button x:Name="RunBtn" Content="Run Diagnosis" Style="{StaticResource PrimaryActionButton}"
+                            HorizontalAlignment="Left" Click="RunClick"/>
+                    <TextBlock x:Name="ProgressText" Foreground="{StaticResource Text3Brush}" FontSize="11" Margin="0,10,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <ItemsControl x:Name="FindingsList">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10" Padding="16,12">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Badge}" FontSize="12" FontWeight="Bold"
+                                               Foreground="{Binding BadgeBrush}" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center"
+                                               Foreground="{StaticResource Text0Brush}"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding Detail}" Foreground="{StaticResource Text2Brush}"
+                                           FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                <TextBlock Text="{Binding Fix}" Foreground="{StaticResource AccentBrush}"
+                                           FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"
+                                           Visibility="{Binding HasFix, Converter={StaticResource BoolToVisibility}}"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Text="CAUGHT WHILE GAMING" Style="{StaticResource SectionLabel}" Margin="0,20,0,8"/>
+            <TextBlock x:Name="LiveEmptyText"
+                       Text="Nothing yet — problems detected during play (like CPU throttling) appear here while Sentinel is watching a game."
+                       Foreground="{StaticResource Text3Brush}" FontStyle="Italic" FontSize="12"/>
+            <ItemsControl x:Name="LiveList">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10" Padding="16,12">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13"
+                                           Foreground="{StaticResource Text0Brush}"/>
+                                <TextBlock Text="{Binding Detail}" Foreground="{StaticResource Text2Brush}"
+                                           FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
