@@ -12,4 +12,7 @@ public sealed record MetricsSnapshot(
     long RamUsedBytes,
     long RamTotalBytes,
     long VramUsedBytes,
-    long VramTotalBytes);
+    long VramTotalBytes,
+    // "% Processor Performance" — actual CPU speed vs rated, for throttle detection.
+    // Optional with -1 = unknown so existing constructors/samplers keep compiling.
+    double ProcessorPerformancePercent = -1);

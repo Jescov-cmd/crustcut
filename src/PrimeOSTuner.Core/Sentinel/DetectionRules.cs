@@ -103,4 +103,29 @@ public static class DetectionRules
             snap.At);
         return true;
     }
+
+    // Live throttle rule: CPU busy (>60%) AND "% Processor Performance" < 80% across the whole
+    // trailing 20s window — the CPU is being held below its rated speed (heat / power limit)
+    // exactly while the game needs it. Window entries: (At, CpuPercent, PerfPercent); samples
+    // with unknown perf% are simply not added to the window by the caller (silent rule).
+    private const double ThrottleBusyFloor = 60.0;
+    private const double ThrottlePerfCeiling = 80.0;
+    private static readonly TimeSpan ThrottleWindow = TimeSpan.FromSeconds(20);
+
+    public static Problem? TryCpuThrottled(
+        IReadOnlyList<(DateTime At, double CpuPercent, double PerfPercent)> window, DateTime now)
+    {
+        var cutoff = now - ThrottleWindow;
+        var recent = window.Where(s => s.At >= cutoff).ToList();
+        // Evidence gate is span-based, not count-based: the live loop samples every ~4 s, so
+        // 20 s only yields ~5 samples. Require ≥4 samples covering ≥16 s of the window.
+        if (recent.Count < 4) return null;
+        if (now - recent.Min(s => s.At) < TimeSpan.FromSeconds(16)) return null;
+        if (!recent.All(s => s.CpuPercent > ThrottleBusyFloor)) return null;
+        if (!recent.All(s => s.PerfPercent < ThrottlePerfCeiling)) return null;
+        var avg = recent.Average(s => s.PerfPercent);
+        return new Problem(ProblemKind.CpuThrottled,
+            $"CPU is being slowed by heat or power limits — running at {avg:F0}% of rated speed while the game is loading it.",
+            now);
+    }
 }

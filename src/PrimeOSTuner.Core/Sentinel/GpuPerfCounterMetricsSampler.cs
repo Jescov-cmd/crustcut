@@ -14,12 +14,16 @@ namespace PrimeOSTuner.Core.Sentinel;
 public sealed class GpuPerfCounterMetricsSampler : IMetricsSampler, IDisposable
 {
     private readonly PerformanceCounter? _cpuCounter;
+    private readonly PerformanceCounter? _perfCounter;
     private bool _cpuPrimed;
 
     public GpuPerfCounterMetricsSampler()
     {
         try { _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total"); }
         catch { _cpuCounter = null; }
+        // "% Processor Performance": actual vs rated CPU speed — feeds the throttle rule.
+        try { _perfCounter = new PerformanceCounter("Processor Information", "% Processor Performance", "_Total"); }
+        catch { _perfCounter = null; }
     }
 
     public async Task<MetricsSnapshot> SampleAsync(int gamePid, CancellationToken ct = default)
@@ -36,6 +40,8 @@ public sealed class GpuPerfCounterMetricsSampler : IMetricsSampler, IDisposable
             {
                 try { _cpuCounter.NextValue(); }
                 catch { /* sampler will surface -1 below */ }
+                try { _perfCounter?.NextValue(); }
+                catch { /* perf% stays unknown */ }
                 await Task.Delay(120, ct);
                 _cpuPrimed = true;
             }
@@ -43,11 +49,15 @@ public sealed class GpuPerfCounterMetricsSampler : IMetricsSampler, IDisposable
             catch { cpu = -1; }
         }
 
+        double perf = -1;
+        try { if (_perfCounter is not null) perf = _perfCounter.NextValue(); }
+        catch { perf = -1; }
+
         var (ramUsed, ramTotal) = ReadSystemRam();
         var (vramUsed, vramTotal) = ReadDedicatedGpuMemory();
 
         var now = DateTime.UtcNow;
-        return new MetricsSnapshot(now, gamePid, cpu, ramUsed, ramTotal, vramUsed, vramTotal);
+        return new MetricsSnapshot(now, gamePid, cpu, ramUsed, ramTotal, vramUsed, vramTotal, perf);
     }
 
     private static (long Used, long Total) ReadSystemRam()
@@ -89,7 +99,11 @@ public sealed class GpuPerfCounterMetricsSampler : IMetricsSampler, IDisposable
         }
     }
 
-    public void Dispose() => _cpuCounter?.Dispose();
+    public void Dispose()
+    {
+        _cpuCounter?.Dispose();
+        _perfCounter?.Dispose();
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct MEMORYSTATUSEX

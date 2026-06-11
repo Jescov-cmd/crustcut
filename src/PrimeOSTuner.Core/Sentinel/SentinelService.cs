@@ -13,6 +13,9 @@ public sealed class SentinelService : ISentinelService
 
     private readonly object _gate = new();
     private readonly LinkedList<(DateTime At, double Percent)> _cpuWindow = new();
+    // Throttle window: (At, CpuPercent, PerfPercent). Samples with unknown perf% (-1) are
+    // never added, so the throttle rule stays silent rather than guessing.
+    private readonly LinkedList<(DateTime At, double CpuPercent, double PerfPercent)> _perfWindow = new();
     private SteamPcRequirements? _spec;
     private MetricsSnapshot? _latestSnapshot;
     private int _pid;
@@ -61,6 +64,7 @@ public sealed class SentinelService : ISentinelService
             _spec = null;
             _latestSnapshot = null;
             _cpuWindow.Clear();
+            _perfWindow.Clear();
             _currently = Array.Empty<Problem>();
             _epoch++;
             epoch = _epoch;
@@ -85,6 +89,7 @@ public sealed class SentinelService : ISentinelService
             _spec = null;
             _latestSnapshot = null;
             _cpuWindow.Clear();
+            _perfWindow.Clear();
             _currently = Array.Empty<Problem>();
             _epoch++;
             toDispose = _timer;
@@ -116,7 +121,21 @@ public sealed class SentinelService : ISentinelService
             // Evaluate against the prior history (DetectionRules treats `snap` and
             // `window` as separate inputs — the current sample is the snapshot, the
             // linked list is the trailing window). Then push the current sample and trim.
-            _currently = DetectionRules.Evaluate(snap, spec, _cpuWindow);
+            var problems = DetectionRules.Evaluate(snap, spec, _cpuWindow);
+
+            // Throttle rule runs over its own window INCLUDING the current sample.
+            if (snap.SystemCpuPercent >= 0 && snap.ProcessorPerformancePercent >= 0)
+            {
+                _perfWindow.AddLast((snap.At, snap.SystemCpuPercent, snap.ProcessorPerformancePercent));
+                var cutoff = snap.At - TimeSpan.FromSeconds(25);
+                while (_perfWindow.Count > 0 && _perfWindow.First!.Value.At < cutoff)
+                    _perfWindow.RemoveFirst();
+
+                if (DetectionRules.TryCpuThrottled(_perfWindow.ToList(), snap.At) is Problem throttled)
+                    problems = problems.Append(throttled).ToList();
+            }
+
+            _currently = problems;
             PushAndTrimCpu(snap);
             // Even when the problem set is unchanged, the latest snapshot is fresh — so
             // we always raise Changed; the VM reads LatestSnapshot to refresh the metric rows.
