@@ -78,7 +78,7 @@
     </LinearGradientBrush>
     <SolidColorBrush x:Key="GlassBorder"     Color="#5CFFFFFF"/>   <!-- bright glass edge -->
     <SolidColorBrush x:Key="GlassBorderSoft" Color="#24FFFFFF"/>   <!-- subtle glass edge -->
-    <SolidColorBrush x:Key="GlassHighlight"  Color="#A6FFFFFF"/>   <!-- top sheen line (3D) -->
+    <SolidColorBrush x:Key="GlassHighlight"  Color="#59FFFFFF"/>   <!-- top sheen line (3D, muted) -->
 
     <!-- Raised card edge: bright at the top, fading down the sides — gives panels a beveled,
          lifted feel (top catches the light, bottom falls into shadow). -->
@@ -124,22 +124,22 @@
     <!-- Primary button: glossy raised tan. VERTICAL light-top → dark-bottom so it reads as a
          lit, pressable face; white label sits on it legibly. -->
     <LinearGradientBrush x:Key="PrimaryButtonBrush" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Color="#EAAE68" Offset="0"/>
-        <GradientStop Color="#8E5E2A" Offset="1"/>
+        <GradientStop Color="#D29A5C" Offset="0"/>
+        <GradientStop Color="#7E5526" Offset="1"/>
     </LinearGradientBrush>
     <LinearGradientBrush x:Key="PrimaryButtonHoverBrush" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Color="#F4BC76" Offset="0"/>
-        <GradientStop Color="#9C6A32" Offset="1"/>
+        <GradientStop Color="#DEA868" Offset="0"/>
+        <GradientStop Color="#8A5E2C" Offset="1"/>
     </LinearGradientBrush>
 
     <!-- Standard button face: glossy raised neutral dark — a lit-from-top gradient. -->
     <LinearGradientBrush x:Key="ButtonFaceBrush" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Color="#303034" Offset="0"/>
-        <GradientStop Color="#161618" Offset="1"/>
+        <GradientStop Color="#2A2A2E" Offset="0"/>
+        <GradientStop Color="#19191C" Offset="1"/>
     </LinearGradientBrush>
     <LinearGradientBrush x:Key="ButtonFaceHoverBrush" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Color="#3C3C42" Offset="0"/>
-        <GradientStop Color="#1E1E21" Offset="1"/>
+        <GradientStop Color="#333338" Offset="0"/>
+        <GradientStop Color="#202024" Offset="1"/>
     </LinearGradientBrush>
 
     <!-- Boost-score ring: glowing wheat → crust orb arc. -->
