@@ -46,19 +46,52 @@ public sealed class XboxLibraryScanner : IXboxLibraryScanner
     {
         DriveInfo[] drives;
         try { drives = DriveInfo.GetDrives(); }
-        catch { yield break; }
+        catch { return Array.Empty<string>(); }
 
+        // A custom root (from .GamingRoot) may equal the conventional XboxGames folder —
+        // collect into a set so each root is scanned once.
+        var roots = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var d in drives)
         {
-            string root;
             try
             {
                 if (!d.IsReady) continue;
-                root = Path.Combine(d.RootDirectory.FullName, "XboxGames");
+
+                var conventional = Path.Combine(d.RootDirectory.FullName, "XboxGames");
+                if (Directory.Exists(conventional)) roots.Add(conventional);
+
+                // Custom install folder recorded by Windows in the hidden .GamingRoot file.
+                var grPath = Path.Combine(d.RootDirectory.FullName, ".GamingRoot");
+                if (File.Exists(grPath))
+                {
+                    var custom = ParseGamingRoot(File.ReadAllBytes(grPath), d.RootDirectory.FullName[0]);
+                    if (custom is not null && Directory.Exists(custom)) roots.Add(custom);
+                }
             }
-            catch { continue; }
-            if (Directory.Exists(root)) yield return root;
+            catch { /* unreadable drive/file -> skip */ }
         }
+        return roots;
+    }
+
+    /// <summary>
+    /// Parses a drive's hidden ".GamingRoot" file: magic "RGBX", a 4-byte count, then a
+    /// null-terminated UTF-16LE folder path relative to the drive root. Windows writes it
+    /// when the user picks a custom Xbox/Game Pass install folder. Null on any malformation.
+    /// </summary>
+    public static string? ParseGamingRoot(byte[] bytes, char driveLetter)
+    {
+        try
+        {
+            if (bytes.Length < 10) return null;
+            if (bytes[0] != 'R' || bytes[1] != 'G' || bytes[2] != 'B' || bytes[3] != 'X') return null;
+            var text = System.Text.Encoding.Unicode.GetString(bytes, 8, bytes.Length - 8);
+            var nul = text.IndexOf('\0');
+            if (nul >= 0) text = text[..nul];
+            text = text.Trim();
+            if (text.Length == 0) return null;
+            return Path.Combine($"{driveLetter}:\\", text);
+        }
+        catch { return null; }
     }
 
     /// <summary>Authoritative exe from MicrosoftGame.config; falls back to a best-guess exe.</summary>
