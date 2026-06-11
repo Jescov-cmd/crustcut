@@ -39,7 +39,8 @@ public partial class BloatwareView : UserControl
         try
         {
             await _disableSvc.DisableAsync(row.Item);
-            row.StatusText = "Disabled";
+            _vm.Items.Remove(row);   // handled — drop from list (a rescan won't show it either)
+            _vm.DetectedCount = _vm.Items.Count;
         }
         catch (Exception ex)
         {
@@ -65,7 +66,8 @@ public partial class BloatwareView : UserControl
         try
         {
             await _uninstallSvc.UninstallAsync(row.Item);
-            row.StatusText = "Uninstalled";
+            _vm.Items.Remove(row);
+            _vm.DetectedCount = _vm.Items.Count;
         }
         catch (Exception ex)
         {
