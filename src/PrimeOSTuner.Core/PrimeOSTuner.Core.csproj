@@ -27,6 +27,9 @@
     <None Update="Bloatware\catalog\bloatware-list.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Bloatware\catalog\desktop-bloatware-list.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

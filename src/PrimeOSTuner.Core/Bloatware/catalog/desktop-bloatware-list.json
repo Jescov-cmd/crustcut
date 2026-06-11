@@ -1,0 +1,22 @@
+{
+  "items": [
+    { "id": "mcafee", "displayName": "McAfee (trial security)", "nameContains": "McAfee", "publisherContains": null, "category": "antivirus-trial", "tier": "Risky", "riskNote": "Uninstalling antivirus is safe: Windows Defender turns itself on automatically." },
+    { "id": "norton", "displayName": "Norton (trial security)", "nameContains": "Norton", "publisherContains": null, "category": "antivirus-trial", "tier": "Risky", "riskNote": "Uninstalling antivirus is safe: Windows Defender turns itself on automatically." },
+    { "id": "avast", "displayName": "Avast Antivirus", "nameContains": "Avast", "publisherContains": null, "category": "antivirus-trial", "tier": "Risky", "riskNote": "Uninstalling antivirus is safe: Windows Defender turns itself on automatically." },
+    { "id": "avg", "displayName": "AVG Antivirus", "nameContains": "AVG", "publisherContains": "AVG", "category": "antivirus-trial", "tier": "Risky", "riskNote": "Uninstalling antivirus is safe: Windows Defender turns itself on automatically." },
+    { "id": "expressvpn-oem", "displayName": "ExpressVPN (preinstalled offer)", "nameContains": "ExpressVPN", "publisherContains": null, "category": "oem-offer", "tier": "Safe", "riskNote": null },
+    { "id": "wildtangent", "displayName": "WildTangent Games", "nameContains": "WildTangent", "publisherContains": null, "category": "oem-offer", "tier": "Safe", "riskNote": null },
+    { "id": "booking-oem", "displayName": "Booking.com (preinstalled offer)", "nameContains": "Booking.com", "publisherContains": null, "category": "oem-offer", "tier": "Safe", "riskNote": null },
+    { "id": "hp-support-assistant", "displayName": "HP Support Assistant", "nameContains": "HP Support Assistant", "publisherContains": "HP", "category": "oem", "tier": "Risky", "riskNote": "HP's updater/diagnostics — removing it means fetching HP driver updates manually." },
+    { "id": "hp-jumpstart", "displayName": "HP JumpStart", "nameContains": "HP JumpStart", "publisherContains": "HP", "category": "oem", "tier": "Safe", "riskNote": null },
+    { "id": "hp-docs", "displayName": "HP Documentation", "nameContains": "HP Documentation", "publisherContains": "HP", "category": "oem", "tier": "Safe", "riskNote": null },
+    { "id": "dell-supportassist", "displayName": "Dell SupportAssist", "nameContains": "SupportAssist", "publisherContains": "Dell", "category": "oem", "tier": "Risky", "riskNote": "Dell's updater/diagnostics — removing it means fetching Dell driver updates manually." },
+    { "id": "dell-optimizer", "displayName": "Dell Optimizer", "nameContains": "Dell Optimizer", "publisherContains": "Dell", "category": "oem", "tier": "Safe", "riskNote": null },
+    { "id": "dell-dd", "displayName": "Dell Digital Delivery", "nameContains": "Dell Digital Delivery", "publisherContains": "Dell", "category": "oem", "tier": "Safe", "riskNote": null },
+    { "id": "lenovo-appexplorer", "displayName": "Lenovo App Explorer", "nameContains": "App Explorer", "publisherContains": "Lenovo", "category": "oem", "tier": "Safe", "riskNote": null },
+    { "id": "asus-giftbox", "displayName": "ASUS GiftBox", "nameContains": "GiftBox", "publisherContains": "ASUS", "category": "oem", "tier": "Safe", "riskNote": null },
+    { "id": "acer-collection", "displayName": "Acer Collection", "nameContains": "Acer Collection", "publisherContains": "Acer", "category": "oem", "tier": "Safe", "riskNote": null },
+    { "id": "driver-booster", "displayName": "Driver Booster", "nameContains": "Driver Booster", "publisherContains": null, "category": "junk-utility", "tier": "Safe", "riskNote": "Driver-updater utilities are unnecessary — GPU drivers come from NVIDIA/AMD, the rest from Windows Update." },
+    { "id": "driverpack", "displayName": "DriverPack", "nameContains": "DriverPack", "publisherContains": null, "category": "junk-utility", "tier": "Safe", "riskNote": "Driver-updater utilities are unnecessary — GPU drivers come from NVIDIA/AMD, the rest from Windows Update." }
+  ]
+}
