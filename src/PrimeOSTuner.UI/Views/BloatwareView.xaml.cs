@@ -58,10 +58,19 @@ public partial class BloatwareView : UserControl
         if (sender is not Button btn || btn.Tag is not DesktopBloatRowVm row) return;
         try
         {
-            // UninstallString may be "exe" or "exe args" — hand the whole line to cmd to parse.
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd.exe",
-                $"/c start \"\" {row.Hit.Program.UninstallString}")
-            { CreateNoWindow = true, UseShellExecute = false });
+            // SECURITY: never hand the registry UninstallString to a shell (cmd would interpret
+            // & | etc., and HKCU uninstall entries are writable by unprivileged processes while
+            // Crustcut runs elevated). Split exe/args ourselves and launch the exe directly.
+            var (exe, args) = SplitCommandLine(row.Hit.Program.UninstallString);
+            if (exe is null)
+            {
+                MessageBox.Show("This program's uninstall command looks invalid — uninstall it from " +
+                                "Windows Settings → Apps instead.", row.ProgramName,
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exe, args)
+            { UseShellExecute = true });
             btn.Content = "Uninstaller opened";
             btn.IsEnabled = false;
         }
@@ -70,6 +79,41 @@ public partial class BloatwareView : UserControl
             MessageBox.Show($"Couldn't open the uninstaller: {ex.Message}", row.ProgramName,
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    /// <summary>
+    /// Splits an UninstallString into (exe, args) without shell interpretation. Handles a
+    /// quoted exe path, and for unquoted paths with spaces resolves progressively longer
+    /// prefixes the way Windows does. Returns (null, _) when no real executable resolves.
+    /// </summary>
+    internal static (string? Exe, string Args) SplitCommandLine(string commandLine)
+    {
+        var s = commandLine.Trim();
+        if (s.Length == 0) return (null, "");
+
+        if (s[0] == '"')
+        {
+            var close = s.IndexOf('"', 1);
+            if (close < 0) return (null, "");
+            var exe = s[1..close];
+            return File.Exists(exe) ? (exe, s[(close + 1)..].Trim()) : (null, "");
+        }
+
+        // Unquoted: try progressively longer space-delimited prefixes ("C:\Program Files\x\u.exe /S").
+        var probe = -1;
+        while (true)
+        {
+            probe = s.IndexOf(' ', probe + 1);
+            var candidate = probe < 0 ? s : s[..probe];
+            if (File.Exists(candidate)) return (candidate, probe < 0 ? "" : s[(probe + 1)..].Trim());
+            if (probe < 0) break;
+        }
+        // Not a direct file path — allow only well-known system uninstall hosts (resolved via PATH).
+        var first = s.Split(' ', 2);
+        var name = Path.GetFileNameWithoutExtension(first[0]).ToLowerInvariant();
+        if (name is "msiexec" or "rundll32")
+            return (first[0], first.Length > 1 ? first[1].Trim() : "");
+        return (null, "");
     }
 
     private async void UninstallClick(object sender, RoutedEventArgs e)
