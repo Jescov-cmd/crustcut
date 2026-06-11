@@ -204,6 +204,9 @@ public partial class App : Application
                 s.AddSingleton<IAppxClient, AppxClient>();
                 s.AddSingleton<IReadOnlyList<BloatwareCatalogEntry>>(_ =>
                     BloatwareCatalog.LoadFromFile(BloatwareCatalog.DefaultPath()));
+                s.AddSingleton<IReadOnlyList<DesktopBloatwareCatalogEntry>>(_ =>
+                    DesktopBloatwareCatalog.LoadFromFile(DesktopBloatwareCatalog.DefaultPath()));
+                s.AddSingleton<IInstalledProgramsClient, InstalledProgramsClient>();
                 s.AddSingleton<BloatwareDetector>();
                 s.AddSingleton<BloatwareDisableService>();
                 s.AddSingleton<BloatwareUninstallService>();

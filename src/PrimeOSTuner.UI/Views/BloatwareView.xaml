@@ -122,6 +122,75 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </Border>
+
+            <!-- Desktop (Win32) programs — can't be silently removed safely, so the action
+                 opens each program's own uninstaller. Section hidden when nothing matched. -->
+            <StackPanel Visibility="{Binding HasDesktopItems, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="DESKTOP PROGRAMS" Style="{StaticResource SectionLabel}" Margin="0,24,0,8"/>
+                <TextBlock Text="Classic installed programs known to slow PCs down (antivirus trials, manufacturer utilities). These open their own uninstaller — nothing is removed automatically."
+                           Foreground="{StaticResource Text3Brush}" FontSize="11" Margin="0,0,0,12" TextWrapping="Wrap"/>
+                <Border Style="{StaticResource CardBorder}" Padding="0">
+                    <ItemsControl ItemsSource="{Binding DesktopItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="20,14"
+                                        BorderBrush="#22FFFFFF"
+                                        BorderThickness="0,0,0,1">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#0DFFFFFF"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Image Grid.Column="0"
+                                               Width="24" Height="24"
+                                               Margin="0,0,16,0" VerticalAlignment="Center"
+                                               ToolTip="{Binding TierLabel}">
+                                            <Image.Style>
+                                                <Style TargetType="Image">
+                                                    <Setter Property="Source" Value="{StaticResource IconCheck}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding TierLabel}" Value="Risky">
+                                                            <Setter Property="Source" Value="{StaticResource IconWarning}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Image.Style>
+                                        </Image>
+
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding ProgramName}"
+                                                       FontWeight="SemiBold" FontSize="14"
+                                                       Foreground="{StaticResource Text0Brush}"/>
+                                            <TextBlock Text="{Binding Publisher}"
+                                                       Foreground="{StaticResource Text3Brush}"
+                                                       FontSize="11" Margin="0,2,0,0"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+
+                                        <Button Grid.Column="2" Content="Open Uninstaller"
+                                                Click="OpenUninstallerClick" Tag="{Binding}"
+                                                ToolTip="{Binding RiskNote}"
+                                                MinWidth="120" Padding="14,6"
+                                                FontSize="12" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </StackPanel>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

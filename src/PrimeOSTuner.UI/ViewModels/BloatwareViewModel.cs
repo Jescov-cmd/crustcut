@@ -31,18 +31,38 @@ public sealed class BloatwareItemRowVm : ObservableObject
     }
 }
 
+public sealed class DesktopBloatRowVm
+{
+    public DesktopBloatHit Hit { get; }
+    public DesktopBloatRowVm(DesktopBloatHit hit) { Hit = hit; }
+    public string DisplayName => Hit.Entry.DisplayName;
+    public string ProgramName => Hit.Program.DisplayName;
+    public string Publisher => Hit.Program.Publisher ?? "";
+    public string TierLabel => Hit.Entry.Tier.ToString();
+    public string? RiskNote => Hit.Entry.RiskNote;
+}
+
 public partial class BloatwareViewModel : ObservableObject
 {
     private readonly BloatwareDetector _detector;
+    private readonly IInstalledProgramsClient _programs;
+    private readonly IReadOnlyList<DesktopBloatwareCatalogEntry> _desktopCatalog;
     public ObservableCollection<BloatwareItemRowVm> Items { get; } = new();
+    public ObservableCollection<DesktopBloatRowVm> DesktopItems { get; } = new();
 
     [ObservableProperty] private string _status = "Click Refresh to scan installed bloatware.";
     [ObservableProperty] private int _detectedCount;
     [ObservableProperty] private bool _isScanning;
+    [ObservableProperty] private bool _hasDesktopItems;
 
-    public BloatwareViewModel(BloatwareDetector detector)
+    public BloatwareViewModel(
+        BloatwareDetector detector,
+        IInstalledProgramsClient programs,
+        IReadOnlyList<DesktopBloatwareCatalogEntry> desktopCatalog)
     {
         _detector = detector;
+        _programs = programs;
+        _desktopCatalog = desktopCatalog;
     }
 
     public async Task RefreshAsync()
@@ -54,10 +74,19 @@ public partial class BloatwareViewModel : ObservableObject
             var items = await _detector.DetectAsync();
             Items.Clear();
             foreach (var i in items) Items.Add(new BloatwareItemRowVm(i));
-            DetectedCount = items.Count;
-            Status = items.Count == 0
+
+            // Desktop (Win32) programs — detection only; the action opens the program's own
+            // uninstaller (registry scan runs off the UI thread; it touches many keys).
+            var desktopHits = await Task.Run(() =>
+                DesktopBloatwareDetector.Match(_programs.ListInstalled(), _desktopCatalog));
+            DesktopItems.Clear();
+            foreach (var hit in desktopHits) DesktopItems.Add(new DesktopBloatRowVm(hit));
+            HasDesktopItems = DesktopItems.Count > 0;
+
+            DetectedCount = items.Count + desktopHits.Count;
+            Status = DetectedCount == 0
                 ? "No known bloatware detected."
-                : $"{items.Count} bloatware item(s) detected.";
+                : $"{items.Count} Store app(s) + {desktopHits.Count} desktop program(s) detected.";
         }
         catch (Exception ex)
         {

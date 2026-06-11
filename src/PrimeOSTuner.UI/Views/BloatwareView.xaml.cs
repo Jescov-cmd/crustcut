@@ -53,6 +53,25 @@ public partial class BloatwareView : UserControl
         }
     }
 
+    private void OpenUninstallerClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not DesktopBloatRowVm row) return;
+        try
+        {
+            // UninstallString may be "exe" or "exe args" — hand the whole line to cmd to parse.
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd.exe",
+                $"/c start \"\" {row.Hit.Program.UninstallString}")
+            { CreateNoWindow = true, UseShellExecute = false });
+            btn.Content = "Uninstaller opened";
+            btn.IsEnabled = false;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Couldn't open the uninstaller: {ex.Message}", row.ProgramName,
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private async void UninstallClick(object sender, RoutedEventArgs e)
     {
         if (sender is not Button btn || btn.Tag is not BloatwareItemRowVm row) return;
