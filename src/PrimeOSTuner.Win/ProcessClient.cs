@@ -14,40 +14,4 @@ public sealed class ProcessClient : IProcessClient
         catch (ArgumentException) { /* process exited between enumerate and trim */ }
         catch (InvalidOperationException) { /* same */ }
     }
-
-    public int TrimAllUserProcesses()
-    {
-        var attempted = 0;
-        foreach (var p in Process.GetProcesses())
-        {
-            try
-            {
-                PInvoke.EmptyWorkingSet(p.Handle);
-                attempted++;
-            }
-            catch { /* protected processes will refuse — that's expected */ }
-            finally { p.Dispose(); }
-        }
-        return attempted;
-    }
-
-    public int TrimUserProcessesExcept(IReadOnlyCollection<string> exePathExclusions)
-    {
-        var excludeSet = new HashSet<string>(exePathExclusions, StringComparer.OrdinalIgnoreCase);
-        int attempted = 0;
-        foreach (var p in Process.GetProcesses())
-        {
-            try
-            {
-                string? path = null;
-                try { path = p.MainModule?.FileName; } catch { /* access denied — skip path check */ }
-                if (path is not null && excludeSet.Contains(path)) continue;
-                PInvoke.EmptyWorkingSet(p.Handle);
-                attempted++;
-            }
-            catch { /* protected processes will refuse — that's expected */ }
-            finally { p.Dispose(); }
-        }
-        return attempted;
-    }
 }

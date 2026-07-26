@@ -18,14 +18,4 @@ public class ProcessClientTests
 
         act.Should().NotThrow();
     }
-
-    [Fact]
-    public void TrimAllUserProcesses_returns_count_of_processes_attempted()
-    {
-        var client = new ProcessClient();
-
-        var attempted = client.TrimAllUserProcesses();
-
-        attempted.Should().BeGreaterThan(0);
-    }
 }
