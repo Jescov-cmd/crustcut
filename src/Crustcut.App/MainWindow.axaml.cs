@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Avalonia.Controls;
 using Crustcut.Presentation;
 
@@ -5,6 +6,9 @@ namespace Crustcut.App;
 
 public partial class MainWindow : Window
 {
+    private readonly ShellViewModel _shell;
+    private readonly PageFactory _pages;
+
     public MainWindow() : this(new ShellViewModel(), null) { }
 
     public MainWindow(ShellViewModel shell, OverviewViewModel? overview)
@@ -13,7 +17,19 @@ public partial class MainWindow : Window
         // the x:Name fields (PageHost). Declaring it by hand shadows that and leaves the
         // fields null.
         InitializeComponent();
+
+        _shell = shell;
+        _pages = new PageFactory(overview);
         DataContext = shell;
-        PageHost.Content = new Views.OverviewView { DataContext = overview };
+
+        _shell.PropertyChanged += OnShellPropertyChanged;
+        ShowActivePage();
     }
+
+    private void OnShellPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ShellViewModel.ActiveTab)) ShowActivePage();
+    }
+
+    private void ShowActivePage() => PageHost.Content = _pages.Create(_shell.ActiveTab);
 }

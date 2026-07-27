@@ -26,6 +26,14 @@
       <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
       <Setter Property="TextElement.Foreground" Value="{DynamicResource Text1}"/>
     </Style>
+    <Style Selector="Button.nav.active /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource Text0}"/>
+    </Style>
+    <Style Selector="Button.nav.active">
+      <Setter Property="Foreground" Value="{DynamicResource AccentWheat}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
 
     <Style Selector="TextBlock.groupLabel">
       <Setter Property="FontSize" Value="9"/>
@@ -66,7 +74,8 @@
         <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding Bottom}" Margin="0,0,0,8">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Button Classes="nav" Content="{Binding Label}"
+              <Button Classes="nav" Classes.active="{Binding IsActive}"
+                      Content="{Binding Label}"
                       Command="{Binding $parent[Window].DataContext.NavigateCommand}"
                       CommandParameter="{Binding Id}"/>
             </DataTemplate>
