@@ -10,4 +10,10 @@ public enum DialogKind { Info, Warning, Error }
 public interface IDialogService
 {
     Task ShowAsync(string title, string message, DialogKind kind = DialogKind.Info);
+
+    /// <summary>
+    /// Asks the user to confirm a destructive action. Returns false unless they explicitly
+    /// accept — callers must treat anything but true as "do not proceed".
+    /// </summary>
+    Task<bool> ConfirmAsync(string title, string message, string confirmLabel);
 }

@@ -80,4 +80,89 @@ public sealed class AvaloniaDialogService : IDialogService
             if (owner is not null) await dialog.ShowDialog(owner);
             else dialog.Show();
         });
+
+    public Task<bool> ConfirmAsync(string title, string message, string confirmLabel)
+        => Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            var owner = (Avalonia.Application.Current?.ApplicationLifetime
+                as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+
+            var confirmed = false;
+
+            var cancel = new Button
+            {
+                Content = "Cancel",
+                Height = 32,
+                Padding = new Avalonia.Thickness(18, 0),
+                CornerRadius = new Avalonia.CornerRadius(16),
+                Background = Brushes.Transparent,
+                BorderBrush = new SolidColorBrush(Color.Parse("#22FFFFFF")),
+                BorderThickness = new Avalonia.Thickness(1),
+                Foreground = new SolidColorBrush(Color.Parse("#9A948C")),
+                Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
+            };
+
+            var confirm = new Button
+            {
+                Content = confirmLabel,
+                Height = 32,
+                Padding = new Avalonia.Thickness(20, 0),
+                CornerRadius = new Avalonia.CornerRadius(16),
+                Background = new SolidColorBrush(Color.Parse("#FF6B6B")),
+                Foreground = new SolidColorBrush(Color.Parse("#2A0F0F")),
+                FontWeight = FontWeight.SemiBold,
+                Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
+            };
+
+            var dialog = new Window
+            {
+                Title = title,
+                Width = 460,
+                SizeToContent = SizeToContent.Height,
+                CanResize = false,
+                WindowStartupLocation = owner is null
+                    ? WindowStartupLocation.CenterScreen
+                    : WindowStartupLocation.CenterOwner,
+                Background = new SolidColorBrush(Color.Parse("#141312")),
+                Content = new StackPanel
+                {
+                    Margin = new Avalonia.Thickness(24),
+                    Spacing = 14,
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = title,
+                            FontSize = 15,
+                            FontWeight = FontWeight.SemiBold,
+                            Foreground = new SolidColorBrush(Color.Parse("#F9F0E1")),
+                            TextWrapping = TextWrapping.Wrap,
+                        },
+                        new TextBlock
+                        {
+                            Text = message,
+                            FontSize = 12.5,
+                            Foreground = new SolidColorBrush(Color.Parse("#C9C3BA")),
+                            TextWrapping = TextWrapping.Wrap,
+                        },
+                        new StackPanel
+                        {
+                            Orientation = Orientation.Horizontal,
+                            HorizontalAlignment = HorizontalAlignment.Right,
+                            Spacing = 9,
+                            Children = { cancel, confirm },
+                        }
+                    }
+                }
+            };
+
+            // Default is "no" — closing the window any other way must not count as consent.
+            cancel.Click += (_, _) => dialog.Close();
+            confirm.Click += (_, _) => { confirmed = true; dialog.Close(); };
+
+            if (owner is not null) await dialog.ShowDialog(owner);
+            else dialog.Show();
+
+            return confirmed;
+        });
 }

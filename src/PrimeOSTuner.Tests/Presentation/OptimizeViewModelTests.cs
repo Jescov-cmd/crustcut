@@ -11,11 +11,21 @@ namespace PrimeOSTuner.Tests.Presentation;
 public sealed class RecordingDialogService : IDialogService
 {
     public List<(string Title, string Message, DialogKind Kind)> Shown { get; } = new();
+    public List<(string Title, string Message, string ConfirmLabel)> Confirms { get; } = new();
+
+    /// <summary>What ConfirmAsync returns. Defaults to false — the safe answer.</summary>
+    public bool ConfirmResult { get; set; }
 
     public Task ShowAsync(string title, string message, DialogKind kind = DialogKind.Info)
     {
         Shown.Add((title, message, kind));
         return Task.CompletedTask;
+    }
+
+    public Task<bool> ConfirmAsync(string title, string message, string confirmLabel)
+    {
+        Confirms.Add((title, message, confirmLabel));
+        return Task.FromResult(ConfirmResult);
     }
 }
 

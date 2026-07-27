@@ -14,18 +14,23 @@ public sealed class PageFactory
 {
     private readonly OverviewViewModel? _overview;
     private readonly OptimizeViewModel? _optimize;
+    private readonly CleanupViewModel? _cleanup;
     private bool _optimizeProbed;
 
-    public PageFactory(OverviewViewModel? overview, OptimizeViewModel? optimize)
+    public PageFactory(OverviewViewModel? overview, OptimizeViewModel? optimize, CleanupViewModel? cleanup)
     {
         _overview = overview;
         _optimize = optimize;
+        _cleanup = cleanup;
     }
 
     public Control Create(string tabId) => tabId switch
     {
         "Overview" => new OverviewView { DataContext = _overview },
         "Optimize" => CreateOptimize(),
+        // Cleanup deliberately does NOT auto-scan: enumerating packages is slow, and nothing
+        // here should happen without the user asking for it.
+        "Cleanup" => new CleanupView { DataContext = _cleanup },
         _ => new PlaceholderView(LabelFor(tabId)),
     };
 

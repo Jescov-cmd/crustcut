@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Crustcut.App.Views.CleanupView">
+
+  <UserControl.Styles>
+    <Style Selector="Border.row">
+      <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource RadiusSmall}"/>
+      <Setter Property="Padding" Value="14,11"/>
+      <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontSize" Value="{DynamicResource FontLabel}"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top">
+      <TextBlock Text="CLEANUP" Classes="label" Height="56" VerticalAlignment="Center"/>
+      <TextBlock Text="{Binding Status}" FontSize="12"
+                 Foreground="{DynamicResource Text2}" Margin="0,0,0,12"/>
+      <Button Content="Scan for unnecessary apps" Height="34" Padding="18,0"
+              Margin="0,0,0,16" HorizontalAlignment="Left"
+              CornerRadius="{DynamicResource RadiusPill}"
+              Background="{DynamicResource AccentGradient}" Foreground="#26190A"
+              FontWeight="SemiBold" Cursor="Hand"
+              IsEnabled="{Binding !IsScanning}"
+              Click="ScanClick"/>
+    </StackPanel>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <StackPanel>
+
+        <ItemsControl ItemsSource="{Binding Items}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Classes="row">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                  <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding DisplayName}" FontSize="13" FontWeight="SemiBold"
+                               Foreground="{DynamicResource Text0}"/>
+                    <TextBlock Text="{Binding RiskNote}" FontSize="11"
+                               Foreground="{DynamicResource Warn}" TextWrapping="Wrap"
+                               Margin="0,3,12,0"
+                               IsVisible="{Binding RiskNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                  </StackPanel>
+
+                  <Button Grid.Column="1" Content="Disable" Height="30" Padding="14,0"
+                          Margin="0,0,8,0" CornerRadius="{DynamicResource RadiusSmall}"
+                          Background="Transparent" BorderThickness="1"
+                          BorderBrush="{DynamicResource Hairline}"
+                          Foreground="{DynamicResource Text2}" Cursor="Hand"
+                          IsEnabled="{Binding !IsBusy}"
+                          Tag="{Binding}" Click="DisableClick"/>
+
+                  <Button Grid.Column="2" Content="Remove" Height="30" Padding="14,0"
+                          CornerRadius="{DynamicResource RadiusSmall}"
+                          Background="#22FF6B6B" BorderThickness="0"
+                          Foreground="{DynamicResource Danger}" Cursor="Hand"
+                          IsEnabled="{Binding CanUninstall}"
+                          Tag="{Binding}" Click="UninstallClick"/>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <TextBlock Text="DESKTOP PROGRAMS" Classes="label" Margin="0,14,0,8"
+                   IsVisible="{Binding HasDesktopItems}"/>
+        <ItemsControl ItemsSource="{Binding DesktopItems}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Classes="row">
+                <StackPanel>
+                  <TextBlock Text="{Binding ProgramName}" FontSize="13" FontWeight="SemiBold"
+                             Foreground="{DynamicResource Text0}"/>
+                  <TextBlock Text="{Binding Publisher}" FontSize="11"
+                             Foreground="{DynamicResource Text3}" Margin="0,2,0,0"/>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+      </StackPanel>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

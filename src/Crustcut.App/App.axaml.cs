@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Crustcut.App.Services;
 using Crustcut.Presentation;
+using PrimeOSTuner.Core.Bloatware;
 using PrimeOSTuner.Core.History;
 using PrimeOSTuner.Core.Monitoring;
 using PrimeOSTuner.Core.Performance;
@@ -28,8 +29,9 @@ public partial class App : Application
 
             _overview = BuildOverviewViewModel(tweaks);
             var optimize = BuildOptimizeViewModel(tweaks);
+            var cleanup = BuildCleanupViewModel();
 
-            desktop.MainWindow = new MainWindow(new ShellViewModel(), _overview, optimize);
+            desktop.MainWindow = new MainWindow(new ShellViewModel(), _overview, optimize, cleanup);
             desktop.ShutdownRequested += (_, _) => _overview?.Dispose();
         }
 
@@ -49,6 +51,18 @@ public partial class App : Application
         var frameStore = new FrameSessionStore(FrameSessionStore.DefaultPath());
 
         return new OverviewViewModel(sampler, activeStore, tweaks, frameStore, new AvaloniaDispatcher());
+    }
+
+    private static CleanupViewModel BuildCleanupViewModel()
+    {
+        var appx = new AppxClient();
+        return new CleanupViewModel(
+            new BloatwareDetector(appx, BloatwareCatalog.LoadFromFile(BloatwareCatalog.DefaultPath())),
+            new InstalledProgramsClient(),
+            DesktopBloatwareCatalog.LoadFromFile(DesktopBloatwareCatalog.DefaultPath()),
+            new BloatwareUninstallService(appx),
+            new BloatwareDisableService(new ServiceClient()),
+            new AvaloniaDialogService());
     }
 
     private static OptimizeViewModel BuildOptimizeViewModel(IReadOnlyList<ITweak> tweaks)
