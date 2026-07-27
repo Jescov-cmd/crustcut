@@ -1,0 +1,69 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Crustcut.App.Views.DiagnosisView">
+
+  <UserControl.Styles>
+    <Style Selector="Border.row">
+      <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource RadiusSmall}"/>
+      <Setter Property="Padding" Value="14,12"/>
+      <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontSize" Value="{DynamicResource FontLabel}"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top">
+      <TextBlock Text="DIAGNOSIS" Classes="label" Height="56" VerticalAlignment="Center"/>
+      <TextBlock Text="{Binding Status}" FontSize="12"
+                 Foreground="{DynamicResource Text2}" Margin="0,0,0,14" TextWrapping="Wrap"/>
+      <Button Content="Run scan" Height="34" Padding="20,0" Margin="0,0,0,16"
+              HorizontalAlignment="Left"
+              CornerRadius="{DynamicResource RadiusPill}"
+              Background="{DynamicResource AccentGradient}" Foreground="#26190A"
+              FontWeight="SemiBold" Cursor="Hand"
+              IsEnabled="{Binding !IsScanning}"
+              Click="ScanClick"/>
+    </StackPanel>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <ItemsControl ItemsSource="{Binding Findings}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Classes="row">
+              <StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Border CornerRadius="9" Padding="8,2" Background="#22FF6B6B"
+                          IsVisible="{Binding IsProblem}">
+                    <TextBlock Text="PROBLEM" FontSize="9" Foreground="{DynamicResource Danger}"/>
+                  </Border>
+                  <Border CornerRadius="9" Padding="8,2" Background="#22FFB84D"
+                          IsVisible="{Binding IsWarning}">
+                    <TextBlock Text="WARNING" FontSize="9" Foreground="{DynamicResource Warn}"/>
+                  </Border>
+                  <Border CornerRadius="9" Padding="8,2" Background="#223ECF8E"
+                          IsVisible="{Binding IsPassed}">
+                    <TextBlock Text="OK" FontSize="9" Foreground="{DynamicResource Good}"/>
+                  </Border>
+                  <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
+                             Foreground="{DynamicResource Text0}" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <TextBlock Text="{Binding Detail}" FontSize="11.5"
+                           Foreground="{DynamicResource Text2}" TextWrapping="Wrap"
+                           Margin="0,7,0,0"/>
+
+                <TextBlock Text="{Binding FixSuggestion}" FontSize="11.5"
+                           Foreground="{DynamicResource AccentWheat}" TextWrapping="Wrap"
+                           Margin="0,6,0,0" IsVisible="{Binding HasFix}"/>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

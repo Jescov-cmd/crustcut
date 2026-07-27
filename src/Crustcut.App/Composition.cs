@@ -1,6 +1,7 @@
 using Crustcut.App.Services;
 using Crustcut.Presentation;
 using PrimeOSTuner.Core.Bloatware;
+using PrimeOSTuner.Core.Diagnosis;
 using PrimeOSTuner.Core.Games;
 using PrimeOSTuner.Core.History;
 using PrimeOSTuner.Core.Memory;
@@ -27,6 +28,8 @@ public sealed class Composition
     public OptimizeViewModel Optimize { get; }
     public CleanupViewModel Cleanup { get; }
     public MemoryPriorityViewModel Memory { get; }
+    public DiagnosisViewModel Diagnosis { get; }
+    public HistoryViewModel History { get; }
 
     public Composition()
     {
@@ -49,13 +52,20 @@ public sealed class Composition
             new FrameSessionStore(FrameSessionStore.DefaultPath()),
             ui);
 
-        // ── Optimize ──────────────────────────────────────────────────────────────────
+        // ── Optimize + History (share one history store) ───────────────────────────────
+        var history = new TweakHistory(TweakHistory.DefaultPath());
+
         Optimize = new OptimizeViewModel(
             Tweaks,
-            new TweakHistory(TweakHistory.DefaultPath()),
+            history,
             new SessionTweakStore(SessionTweakStore.DefaultPath()),
             new PendingUndoStore(PendingUndoStore.DefaultPath()),
             dialogs);
+
+        History = new HistoryViewModel(history);
+
+        // ── Diagnosis ─────────────────────────────────────────────────────────────────
+        Diagnosis = new DiagnosisViewModel(new DiagnosisService(new DiagnosisProbes()));
 
         // ── Cleanup ───────────────────────────────────────────────────────────────────
         var appx = new AppxClient();

@@ -17,12 +17,7 @@ public partial class App : Application
         {
             _composition = new Composition();
 
-            desktop.MainWindow = new MainWindow(
-                new ShellViewModel(),
-                _composition.Overview,
-                _composition.Optimize,
-                _composition.Cleanup,
-                _composition.Memory);
+            desktop.MainWindow = new MainWindow(new ShellViewModel(), _composition);
 
             desktop.ShutdownRequested += (_, _) => _composition?.Overview.Dispose();
         }
