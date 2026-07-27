@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Crustcut.App.Services;
 using Crustcut.Presentation;
+using PrimeOSTuner.Core.History;
 using PrimeOSTuner.Core.Monitoring;
 using PrimeOSTuner.Core.Performance;
 using PrimeOSTuner.Core.Profiles;
@@ -21,9 +22,14 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            _overview = BuildOverviewViewModel();
+            var registry = new RegistryClient();
+            var defs = RegistryTweakCatalog.LoadFromFile(RegistryTweakCatalog.DefaultPath());
+            var tweaks = defs.Select(d => (ITweak)new RegistryTweak(d, registry)).ToList();
 
-            desktop.MainWindow = new MainWindow(new ShellViewModel(), _overview);
+            _overview = BuildOverviewViewModel(tweaks);
+            var optimize = BuildOptimizeViewModel(tweaks);
+
+            desktop.MainWindow = new MainWindow(new ShellViewModel(), _overview, optimize);
             desktop.ShutdownRequested += (_, _) => _overview?.Dispose();
         }
 
@@ -36,16 +42,20 @@ public partial class App : Application
     /// GameRegistry and a large dependency graph, and get wired in Phase 2 along with the
     /// rest of the pages.
     /// </summary>
-    private static OverviewViewModel BuildOverviewViewModel()
+    private static OverviewViewModel BuildOverviewViewModel(IReadOnlyList<ITweak> tweaks)
     {
-        var registry = new RegistryClient();
-        var defs = RegistryTweakCatalog.LoadFromFile(RegistryTweakCatalog.DefaultPath());
-        var tweaks = defs.Select(d => (ITweak)new RegistryTweak(d, registry)).ToList();
-
         var sampler = new SystemSampler(new HardwareClient());
         var activeStore = new ActiveTweaksStore(ActiveTweaksStore.DefaultPath());
         var frameStore = new FrameSessionStore(FrameSessionStore.DefaultPath());
 
         return new OverviewViewModel(sampler, activeStore, tweaks, frameStore, new AvaloniaDispatcher());
     }
+
+    private static OptimizeViewModel BuildOptimizeViewModel(IReadOnlyList<ITweak> tweaks)
+        => new(
+            tweaks,
+            new TweakHistory(TweakHistory.DefaultPath()),
+            new SessionTweakStore(SessionTweakStore.DefaultPath()),
+            new PendingUndoStore(PendingUndoStore.DefaultPath()),
+            new AvaloniaDialogService());
 }

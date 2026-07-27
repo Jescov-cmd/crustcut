@@ -13,14 +13,33 @@ namespace Crustcut.App;
 public sealed class PageFactory
 {
     private readonly OverviewViewModel? _overview;
+    private readonly OptimizeViewModel? _optimize;
+    private bool _optimizeProbed;
 
-    public PageFactory(OverviewViewModel? overview) => _overview = overview;
+    public PageFactory(OverviewViewModel? overview, OptimizeViewModel? optimize)
+    {
+        _overview = overview;
+        _optimize = optimize;
+    }
 
     public Control Create(string tabId) => tabId switch
     {
         "Overview" => new OverviewView { DataContext = _overview },
+        "Optimize" => CreateOptimize(),
         _ => new PlaceholderView(LabelFor(tabId)),
     };
+
+    private Control CreateOptimize()
+    {
+        var view = new OptimizeView { DataContext = _optimize };
+        // Probing every tweak is slow, so do it once on first visit rather than at startup.
+        if (_optimize is not null && !_optimizeProbed)
+        {
+            _optimizeProbed = true;
+            _ = _optimize.InitializeAppliedStatesAsync();
+        }
+        return view;
+    }
 
     private static string LabelFor(string tabId) =>
         NavCatalog.Primary.Concat(NavCatalog.Bottom)

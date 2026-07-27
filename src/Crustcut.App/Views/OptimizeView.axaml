@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Crustcut.App.Views.OptimizeView">
+
+  <UserControl.Styles>
+    <Style Selector="Border.tile">
+      <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource RadiusCard}"/>
+      <Setter Property="Padding" Value="16,14"/>
+      <Setter Property="Margin" Value="0,0,12,12"/>
+      <Setter Property="Width" Value="330"/>
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontSize" Value="{DynamicResource FontLabel}"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
+    </Style>
+    <Style Selector="Border.pill">
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Padding" Value="7,2"/>
+      <Setter Property="Margin" Value="0,0,6,0"/>
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel>
+
+    <StackPanel DockPanel.Dock="Top">
+      <TextBlock Text="OPTIMIZE" Classes="label" Height="56" VerticalAlignment="Center"/>
+      <TextBlock Text="{Binding StatusText}" FontSize="12"
+                 Foreground="{DynamicResource Text2}" Margin="0,0,0,14"/>
+
+      <TextBox Text="{Binding SearchText}" Watermark="Search optimizations…"
+               Height="34" Margin="0,0,0,16" MaxWidth="360"
+               HorizontalAlignment="Left"
+               CornerRadius="{DynamicResource RadiusSmall}"/>
+    </StackPanel>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <ItemsControl ItemsSource="{Binding VisibleRows}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel/>
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Classes="tile">
+              <Grid RowDefinitions="Auto,Auto,Auto">
+
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                  <StackPanel Grid.Column="0">
+                    <TextBlock Text="{Binding Category}" Classes="label"/>
+                    <TextBlock Text="{Binding DisplayName}" FontSize="13.5" FontWeight="SemiBold"
+                               Foreground="{DynamicResource Text0}" TextWrapping="Wrap"
+                               Margin="0,3,10,0"/>
+                  </StackPanel>
+                  <ToggleSwitch Grid.Column="1" VerticalAlignment="Top"
+                                OnContent="" OffContent=""
+                                IsChecked="{Binding IsApplied, Mode=TwoWay}"
+                                IsEnabled="{Binding !IsBusy}"
+                                Tag="{Binding}"
+                                Click="ToggleClick"/>
+                </Grid>
+
+                <TextBlock Grid.Row="1" Text="{Binding Description}" FontSize="11.5"
+                           Foreground="{DynamicResource Text2}" TextWrapping="Wrap"
+                           Margin="0,8,0,0"/>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                  <Border Classes="pill" Background="#22FFB84D"
+                          IsVisible="{Binding RequiresReboot}">
+                    <TextBlock Text="Needs restart" FontSize="9.5" Foreground="{DynamicResource Warn}"/>
+                  </Border>
+                  <Border Classes="pill" Background="#22FF6B6B" IsVisible="{Binding CausesHeat}">
+                    <TextBlock Text="Runs hotter" FontSize="9.5" Foreground="{DynamicResource Danger}"/>
+                  </Border>
+                  <Border Classes="pill" Background="#18FFFFFF" IsVisible="{Binding HasOtherRisk}">
+                    <TextBlock Text="Caution" FontSize="9.5" Foreground="{DynamicResource Text2}"/>
+                  </Border>
+                </StackPanel>
+
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>
