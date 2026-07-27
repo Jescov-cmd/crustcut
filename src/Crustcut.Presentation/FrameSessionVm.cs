@@ -19,4 +19,9 @@ public sealed class FrameSessionVm
     public string AvgFpsDisplay          => $"{_model.Stats.AvgFps:F0} FPS avg";
     public string OnePctLowDisplay       => $"1% low: {_model.Stats.OnePctLowFps:F0} FPS";
     public string ZeroPointOnePctDisplay => $"0.1% low: {_model.Stats.ZeroPointOnePctLowFps:F0} FPS";
+
+    // Bare numbers, for table columns that already carry a header. The *Display variants
+    // repeat their own label, which collides when they sit under one.
+    public string AvgFpsValue      => $"{_model.Stats.AvgFps:F0}";
+    public string OnePctLowValue   => $"{_model.Stats.OnePctLowFps:F0}";
 }

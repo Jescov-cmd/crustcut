@@ -2,110 +2,118 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Crustcut.App.MainWindow"
         Title="Crustcut"
-        Width="1240" Height="780" MinWidth="860" MinHeight="560"
+        Width="1240" Height="780" MinWidth="900" MinHeight="580"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource SurfaceBase}"
-        ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaTitleBarHeightHint="-1">
+        FontFamily="Segoe UI">
 
   <Window.Styles>
+    <!-- Nav row: square, full-bleed, hairline-free. Selection is a filled row plus a 3px
+         accent bar on the left edge — the classic control-panel affordance. -->
     <Style Selector="Button.nav">
       <Setter Property="Background" Value="Transparent"/>
       <Setter Property="BorderThickness" Value="0"/>
-      <Setter Property="Foreground" Value="{DynamicResource Text2}"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text1}"/>
       <Setter Property="HorizontalAlignment" Value="Stretch"/>
       <Setter Property="HorizontalContentAlignment" Value="Left"/>
-      <Setter Property="Height" Value="30"/>
-      <Setter Property="Padding" Value="12,0"/>
-      <Setter Property="Margin" Value="8,1"/>
-      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Height" Value="28"/>
+      <Setter Property="Padding" Value="26,0,12,0"/>
+      <Setter Property="Margin" Value="0"/>
+      <Setter Property="CornerRadius" Value="0"/>
       <Setter Property="FontSize" Value="12.5"/>
       <Setter Property="Cursor" Value="Hand"/>
     </Style>
     <Style Selector="Button.nav:pointerover /template/ ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
-      <Setter Property="TextElement.Foreground" Value="{DynamicResource Text1}"/>
     </Style>
     <Style Selector="Button.nav.active /template/ ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
-      <Setter Property="TextElement.Foreground" Value="{DynamicResource Text0}"/>
+      <Setter Property="Background" Value="{DynamicResource SurfaceSelected}"/>
     </Style>
     <Style Selector="Button.nav.active">
-      <Setter Property="Foreground" Value="{DynamicResource AccentWheat}"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
     </Style>
 
     <Style Selector="TextBlock.groupLabel">
-      <Setter Property="FontSize" Value="9"/>
+      <Setter Property="FontSize" Value="10.5"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
-      <Setter Property="Margin" Value="20,16,0,5"/>
+      <Setter Property="Margin" Value="12,16,0,5"/>
     </Style>
   </Window.Styles>
 
-  <Grid ColumnDefinitions="212,*">
+  <Grid RowDefinitions="38,1,*">
 
-    <!-- ===== NAVIGATION RAIL ===== -->
-    <Border Grid.Column="0" Background="{DynamicResource SurfaceRail}"
-            BorderBrush="{DynamicResource Hairline}" BorderThickness="0,0,1,0">
-      <DockPanel>
+    <!-- ===== TITLE BAR ===== -->
+    <Border Grid.Row="0" Background="{DynamicResource SurfaceRail}">
+      <StackPanel Orientation="Horizontal" Margin="12,0" Spacing="9" VerticalAlignment="Center">
+        <Ellipse Width="13" Height="13" Fill="{DynamicResource AccentWheat}"/>
+        <TextBlock Text="Crustcut" FontSize="12.5" FontWeight="SemiBold"
+                   Foreground="{DynamicResource Text0}" VerticalAlignment="Center"/>
+        <TextBlock Text="Performance control panel" FontSize="11.5"
+                   Foreground="{DynamicResource Text3}" VerticalAlignment="Center"
+                   Margin="6,0,0,0"/>
+      </StackPanel>
+    </Border>
+    <Border Grid.Row="1" Background="{DynamicResource Hairline}"/>
 
-        <!-- Brand. 56px tall so it shares a baseline with the page eyebrow. -->
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal"
-                    Height="56" Margin="16,0,0,0" Spacing="9">
-          <Ellipse Width="16" Height="16" Fill="{DynamicResource AccentGradient}"
-                   VerticalAlignment="Center"/>
-          <TextBlock Text="Crustcut" FontSize="14" FontWeight="SemiBold"
-                     Foreground="{DynamicResource Text1}" VerticalAlignment="Center"/>
-        </StackPanel>
+    <Grid Grid.Row="2" ColumnDefinitions="216,1,*">
 
-        <!-- Watcher status: flush to the very bottom edge, full width. -->
-        <Border DockPanel.Dock="Bottom" Height="44" Padding="16,0"
-                Background="#08FFFFFF"
-                BorderBrush="{DynamicResource Hairline}" BorderThickness="0,1,0,0">
-          <StackPanel Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
-            <Ellipse Width="6" Height="6" Fill="{DynamicResource Good}"/>
-            <!-- Repositioned copy: apps, not games. -->
-            <TextBlock Text="Watching apps" FontSize="11"
-                       Foreground="{DynamicResource Text2}" VerticalAlignment="Center"/>
-          </StackPanel>
-        </Border>
+      <!-- ===== NAV TREE ===== -->
+      <Border Grid.Column="0" Background="{DynamicResource SurfaceRail}">
+        <DockPanel>
+          <Border DockPanel.Dock="Bottom" Height="30" Padding="12,0"
+                  BorderBrush="{DynamicResource Hairline}" BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <Ellipse Width="6" Height="6" Fill="{DynamicResource Good}"/>
+              <TextBlock Text="Watching apps" FontSize="11"
+                         Foreground="{DynamicResource Text3}" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Border>
 
-        <!-- Bottom-anchored utility items sit above the watcher bar. -->
-        <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding Bottom}" Margin="0,0,0,8">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Button Classes="nav" Classes.active="{Binding IsActive}"
-                      Content="{Binding Label}"
-                      Command="{Binding $parent[Window].DataContext.NavigateCommand}"
-                      CommandParameter="{Binding Id}"/>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-
-        <!-- Primary items, grouped by section. -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,6,0,0">
-          <ItemsControl ItemsSource="{Binding Primary}">
+          <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding Bottom}" Margin="0,0,0,8">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <StackPanel>
-                  <TextBlock Classes="groupLabel" Text="{Binding Group}"
-                             IsVisible="{Binding ShowGroupHeader}"/>
+                <Grid>
+                  <Border Width="3" HorizontalAlignment="Left"
+                          Background="{DynamicResource AccentWheat}"
+                          IsVisible="{Binding IsActive}"/>
                   <Button Classes="nav" Classes.active="{Binding IsActive}"
                           Content="{Binding Label}"
                           Command="{Binding $parent[Window].DataContext.NavigateCommand}"
                           CommandParameter="{Binding Id}"/>
-                </StackPanel>
+                </Grid>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-        </ScrollViewer>
-      </DockPanel>
-    </Border>
 
-    <!-- ===== CONTENT ===== -->
-    <Grid Grid.Column="1">
-      <Border Background="{DynamicResource AmbientGlow}" IsHitTestVisible="False"/>
-      <ContentControl x:Name="PageHost" Margin="24,0,24,24"/>
+          <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,6,0,0">
+            <ItemsControl ItemsSource="{Binding Primary}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <StackPanel>
+                    <TextBlock Classes="groupLabel" Text="{Binding Group}"
+                               IsVisible="{Binding ShowGroupHeader}"/>
+                    <Grid>
+                      <Border Width="3" HorizontalAlignment="Left"
+                              Background="{DynamicResource AccentWheat}"
+                              IsVisible="{Binding IsActive}"/>
+                      <Button Classes="nav" Classes.active="{Binding IsActive}"
+                              Content="{Binding Label}"
+                              Command="{Binding $parent[Window].DataContext.NavigateCommand}"
+                              CommandParameter="{Binding Id}"/>
+                    </Grid>
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+
+      <Border Grid.Column="1" Background="{DynamicResource Hairline}"/>
+
+      <!-- ===== CONTENT ===== -->
+      <ContentControl Grid.Column="2" x:Name="PageHost"/>
     </Grid>
   </Grid>
 </Window>
