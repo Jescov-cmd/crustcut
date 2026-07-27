@@ -13,6 +13,7 @@ using PrimeOSTuner.Core.Tweaks;
 using PrimeOSTuner.Win;
 using PrimeOSTuner.Win.Launchers;
 using PrimeOSTuner.Win.Steam;
+using PrimeOSTuner.Win.SteamGridDb;
 using PrimeOSTuner.Win.Xbox;
 
 namespace Crustcut.App;
@@ -32,6 +33,7 @@ public sealed class Composition
     public DiagnosisViewModel Diagnosis { get; }
     public HistoryViewModel History { get; }
     public SettingsViewModel Settings { get; }
+    public GamesViewModel Games { get; }
 
     public Composition()
     {
@@ -87,7 +89,7 @@ public sealed class Composition
         var booster = new GameBooster(new SafeRamCleaner(new WorkingSetTrimmer()));
         var engine = new PriorityRuleEngine(new WmiProcessWatcher(), new PriorityClient(), booster);
 
-        var games = new GameRegistry(
+        var gameRegistry = new GameRegistry(
             new SteamLibraryScanner(),
             new XboxLibraryScanner(),
             new IExternalGameScanner[]
@@ -99,6 +101,21 @@ public sealed class Composition
             },
             new AddedGamesStore(AddedGamesStore.DefaultPath()));
 
-        Memory = new MemoryPriorityViewModel(priorityStore, engine, games);
+        Memory = new MemoryPriorityViewModel(priorityStore, engine, gameRegistry);
+
+        // ── Games ─────────────────────────────────────────────────────────────────────
+        // One HttpClient for every art/lookup client — creating one per client is the
+        // classic socket-exhaustion mistake.
+        var http = new HttpClient();
+        var artCache = new ArtCache(ArtCache.DefaultDir(), http);
+
+        Games = new GamesViewModel(
+            gameRegistry,
+            new GameProfileStore(GameProfileStore.DefaultPath()),
+            new SteamGridDbClient(http, SteamGridDbSettings.Load()),
+            artCache,
+            new SteamCdnCoverFetcher(artCache),
+            new SteamAppLookup(http),
+            ui);
     }
 }

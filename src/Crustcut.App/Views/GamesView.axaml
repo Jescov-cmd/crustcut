@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Crustcut.App.Views.GamesView">
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontSize" Value="{DynamicResource FontLabel}"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top">
+      <TextBlock Text="GAMES" Classes="label" Height="56" VerticalAlignment="Center"/>
+      <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,16"
+                 TextWrapping="Wrap"
+                 Text="Detected from Steam, Xbox, Epic, Ubisoft, EA and GOG."/>
+    </StackPanel>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <ItemsControl ItemsSource="{Binding Tiles}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel/>
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Width="168" Margin="0,0,14,16"
+                    Background="{DynamicResource SurfaceCard}"
+                    CornerRadius="{DynamicResource RadiusCard}"
+                    ClipToBounds="True">
+              <StackPanel>
+                <Panel Height="224" Background="#14FFFFFF">
+                  <!-- Cover art when we have it; the title stands in while it loads or
+                       when no art could be resolved. -->
+                  <TextBlock Text="{Binding DisplayName}" FontSize="12"
+                             Foreground="{DynamicResource Text3}"
+                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                             TextWrapping="Wrap" TextAlignment="Center" Margin="12"/>
+                  <Image Source="{Binding CoverImagePath}" Stretch="UniformToFill"/>
+                </Panel>
+                <StackPanel Margin="11,9,11,12">
+                  <TextBlock Text="{Binding DisplayName}" FontSize="12.5" FontWeight="SemiBold"
+                             Foreground="{DynamicResource Text0}"
+                             TextTrimming="CharacterEllipsis"/>
+                  <TextBlock Text="{Binding Game.Source}" FontSize="10"
+                             Foreground="{DynamicResource Text3}" Margin="0,3,0,0"/>
+                </StackPanel>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>
