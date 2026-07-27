@@ -16,5 +16,11 @@ public partial class NavItemVm : ObservableObject
     public string Label => Model.Label;
     public string Group => Model.Group;
 
+    /// <summary>
+    /// True only for the first item of a group, so the section heading is drawn once above
+    /// the group rather than repeated above every row.
+    /// </summary>
+    public bool ShowGroupHeader { get; init; }
+
     [ObservableProperty] private bool _isActive;
 }

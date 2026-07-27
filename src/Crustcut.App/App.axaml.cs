@@ -22,8 +22,12 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var (shotPath, shotTab) = SelfScreenshot.Parse(Program.Args);
+
+            // The screenshot run is a throwaway process: skip the single-instance guard so
+            // it can run while the real app is open.
             _guard = new SingleInstanceGuard();
-            if (!_guard.TryAcquire())
+            if (shotPath is null && !_guard.TryAcquire())
             {
                 // Another copy is already running and has been asked to surface.
                 desktop.Shutdown();
@@ -41,7 +45,13 @@ public partial class App : Application
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             desktop.MainWindow = _window;
 
-            if (settings.StartMinimized)
+            if (shotPath is not null)
+            {
+                if (shotTab is not null) _window.NavigateTo(shotTab);
+                _window.Show();
+                _ = SelfScreenshot.CaptureThenExitAsync(_window, shotPath);
+            }
+            else if (settings.StartMinimized)
             {
                 // Deliberately do not Show(). The tray icon is the only affordance — this is
                 // exactly the behaviour that made users think the app had failed to open, so

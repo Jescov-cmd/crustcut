@@ -6,25 +6,35 @@
   <UserControl.Styles>
     <Style Selector="Border.card">
       <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
-      <Setter Property="CornerRadius" Value="{DynamicResource RadiusCard}"/>
+      <Setter Property="CornerRadius" Value="14"/>
       <Setter Property="Padding" Value="14,12"/>
+      <Setter Property="ClipToBounds" Value="True"/>
+    </Style>
+    <!-- No bottom padding: the sparkline bleeds to the card's edge instead of floating
+         above a strip of empty background. -->
+    <Style Selector="Border.statCard">
+      <Setter Property="Padding" Value="14,12,14,0"/>
     </Style>
     <Style Selector="TextBlock.label">
-      <Setter Property="FontSize" Value="{DynamicResource FontLabel}"/>
+      <Setter Property="FontSize" Value="9.5"/>
       <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
+      <Setter Property="LetterSpacing" Value="1.1"/>
     </Style>
     <Style Selector="TextBlock.stat">
-      <Setter Property="FontSize" Value="22"/>
+      <Setter Property="FontSize" Value="24"/>
       <Setter Property="Foreground" Value="{DynamicResource Text1}"/>
-      <Setter Property="Margin" Value="0,3,0,0"/>
+      <Setter Property="Margin" Value="0,4,0,0"/>
     </Style>
   </UserControl.Styles>
 
   <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel>
 
-      <!-- 56px eyebrow shares the rail brand's baseline -->
-      <TextBlock Text="YOUR PC" Classes="label" Height="56" VerticalAlignment="Center"/>
+      <!-- 56px band matching the rail's brand row, with the text centred inside it rather
+           than the TextBlock itself being 56px tall (which clipped it against the top). -->
+      <Panel Height="56">
+        <TextBlock Text="YOUR PC" Classes="label" VerticalAlignment="Center"/>
+      </Panel>
 
       <!-- HERO: score arc + status + actions -->
       <Grid ColumnDefinitions="150,*" Margin="0,0,0,20">
@@ -59,35 +69,75 @@
 
       <!-- LIVE STATS with sparklines -->
       <Grid ColumnDefinitions="*,*,*,*">
-        <Border Grid.Column="0" Classes="card" Margin="0,0,6,0">
+        <Border Grid.Column="0" Classes="card statCard" Margin="0,0,6,0">
           <StackPanel>
             <TextBlock Text="CPU" Classes="label"/>
             <TextBlock Classes="stat" Text="{Binding CpuPercent, StringFormat={}{0:F0}%}"/>
-            <c:Sparkline Height="26" Margin="0,6,0,0" Values="{Binding CpuHistory}"/>
+            <c:Sparkline Height="44" Margin="0,12,0,0" Maximum="100" Values="{Binding CpuHistory}"/>
           </StackPanel>
         </Border>
-        <Border Grid.Column="1" Classes="card" Margin="6,0">
+        <Border Grid.Column="1" Classes="card statCard" Margin="6,0">
           <StackPanel>
             <TextBlock Text="MEMORY" Classes="label"/>
             <TextBlock Classes="stat" Text="{Binding RamPercent, StringFormat={}{0:F0}%}"/>
-            <c:Sparkline Height="26" Margin="0,6,0,0" Values="{Binding RamHistory}"/>
+            <c:Sparkline Height="44" Margin="0,12,0,0" Maximum="100" Values="{Binding RamHistory}"/>
           </StackPanel>
         </Border>
-        <Border Grid.Column="2" Classes="card" Margin="6,0">
+        <Border Grid.Column="2" Classes="card statCard" Margin="6,0">
           <StackPanel>
             <TextBlock Text="GPU" Classes="label"/>
             <TextBlock Classes="stat" Text="{Binding GpuPercent, StringFormat={}{0:F0}%}"/>
-            <c:Sparkline Height="26" Margin="0,6,0,0" Values="{Binding GpuHistory}"/>
+            <c:Sparkline Height="44" Margin="0,12,0,0" Maximum="100" Values="{Binding GpuHistory}"/>
           </StackPanel>
         </Border>
-        <Border Grid.Column="3" Classes="card" Margin="6,0,0,0">
+        <Border Grid.Column="3" Classes="card statCard" Margin="6,0,0,0">
           <StackPanel>
             <TextBlock Text="NETWORK" Classes="label"/>
             <TextBlock Classes="stat" Text="{Binding NetworkText}"/>
-            <c:Sparkline Height="26" Margin="0,6,0,0" Values="{Binding NetHistory}"/>
+            <c:Sparkline Height="44" Margin="0,10,0,0" Values="{Binding NetHistory}"/>
           </StackPanel>
         </Border>
       </Grid>
+
+      <!-- RECENT SESSIONS — fills the lower half, and is the thing that makes Crustcut
+           different from every other cleaner: it actually measured something. -->
+      <Panel Height="46">
+        <TextBlock Text="RECENT SESSIONS" Classes="label" VerticalAlignment="Bottom"/>
+      </Panel>
+
+      <Border Classes="card" Padding="18,16" IsVisible="{Binding !RecentSessions.Count}">
+        <StackPanel Spacing="5">
+          <TextBlock Text="No sessions recorded yet" FontSize="13" FontWeight="SemiBold"
+                     Foreground="{DynamicResource Text1}"/>
+          <TextBlock FontSize="11.5" Foreground="{DynamicResource Text3}" TextWrapping="Wrap"
+                     Text="Launch a game and Crustcut records its frame times, then shows average and 1% low FPS here."/>
+        </StackPanel>
+      </Border>
+
+      <ItemsControl ItemsSource="{Binding RecentSessions}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel/>
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Classes="card" Width="248" Margin="0,0,12,12" Padding="16,14">
+              <StackPanel Spacing="7">
+                <TextBlock Text="{Binding GameName}" FontSize="13" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Text0}"
+                           TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="{Binding AvgFpsDisplay}" FontSize="21"
+                           Foreground="{DynamicResource AccentWheat}"/>
+                <TextBlock Text="{Binding OnePctLowDisplay}" FontSize="11"
+                           Foreground="{DynamicResource Text2}"/>
+                <TextBlock Text="{Binding StartedAtDisplay}" FontSize="10"
+                           Foreground="{DynamicResource Text3}"/>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
 
     </StackPanel>
   </ScrollViewer>

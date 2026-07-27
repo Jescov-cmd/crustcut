@@ -13,8 +13,8 @@ public partial class ShellViewModel : ObservableObject
 
     public ShellViewModel()
     {
-        Primary = NavCatalog.Primary.Select(i => new NavItemVm(i)).ToList();
-        Bottom = NavCatalog.Bottom.Select(i => new NavItemVm(i)).ToList();
+        Primary = WithGroupHeaders(NavCatalog.Primary);
+        Bottom = WithGroupHeaders(NavCatalog.Bottom);
         SyncActiveFlags();
     }
 
@@ -31,6 +31,22 @@ public partial class ShellViewModel : ObservableObject
     }
 
     partial void OnActiveTabChanged(string value) => SyncActiveFlags();
+
+    /// <summary>Flags the first row of each group so its heading is drawn only once.</summary>
+    private static IReadOnlyList<NavItemVm> WithGroupHeaders(IReadOnlyList<NavItem> items)
+    {
+        var result = new List<NavItemVm>(items.Count);
+        string? previousGroup = null;
+
+        foreach (var item in items)
+        {
+            var isFirstOfGroup = !string.IsNullOrEmpty(item.Group) && item.Group != previousGroup;
+            result.Add(new NavItemVm(item) { ShowGroupHeader = isFirstOfGroup });
+            previousGroup = item.Group;
+        }
+
+        return result;
+    }
 
     private void SyncActiveFlags()
     {

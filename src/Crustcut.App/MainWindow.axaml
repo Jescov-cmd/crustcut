@@ -15,11 +15,11 @@
       <Setter Property="Foreground" Value="{DynamicResource Text2}"/>
       <Setter Property="HorizontalAlignment" Value="Stretch"/>
       <Setter Property="HorizontalContentAlignment" Value="Left"/>
-      <Setter Property="Height" Value="32"/>
+      <Setter Property="Height" Value="30"/>
       <Setter Property="Padding" Value="12,0"/>
       <Setter Property="Margin" Value="8,1"/>
-      <Setter Property="CornerRadius" Value="{DynamicResource RadiusSmall}"/>
-      <Setter Property="FontSize" Value="{DynamicResource FontBody}"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="FontSize" Value="12.5"/>
       <Setter Property="Cursor" Value="Hand"/>
     </Style>
     <Style Selector="Button.nav:pointerover /template/ ContentPresenter">
@@ -38,7 +38,7 @@
     <Style Selector="TextBlock.groupLabel">
       <Setter Property="FontSize" Value="9"/>
       <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
-      <Setter Property="Margin" Value="20,14,0,4"/>
+      <Setter Property="Margin" Value="20,16,0,5"/>
     </Style>
   </Window.Styles>
 
@@ -89,8 +89,9 @@
               <DataTemplate>
                 <StackPanel>
                   <TextBlock Classes="groupLabel" Text="{Binding Group}"
-                             IsVisible="{Binding Group, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                  <Button Classes="nav" Content="{Binding Label}"
+                             IsVisible="{Binding ShowGroupHeader}"/>
+                  <Button Classes="nav" Classes.active="{Binding IsActive}"
+                          Content="{Binding Label}"
                           Command="{Binding $parent[Window].DataContext.NavigateCommand}"
                           CommandParameter="{Binding Id}"/>
                 </StackPanel>

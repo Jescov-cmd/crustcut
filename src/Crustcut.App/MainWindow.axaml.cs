@@ -32,4 +32,7 @@ public partial class MainWindow : Window
     }
 
     private void ShowActivePage() => PageHost.Content = _pages.Create(_shell.ActiveTab);
+
+    /// <summary>Switches tab programmatically. Used by the --screenshot debug flag.</summary>
+    public void NavigateTo(string tabId) => _shell.NavigateCommand.Execute(tabId);
 }
