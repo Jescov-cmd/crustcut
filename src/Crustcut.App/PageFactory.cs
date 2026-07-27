@@ -15,13 +15,20 @@ public sealed class PageFactory
     private readonly OverviewViewModel? _overview;
     private readonly OptimizeViewModel? _optimize;
     private readonly CleanupViewModel? _cleanup;
+    private readonly MemoryPriorityViewModel? _memory;
     private bool _optimizeProbed;
+    private bool _memoryLoaded;
 
-    public PageFactory(OverviewViewModel? overview, OptimizeViewModel? optimize, CleanupViewModel? cleanup)
+    public PageFactory(
+        OverviewViewModel? overview,
+        OptimizeViewModel? optimize,
+        CleanupViewModel? cleanup,
+        MemoryPriorityViewModel? memory)
     {
         _overview = overview;
         _optimize = optimize;
         _cleanup = cleanup;
+        _memory = memory;
     }
 
     public Control Create(string tabId) => tabId switch
@@ -31,8 +38,20 @@ public sealed class PageFactory
         // Cleanup deliberately does NOT auto-scan: enumerating packages is slow, and nothing
         // here should happen without the user asking for it.
         "Cleanup" => new CleanupView { DataContext = _cleanup },
+        "Memory" => CreateMemory(),
         _ => new PlaceholderView(LabelFor(tabId)),
     };
+
+    private Control CreateMemory()
+    {
+        var view = new MemoryView { DataContext = _memory };
+        if (_memory is not null && !_memoryLoaded)
+        {
+            _memoryLoaded = true;
+            _ = _memory.LoadAsync();
+        }
+        return view;
+    }
 
     private Control CreateOptimize()
     {

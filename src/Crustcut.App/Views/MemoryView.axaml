@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Crustcut.App.Views.MemoryView">
+
+  <UserControl.Styles>
+    <Style Selector="Border.row">
+      <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource RadiusSmall}"/>
+      <Setter Property="Padding" Value="14,11"/>
+      <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontSize" Value="{DynamicResource FontLabel}"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top">
+      <TextBlock Text="MEMORY" Classes="label" Height="56" VerticalAlignment="Center"/>
+      <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,14"
+                 TextWrapping="Wrap"
+                 Text="Give the apps you care about more CPU priority, and protect them from memory cleanups. Anything with an open window is protected automatically."/>
+
+      <StackPanel Orientation="Horizontal" Spacing="9" Margin="0,0,0,16">
+        <Button Content="Scan running apps" Height="32" Padding="16,0"
+                CornerRadius="{DynamicResource RadiusPill}"
+                Background="{DynamicResource AccentGradient}" Foreground="#26190A"
+                FontWeight="SemiBold" Cursor="Hand" Click="RescanClick"/>
+        <Button Content="Recommended for my games" Height="32" Padding="16,0"
+                CornerRadius="{DynamicResource RadiusPill}"
+                Background="Transparent" BorderThickness="1"
+                BorderBrush="{DynamicResource Hairline}"
+                Foreground="{DynamicResource Text2}" Cursor="Hand" Click="RecommendedClick"/>
+      </StackPanel>
+
+      <TextBlock x:Name="StatusText" FontSize="11.5"
+                 Foreground="{DynamicResource Text3}" Margin="0,0,0,12"/>
+    </StackPanel>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <ItemsControl ItemsSource="{Binding Rules}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Classes="row">
+              <Grid ColumnDefinitions="*,Auto,Auto">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding DisplayName}" FontSize="13" FontWeight="SemiBold"
+                             Foreground="{DynamicResource Text0}"/>
+                  <TextBlock Text="{Binding ExePath}" FontSize="10.5"
+                             Foreground="{DynamicResource Text3}"
+                             TextTrimming="CharacterEllipsis" Margin="0,2,12,0"/>
+                </StackPanel>
+
+                <Border Grid.Column="1" Background="#18FFFFFF" CornerRadius="10"
+                        Padding="9,3" Margin="0,0,10,0" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Priority}" FontSize="10"
+                             Foreground="{DynamicResource AccentWheat}"/>
+                </Border>
+
+                <CheckBox Grid.Column="2" VerticalAlignment="Center"
+                          IsChecked="{Binding ProtectFromRamCleanup, Mode=TwoWay}"
+                          Content="Protect"
+                          Foreground="{DynamicResource Text2}" FontSize="11"/>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>
