@@ -1,0 +1,51 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+  <!-- Single source of truth for the visual language. No view may hardcode a colour,
+       radius, or font size. This is what keeps a future restyle (and the macOS port)
+       cheap. -->
+
+  <!-- Surfaces: near-black base, translucent cards, no hard borders. -->
+  <SolidColorBrush x:Key="SurfaceBase"  Color="#0C0B0A"/>
+  <SolidColorBrush x:Key="SurfaceRail"  Color="#100F0E"/>
+  <SolidColorBrush x:Key="SurfaceCard"  Color="#0EFFFFFF"/>
+  <SolidColorBrush x:Key="SurfaceHover" Color="#18FFFFFF"/>
+  <SolidColorBrush x:Key="Hairline"     Color="#14FFFFFF"/>
+
+  <!-- Text ramp: warm off-white through to muted. -->
+  <SolidColorBrush x:Key="Text0" Color="#F9F0E1"/>
+  <SolidColorBrush x:Key="Text1" Color="#F7F3ED"/>
+  <SolidColorBrush x:Key="Text2" Color="#9A948C"/>
+  <SolidColorBrush x:Key="Text3" Color="#6B6660"/>
+
+  <!-- Accent: wheat -> crust. -->
+  <SolidColorBrush x:Key="AccentWheat" Color="#E8C088"/>
+  <SolidColorBrush x:Key="AccentCrust" Color="#B4763A"/>
+  <LinearGradientBrush x:Key="AccentGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+    <GradientStop Color="#F2D6A8" Offset="0"/>
+    <GradientStop Color="#E8C088" Offset="0.55"/>
+    <GradientStop Color="#B4763A" Offset="1"/>
+  </LinearGradientBrush>
+
+  <!-- Ambient glow behind the page, so the black is never dead flat. -->
+  <RadialGradientBrush x:Key="AmbientGlow" Center="30%,0%" GradientOrigin="30%,0%" RadiusX="70%" RadiusY="70%">
+    <GradientStop Color="#26E8C088" Offset="0"/>
+    <GradientStop Color="#00E8C088" Offset="1"/>
+  </RadialGradientBrush>
+
+  <!-- Status -->
+  <SolidColorBrush x:Key="Good"   Color="#3ECF8E"/>
+  <SolidColorBrush x:Key="Warn"   Color="#FFB84D"/>
+  <SolidColorBrush x:Key="Danger" Color="#FF6B6B"/>
+
+  <!-- Geometry -->
+  <CornerRadius x:Key="RadiusCard">14</CornerRadius>
+  <CornerRadius x:Key="RadiusSmall">8</CornerRadius>
+  <CornerRadius x:Key="RadiusPill">22</CornerRadius>
+
+  <!-- Type scale -->
+  <sys:Double x:Key="FontDisplay">44</sys:Double>
+  <sys:Double x:Key="FontTitle">19</sys:Double>
+  <sys:Double x:Key="FontBody">12.5</sys:Double>
+  <sys:Double x:Key="FontLabel">8</sys:Double>
+</ResourceDictionary>

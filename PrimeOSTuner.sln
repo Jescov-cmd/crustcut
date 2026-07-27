@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrimeOSTuner.Tests", "src\P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crustcut.Presentation", "src\Crustcut.Presentation\Crustcut.Presentation.csproj", "{C8B9F02D-051B-4F7A-BE99-D6704085336E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crustcut.App", "src\Crustcut.App\Crustcut.App.csproj", "{04EA23CF-01B7-4689-80C6-5507D44955D6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +87,18 @@ Global
 		{C8B9F02D-051B-4F7A-BE99-D6704085336E}.Release|x64.Build.0 = Release|Any CPU
 		{C8B9F02D-051B-4F7A-BE99-D6704085336E}.Release|x86.ActiveCfg = Release|Any CPU
 		{C8B9F02D-051B-4F7A-BE99-D6704085336E}.Release|x86.Build.0 = Release|Any CPU
+		{04EA23CF-01B7-4689-80C6-5507D44955D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04EA23CF-01B7-4689-80C6-5507D44955D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04EA23CF-01B7-4689-80C6-5507D44955D6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{04EA23CF-01B7-4689-80C6-5507D44955D6}.Debug|x64.Build.0 = Debug|Any CPU
+		{04EA23CF-01B7-4689-80C6-5507D44955D6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{04EA23CF-01B7-4689-80C6-5507D44955D6}.Debug|x86.Build.0 = Debug|Any CPU
+		{04EA23CF-01B7-4689-80C6-5507D44955D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04EA23CF-01B7-4689-80C6-5507D44955D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04EA23CF-01B7-4689-80C6-5507D44955D6}.Release|x64.ActiveCfg = Release|Any CPU
+		{04EA23CF-01B7-4689-80C6-5507D44955D6}.Release|x64.Build.0 = Release|Any CPU
+		{04EA23CF-01B7-4689-80C6-5507D44955D6}.Release|x86.ActiveCfg = Release|Any CPU
+		{04EA23CF-01B7-4689-80C6-5507D44955D6}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -95,5 +109,6 @@ Global
 		{3CA1C587-1D2C-4DBA-8422-968B5928DFC2} = {A4BEE955-172E-4931-ACEE-CC6C774BBF80}
 		{901B8700-24E6-48B1-A089-34006A242C90} = {A4BEE955-172E-4931-ACEE-CC6C774BBF80}
 		{C8B9F02D-051B-4F7A-BE99-D6704085336E} = {A4BEE955-172E-4931-ACEE-CC6C774BBF80}
+		{04EA23CF-01B7-4689-80C6-5507D44955D6} = {A4BEE955-172E-4931-ACEE-CC6C774BBF80}
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Reflection bindings for now; compiled bindings get switched on in Phase 2 once
+         every view has an x:DataType. -->
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <AssemblyName>Crustcut.App</AssemblyName>
+    <RootNamespace>Crustcut.App</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crustcut.Presentation\Crustcut.Presentation.csproj" />
+    <ProjectReference Include="..\PrimeOSTuner.Core\PrimeOSTuner.Core.csproj" />
+    <ProjectReference Include="..\PrimeOSTuner.Win\PrimeOSTuner.Win.csproj" />
+  </ItemGroup>
+</Project>

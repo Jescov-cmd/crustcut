@@ -1,0 +1,94 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Crustcut.App.Controls"
+             x:Class="Crustcut.App.Views.OverviewView">
+
+  <UserControl.Styles>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource RadiusCard}"/>
+      <Setter Property="Padding" Value="14,12"/>
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontSize" Value="{DynamicResource FontLabel}"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
+    </Style>
+    <Style Selector="TextBlock.stat">
+      <Setter Property="FontSize" Value="22"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text1}"/>
+      <Setter Property="Margin" Value="0,3,0,0"/>
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel>
+
+      <!-- 56px eyebrow shares the rail brand's baseline -->
+      <TextBlock Text="YOUR PC" Classes="label" Height="56" VerticalAlignment="Center"/>
+
+      <!-- HERO: score arc + status + actions -->
+      <Grid ColumnDefinitions="150,*" Margin="0,0,0,20">
+        <Panel Grid.Column="0" Width="150" Height="150">
+          <c:ScoreArc Score="{Binding BoostScore}"/>
+          <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="{Binding BoostScore}"
+                       FontSize="{DynamicResource FontDisplay}" FontWeight="Light"
+                       Foreground="{DynamicResource Text0}" HorizontalAlignment="Center"/>
+            <TextBlock Text="BOOST SCORE" Classes="label" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+          </StackPanel>
+        </Panel>
+
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="24,0,0,0">
+          <TextBlock Text="{Binding BoostScoreTier}"
+                     FontSize="{DynamicResource FontTitle}" FontWeight="SemiBold"
+                     Foreground="{DynamicResource Text0}"/>
+          <TextBlock Text="{Binding BoostScoreSubtitle}" FontSize="11"
+                     Foreground="{DynamicResource Text2}" Margin="0,6,0,0" TextWrapping="Wrap"/>
+          <StackPanel Orientation="Horizontal" Spacing="9" Margin="0,16,0,0">
+            <Button Content="Optimize now" Height="34" Padding="20,0"
+                    CornerRadius="{DynamicResource RadiusPill}"
+                    Background="{DynamicResource AccentGradient}" Foreground="#26190A"
+                    FontWeight="SemiBold" Cursor="Hand"/>
+            <Button Content="See what changed" Height="34" Padding="16,0"
+                    CornerRadius="{DynamicResource RadiusPill}"
+                    Background="Transparent" BorderBrush="{DynamicResource Hairline}"
+                    BorderThickness="1" Foreground="{DynamicResource Text2}" Cursor="Hand"/>
+          </StackPanel>
+        </StackPanel>
+      </Grid>
+
+      <!-- LIVE STATS with sparklines -->
+      <Grid ColumnDefinitions="*,*,*,*">
+        <Border Grid.Column="0" Classes="card" Margin="0,0,6,0">
+          <StackPanel>
+            <TextBlock Text="CPU" Classes="label"/>
+            <TextBlock Classes="stat" Text="{Binding CpuPercent, StringFormat={}{0:F0}%}"/>
+            <c:Sparkline Height="26" Margin="0,6,0,0" Values="{Binding CpuHistory}"/>
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Classes="card" Margin="6,0">
+          <StackPanel>
+            <TextBlock Text="MEMORY" Classes="label"/>
+            <TextBlock Classes="stat" Text="{Binding RamPercent, StringFormat={}{0:F0}%}"/>
+            <c:Sparkline Height="26" Margin="0,6,0,0" Values="{Binding RamHistory}"/>
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="2" Classes="card" Margin="6,0">
+          <StackPanel>
+            <TextBlock Text="GPU" Classes="label"/>
+            <TextBlock Classes="stat" Text="{Binding GpuPercent, StringFormat={}{0:F0}%}"/>
+            <c:Sparkline Height="26" Margin="0,6,0,0" Values="{Binding GpuHistory}"/>
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="3" Classes="card" Margin="6,0,0,0">
+          <StackPanel>
+            <TextBlock Text="NETWORK" Classes="label"/>
+            <TextBlock Classes="stat" Text="{Binding NetworkText}"/>
+            <c:Sparkline Height="26" Margin="0,6,0,0" Values="{Binding NetHistory}"/>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

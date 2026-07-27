@@ -1,68 +1,78 @@
 # Crustcut idle resource baseline
 
 **Date:** 2026-07-26
-**Build:** v0.8a branch (`v0.8a-memory-safety`), post memory-safety fix
-**Status:** ⏳ **Awaiting measurement** — see "How to run" below
+**Build:** fresh Release publish from `main` post memory-safety fix (`publish/v0.8a-test`)
+**Sampling:** 120 samples over 10 minutes, 5-second interval, app idle in tray, PID 11712
+**Status:** ✅ **Measured — Crustcut is not the cause of system slowdown**
 
-## Why this exists
+## Results
 
-The user reported believing Crustcut itself degrades system performance. This document
-settles that with numbers rather than guesses. No code will be "optimized" on the strength
-of a hunch: if the measurements exonerate a suspect, that suspect is closed.
+| Metric | Average | Maximum | Start → End | Verdict |
+| --- | --- | --- | --- | --- |
+| CPU % | **0.48** | 4.31 | — | Healthy — well under the 2% threshold |
+| Private MB | 199.1 | 221.4 | 72.6 → 207.8 | Warm-up then flat — no leak |
+| Handles | 1307.8 | 1371 | 993 → 1328 | Oscillating, not climbing — no leak |
+| Threads | 22.8 | 33 | 25 → 22 | Stable |
 
-## How to run
+## Reading
 
-Crustcut must be running and elevated (it self-elevates, so launching it raises a UAC
-prompt). Leave it on the Overview tab and do not interact with it while sampling.
+**CPU is a non-issue.** Averaging under half a percent at idle, peaking at 4.3% on a single
+5-second sample. Crustcut is not consuming meaningful CPU.
+
+**The memory growth is warm-up, not a leak.** Private bytes climb from 72 MB to ~208 MB
+during the first ~75 seconds, then sit flat for the remaining nine minutes:
+
+```
+sample   1:  72.59 MB,  993 handles
+sample  16: 208.06 MB, 1356 handles
+sample  31: 208.37 MB, 1359 handles
+sample  46: 207.63 MB, 1328 handles
+sample  61: 208.61 MB, 1332 handles
+sample  76: 208.53 MB, 1319 handles
+sample  91: 207.60 MB, 1318 handles
+sample 106: 207.84 MB, 1328 handles
+```
+
+A leak produces a steady upward slope across the whole run. This is a step to a plateau —
+the shape of one-time initialisation (performance counters, the game-library scan cache,
+cover-art loading) reaching steady state. Handles behave identically: a rise to ~1330, then
+oscillation within a narrow band rather than monotonic growth.
+
+~208 MB resident is on the heavy side for a tray utility and worth revisiting, but it is
+**stable**, and stable memory does not slow a machine down.
+
+## Suspects — all closed
+
+| Suspect | Verdict |
+| --- | --- |
+| `HardwareClient.SampleGpuPercent` re-enumerating GPU counters every sample | **Closed.** Would show as sustained CPU. Measured 0.48% average. |
+| `WmiProcessWatcher` using `Win32_ProcessStartTrace` | **Closed.** No CPU cost and no handle growth over 10 minutes. |
+| `GameProcessWatcher` 2-second poll | **Closed.** Already cached and re-entrancy guarded; invisible in the numbers. |
+
+No code will be changed on the strength of these hypotheses. The measurements exonerate
+all three.
+
+## What was actually causing the slowdown
+
+The RAM cleaner, not the app's own footprint. Three findings, all fixed on `main`:
+
+1. **`RamAutoOptimizeOnInterval: true` with `RamAutoIntervalMinutes: 2`** in the user's
+   settings — the cleaner was running **every two minutes, continuously**, roughly 30 times
+   an hour. This was the dominant cause, and it was not visible from the code alone.
+2. **`TrimAllUserProcesses()`** trimmed every process on the system with no protection at
+   all, so the manual tile was more damaging than the automatic path.
+3. **`EmptyStandbyList()` / `FlushFileCache()`** purged the machine-wide standby list and
+   file cache on every run, forcing every process to re-read from storage.
+
+Additionally, `ProcessClientTests` invoked `TrimAllUserProcesses()` for real, so **every run
+of the test suite** trimmed every process on the developer machine.
+
+## How to re-run
 
 ```powershell
 .\scripts\measure-idle.ps1 -Minutes 10
 ```
 
-The script samples every 5 seconds and writes `idle-samples.csv`, then prints the average
-and maximum for each metric.
-
-## Thresholds
-
-| Metric | Reading | Verdict |
-| --- | --- | --- |
-| CPU | sustained > 2% at idle | investigate |
-| CPU | sustained > 5% at idle | real problem |
-| Private bytes | steady upward slope across the run | leak |
-| Private bytes | plateau | healthy |
-| Handles / threads | monotonic growth | leak, regardless of absolute value |
-
-## Results
-
-| Metric | Average | Maximum | Verdict |
-| --- | --- | --- | --- |
-| CPU % | _not yet measured_ | | |
-| Private MB | _not yet measured_ | | |
-| Working set MB | _not yet measured_ | | |
-| Handles | _not yet measured_ | | |
-| Threads | _not yet measured_ | | |
-
-**Reading:** _to be written once the run completes._
-
-## Suspects, in priority order
-
-These are hypotheses to check **against the measurements**, not defects. Each is closed
-explicitly if the numbers do not support it.
-
-1. **`HardwareClient.SampleGpuPercent`** — re-enumerates every GPU performance-counter
-   instance on every sample. This was a deliberate fix (counters for processes launched
-   after startup were being missed), but it is the most expensive thing on the sampling
-   path. Expect this to dominate CPU if anything does.
-2. **`WmiProcessWatcher`** — uses `Win32_ProcessStartTrace`, a known-expensive WMI event
-   source. Historically it has also thrown `ManagementException: Access denied` on
-   restricted systems.
-3. **`GameProcessWatcher`** — polls on a two-second timer. It already has a 20-second scan
-   cache and a re-entrancy guard, so it is the least likely culprit of the three.
-
-## Related finding (already fixed on this branch)
-
-While implementing the memory-safety work, `ProcessClientTests` was found to call
-`ProcessClient.TrimAllUserProcesses()` for real. **Every run of the test suite trimmed the
-working set of every process on the machine, VS Code included.** If the user ran the suite
-during development, that alone would have produced exactly the stalls they reported. The
-test and the underlying method have both been deleted.
+Thresholds: CPU sustained >2% warrants investigation and >5% is a real problem; private
+bytes sloping upward across the whole run indicates a leak, whereas a plateau does not;
+handle or thread growth is a leak regardless of absolute value.
