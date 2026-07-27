@@ -13,7 +13,7 @@
 
   <DockPanel Margin="20,0,20,16">
     <StackPanel DockPanel.Dock="Top">
-      <TextBlock Text="DIAGNOSIS" Classes="pageTitle" Margin="0,16,0,10"/>
+      <TextBlock Text="Diagnosis" Classes="pageTitle" Margin="0,16,0,10"/>
       <TextBlock Text="{Binding Status}" FontSize="12"
                  Foreground="{DynamicResource Text2}" Margin="0,0,0,14" TextWrapping="Wrap"/>
       <Button Content="Run scan" Height="34" Padding="20,0" Margin="0,0,0,16"

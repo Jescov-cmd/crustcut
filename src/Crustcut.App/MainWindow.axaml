@@ -42,26 +42,24 @@
     </Style>
   </Window.Styles>
 
-  <Grid RowDefinitions="38,1,*">
+  <!-- No custom title bar: the window keeps its native chrome, so drawing our own put a
+       second "Crustcut" directly under the real one and wasted 39px of height. -->
+  <Grid>
 
-    <!-- ===== TITLE BAR ===== -->
-    <Border Grid.Row="0" Background="{DynamicResource SurfaceRail}">
-      <StackPanel Orientation="Horizontal" Margin="12,0" Spacing="9" VerticalAlignment="Center">
-        <Ellipse Width="13" Height="13" Fill="{DynamicResource AccentWheat}"/>
-        <TextBlock Text="Crustcut" FontSize="12.5" FontWeight="SemiBold"
-                   Foreground="{DynamicResource Text0}" VerticalAlignment="Center"/>
-        <TextBlock Text="Performance control panel" FontSize="11.5"
-                   Foreground="{DynamicResource Text3}" VerticalAlignment="Center"
-                   Margin="6,0,0,0"/>
-      </StackPanel>
-    </Border>
-    <Border Grid.Row="1" Background="{DynamicResource Hairline}"/>
-
-    <Grid Grid.Row="2" ColumnDefinitions="216,1,*">
+    <Grid ColumnDefinitions="216,1,*">
 
       <!-- ===== NAV TREE ===== -->
       <Border Grid.Column="0" Background="{DynamicResource SurfaceRail}">
         <DockPanel>
+          <!-- Brand sits at the top of the rail instead of in a bar of its own. -->
+          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8"
+                      Height="42" Margin="12,0,0,0" VerticalAlignment="Center">
+            <Ellipse Width="12" Height="12" Fill="{DynamicResource AccentWheat}"
+                     VerticalAlignment="Center"/>
+            <TextBlock Text="Crustcut" FontSize="13" FontWeight="Bold"
+                       Foreground="{DynamicResource Text0}" VerticalAlignment="Center"/>
+          </StackPanel>
+
           <Border DockPanel.Dock="Bottom" Height="30" Padding="12,0"
                   BorderBrush="{DynamicResource Hairline}" BorderThickness="0,1,0,0">
             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">

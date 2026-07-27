@@ -15,25 +15,28 @@
       </Grid>
     </Border>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16,20,20">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16,26,20">
       <Border Classes="panel">
         <StackPanel>
 
           <!-- Column headers, so the switch column reads as a column rather than a
                floating control per row. -->
-          <Grid ColumnDefinitions="*,110,64" Margin="0,0,0,4">
-            <TextBlock Grid.Column="0" Text="Optimization" Classes="colHead"/>
-            <TextBlock Grid.Column="1" Text="Category" Classes="colHead"
-                       HorizontalAlignment="Right"/>
-            <TextBlock Grid.Column="2" Text="Enabled" Classes="colHead"
-                       HorizontalAlignment="Right"/>
-          </Grid>
+          <!-- Wrapped in the same Border.row the data rows use. Sitting outside it, the
+               header went through different layout and its columns landed ~44px off. -->
+          <Border Classes="row">
+            <Grid ColumnDefinitions="*,120,58">
+              <TextBlock Grid.Column="0" Text="Optimization" Classes="colHead"/>
+              <TextBlock Grid.Column="1" Text="Category" Classes="colHead" HorizontalAlignment="Right"/>
+              <TextBlock Grid.Column="2" Text="On" Classes="colHead"
+                         HorizontalAlignment="Right"/>
+            </Grid>
+          </Border>
 
           <ItemsControl ItemsSource="{Binding VisibleRows}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
                 <Border Classes="row">
-                  <Grid ColumnDefinitions="*,110,64">
+                  <Grid ColumnDefinitions="*,120,58">
 
                     <StackPanel Grid.Column="0" Spacing="3" Margin="0,0,16,0">
                       <TextBlock Text="{Binding DisplayName}" Classes="key"/>
@@ -54,8 +57,11 @@
                       </StackPanel>
                     </StackPanel>
 
-                    <TextBlock Grid.Column="1" Text="{Binding Category}" Classes="value"
+                    <!-- Left-aligned and muted: right-aligned bold white read as a value,
+                         which it isn't — it's a tag. -->
+                    <TextBlock Grid.Column="1" Text="{Binding Category}" FontSize="11.5"
                                Foreground="{DynamicResource Text3}"
+                               HorizontalAlignment="Right"
                                VerticalAlignment="Top" Margin="0,1,0,0"/>
 
                     <ToggleSwitch Grid.Column="2" OnContent="" OffContent=""
