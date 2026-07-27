@@ -1,0 +1,116 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Crustcut.App.Views.SettingsView">
+
+  <UserControl.Styles>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource RadiusCard}"/>
+      <Setter Property="Padding" Value="18,16"/>
+      <Setter Property="Margin" Value="0,0,0,12"/>
+      <Setter Property="MaxWidth" Value="640"/>
+      <Setter Property="HorizontalAlignment" Value="Left"/>
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontSize" Value="{DynamicResource FontLabel}"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
+    </Style>
+    <Style Selector="TextBlock.hint">
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+      <Setter Property="Margin" Value="0,3,0,0"/>
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel>
+      <TextBlock Text="SETTINGS" Classes="label" Height="56" VerticalAlignment="Center"/>
+
+      <!-- ── Memory cleanup ── -->
+      <Border Classes="card">
+        <StackPanel Spacing="12">
+          <TextBlock Text="MEMORY CLEANUP" Classes="label"/>
+
+          <CheckBox IsChecked="{Binding RamAutoOptimizeOnInterval, Mode=TwoWay}"
+                    Content="Clean up memory on a schedule"
+                    Foreground="{DynamicResource Text1}"/>
+
+          <StackPanel IsEnabled="{Binding RamAutoOptimizeOnInterval}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="Every" Foreground="{DynamicResource Text2}"
+                         FontSize="12" VerticalAlignment="Center"/>
+              <NumericUpDown Value="{Binding RamAutoIntervalMinutes, Mode=TwoWay}"
+                             Minimum="1" Maximum="120" Increment="1" Width="110"
+                             FormatString="0"/>
+              <TextBlock Text="minutes" Foreground="{DynamicResource Text2}"
+                         FontSize="12" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <Border Background="#22FFB84D" CornerRadius="8" Padding="11,8" Margin="0,10,0,0"
+                    IsVisible="{Binding IntervalIsAggressive}">
+              <TextBlock FontSize="11" Foreground="{DynamicResource Warn}" TextWrapping="Wrap"
+                         Text="That's a full sweep of every process roughly 30 times an hour. Cleanup now leaves apps you're using alone, but 10 minutes or more is plenty."/>
+            </Border>
+          </StackPanel>
+
+          <CheckBox IsChecked="{Binding RamAutoOptimizeOnThreshold, Mode=TwoWay}"
+                    Content="Also clean up when memory gets full"
+                    Foreground="{DynamicResource Text1}"/>
+
+          <StackPanel Orientation="Horizontal" Spacing="10"
+                      IsEnabled="{Binding RamAutoOptimizeOnThreshold}">
+            <TextBlock Text="Above" Foreground="{DynamicResource Text2}"
+                       FontSize="12" VerticalAlignment="Center"/>
+            <NumericUpDown Value="{Binding RamThresholdPercent, Mode=TwoWay}"
+                           Minimum="50" Maximum="99" Increment="1" Width="110"
+                           FormatString="0"/>
+            <TextBlock Text="% used" Foreground="{DynamicResource Text2}"
+                       FontSize="12" VerticalAlignment="Center"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- ── Startup ── -->
+      <Border Classes="card">
+        <StackPanel Spacing="12">
+          <TextBlock Text="STARTUP" Classes="label"/>
+
+          <StackPanel>
+            <CheckBox IsChecked="{Binding StartAtBoot, Mode=TwoWay}"
+                      Content="Start Crustcut when Windows starts"
+                      Foreground="{DynamicResource Text1}"/>
+          </StackPanel>
+
+          <StackPanel>
+            <CheckBox IsChecked="{Binding StartMinimized, Mode=TwoWay}"
+                      Content="Start minimised to the system tray"
+                      Foreground="{DynamicResource Text1}"/>
+            <TextBlock Classes="hint"
+                       Text="With this on, opening Crustcut shows no window — click the tray icon to bring it up."/>
+          </StackPanel>
+
+          <CheckBox IsChecked="{Binding MinimizeToTrayOnClose, Mode=TwoWay}"
+                    Content="Keep running in the tray when the window is closed"
+                    Foreground="{DynamicResource Text1}"/>
+        </StackPanel>
+      </Border>
+
+      <!-- ── Monitoring ── -->
+      <Border Classes="card">
+        <StackPanel Spacing="12">
+          <TextBlock Text="MONITORING" Classes="label"/>
+          <StackPanel>
+            <CheckBox IsChecked="{Binding SentinelEnabled, Mode=TwoWay}"
+                      Content="Watch performance while apps run"
+                      Foreground="{DynamicResource Text1}"/>
+            <TextBlock Classes="hint"
+                       Text="Records frame times and flags problems it spots during a session."/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <TextBlock Text="{Binding Status}" Classes="hint" Margin="2,0,0,24"/>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

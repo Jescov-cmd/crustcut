@@ -35,6 +35,8 @@ public sealed class PageFactory
         "History" => Once(tabId, new HistoryView { DataContext = _app?.History },
                           () => _app?.History.LoadAsync()),
 
+        "Settings" => new SettingsView { DataContext = _app?.Settings },
+
         _ => new PlaceholderView(LabelFor(tabId)),
     };
 

@@ -8,6 +8,7 @@ using PrimeOSTuner.Core.Memory;
 using PrimeOSTuner.Core.Monitoring;
 using PrimeOSTuner.Core.Performance;
 using PrimeOSTuner.Core.Profiles;
+using PrimeOSTuner.Core.Settings;
 using PrimeOSTuner.Core.Tweaks;
 using PrimeOSTuner.Win;
 using PrimeOSTuner.Win.Launchers;
@@ -30,6 +31,7 @@ public sealed class Composition
     public MemoryPriorityViewModel Memory { get; }
     public DiagnosisViewModel Diagnosis { get; }
     public HistoryViewModel History { get; }
+    public SettingsViewModel Settings { get; }
 
     public Composition()
     {
@@ -66,6 +68,9 @@ public sealed class Composition
 
         // ── Diagnosis ─────────────────────────────────────────────────────────────────
         Diagnosis = new DiagnosisViewModel(new DiagnosisService(new DiagnosisProbes()));
+
+        // ── Settings ──────────────────────────────────────────────────────────────────
+        Settings = new SettingsViewModel(new AppSettingsStore(AppSettingsStore.DefaultPath()));
 
         // ── Cleanup ───────────────────────────────────────────────────────────────────
         var appx = new AppxClient();
