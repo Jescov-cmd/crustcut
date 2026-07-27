@@ -70,53 +70,56 @@
     <Setter Property="HorizontalAlignment" Value="Right"/>
   </Style>
 
-  <!-- ── Buttons ── -->
-  <Style Selector="Button.primary">
-    <Setter Property="Height" Value="28"/>
-    <Setter Property="Padding" Value="14,0"/>
-    <Setter Property="CornerRadius" Value="3"/>
-    <!-- Avalonia does not centre button content by default; without these the label sits
-         top-left inside the button. -->
+  <!-- ── Buttons ──
+       Base style targets EVERY Button, not an opt-in class. Class-based styling meant any
+       button that forgot the class fell through to Fluent's defaults, which is why buttons
+       looked inconsistent and their labels sat off-centre across the app. -->
+  <Style Selector="Button">
     <Setter Property="HorizontalContentAlignment" Value="Center"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="MinHeight" Value="28"/>
+    <Setter Property="Padding" Value="14,0"/>
+    <Setter Property="CornerRadius" Value="3"/>
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text1}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <!-- Fluent's template drives the visual state from the ContentPresenter, so hover and
+       pressed have to be repainted there or they revert to its own accent. -->
+  <Style Selector="Button:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SurfaceSelected}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource Text0}"/>
+  </Style>
+  <Style Selector="Button:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
+  </Style>
+
+  <Style Selector="Button.primary">
     <Setter Property="Background" Value="{DynamicResource AccentWheat}"/>
     <Setter Property="Foreground" Value="#1A1206"/>
     <Setter Property="BorderThickness" Value="0"/>
-    <Setter Property="FontSize" Value="12"/>
     <Setter Property="FontWeight" Value="Bold"/>
-    <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#F0BC74"/>
+    <Setter Property="TextElement.Foreground" Value="#1A1206"/>
   </Style>
   <Style Selector="Button.secondary">
-    <Setter Property="Height" Value="28"/>
-    <Setter Property="Padding" Value="12,0"/>
-    <Setter Property="CornerRadius" Value="3"/>
-    <!-- Avalonia does not centre button content by default; without these the label sits
-         top-left inside the button. -->
-    <Setter Property="HorizontalContentAlignment" Value="Center"/>
-    <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
-    <Setter Property="Foreground" Value="{DynamicResource Text1}"/>
-    <Setter Property="FontSize" Value="12"/>
-    <Setter Property="FontWeight" Value="SemiBold"/>
-    <Setter Property="Cursor" Value="Hand"/>
   </Style>
   <Style Selector="Button.danger">
-    <Setter Property="Height" Value="26"/>
-    <Setter Property="Padding" Value="12,0"/>
-    <Setter Property="CornerRadius" Value="3"/>
-    <!-- Avalonia does not centre button content by default; without these the label sits
-         top-left inside the button. -->
-    <Setter Property="HorizontalContentAlignment" Value="Center"/>
-    <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="BorderBrush" Value="#4D3030"/>
     <Setter Property="Foreground" Value="{DynamicResource Danger}"/>
-    <Setter Property="FontSize" Value="12"/>
-    <Setter Property="FontWeight" Value="SemiBold"/>
-    <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#2A1818"/>
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource Danger}"/>
   </Style>
 
   <!-- ── Toggle: Fluent's default is a bright red/blue accent that clashes with the
@@ -137,9 +140,6 @@
   <!-- ── Inputs ── -->
   <Style Selector="TextBox">
     <Setter Property="CornerRadius" Value="3"/>
-    <!-- Avalonia does not centre button content by default; without these the label sits
-         top-left inside the button. -->
-    <Setter Property="HorizontalContentAlignment" Value="Center"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="Background" Value="#141414"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>

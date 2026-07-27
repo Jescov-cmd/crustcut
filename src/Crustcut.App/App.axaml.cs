@@ -22,7 +22,7 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var (shotPath, shotTab) = SelfScreenshot.Parse(Program.Args);
+            var (shotPath, shotTab, shotW, shotH) = SelfScreenshot.Parse(Program.Args);
 
             // The screenshot run is a throwaway process: skip the single-instance guard so
             // it can run while the real app is open.
@@ -48,6 +48,7 @@ public partial class App : Application
             if (shotPath is not null)
             {
                 if (shotTab is not null) _window.NavigateTo(shotTab);
+                if (shotW > 0 && shotH > 0) { _window.Width = shotW; _window.Height = shotH; }
                 _window.Show();
                 _ = SelfScreenshot.CaptureThenExitAsync(_window, shotPath);
             }

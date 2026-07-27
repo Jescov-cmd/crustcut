@@ -11,7 +11,7 @@
           <TextBlock Text="{Binding StatusText}" Classes="pageSubtitle"/>
         </StackPanel>
         <TextBox Grid.Column="1" Text="{Binding SearchText}" Watermark="Search…"
-                 Width="200" Height="28" VerticalAlignment="Center"/>
+                 MinWidth="150" MaxWidth="260" Height="28" VerticalAlignment="Center"/>
       </Grid>
     </Border>
 

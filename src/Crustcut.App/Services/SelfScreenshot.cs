@@ -13,16 +13,31 @@ namespace Crustcut.App.Services;
 /// </summary>
 public static class SelfScreenshot
 {
-    /// <summary>Parses --screenshot &lt;path&gt; [--screenshot-tab &lt;NavId&gt;] out of the args.</summary>
-    public static (string? Path, string? Tab) Parse(string[] args)
+    /// <summary>
+    /// Parses --screenshot &lt;path&gt; [--screenshot-tab &lt;NavId&gt;] [--screenshot-size WxH].
+    /// The size flag exists so layout can be checked at more than one window size —
+    /// fixed widths only reveal themselves as bugs when the window is narrow.
+    /// </summary>
+    public static (string? Path, string? Tab, int Width, int Height) Parse(string[] args)
     {
         string? path = null, tab = null;
+        int w = 0, h = 0;
+
         for (var i = 0; i < args.Length - 1; i++)
         {
             if (args[i] == "--screenshot") path = args[i + 1];
             if (args[i] == "--screenshot-tab") tab = args[i + 1];
+            if (args[i] == "--screenshot-size")
+            {
+                var parts = args[i + 1].Split('x', 'X');
+                if (parts.Length == 2 &&
+                    int.TryParse(parts[0], out var pw) && int.TryParse(parts[1], out var ph))
+                {
+                    w = pw; h = ph;
+                }
+            }
         }
-        return (path, tab);
+        return (path, tab, w, h);
     }
 
     /// <summary>
