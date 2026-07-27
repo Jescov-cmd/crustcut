@@ -13,4 +13,20 @@
   <Application.Styles>
     <FluentTheme />
   </Application.Styles>
+
+  <TrayIcon.Icons>
+    <TrayIcons>
+      <TrayIcon Icon="avares://Crustcut.App/Assets/bread.ico"
+                ToolTipText="Crustcut"
+                Clicked="TrayClicked">
+        <TrayIcon.Menu>
+          <NativeMenu>
+            <NativeMenuItem Header="Open Crustcut" Click="TrayOpenClick"/>
+            <NativeMenuItemSeparator/>
+            <NativeMenuItem Header="Exit" Click="TrayExitClick"/>
+          </NativeMenu>
+        </TrayIcon.Menu>
+      </TrayIcon>
+    </TrayIcons>
+  </TrayIcon.Icons>
 </Application>
