@@ -9,15 +9,11 @@
       <Setter Property="Padding" Value="14,11"/>
       <Setter Property="Margin" Value="0,0,0,8"/>
     </Style>
-    <Style Selector="TextBlock.label">
-      <Setter Property="FontSize" Value="{DynamicResource FontLabel}"/>
-      <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
-    </Style>
-  </UserControl.Styles>
+    </UserControl.Styles>
 
-  <DockPanel>
+  <DockPanel Margin="20,0,20,16">
     <StackPanel DockPanel.Dock="Top">
-      <TextBlock Text="CLEANUP" Classes="label" Height="56" VerticalAlignment="Center"/>
+      <TextBlock Text="CLEANUP" Classes="pageTitle" Margin="0,16,0,10"/>
       <TextBlock Text="{Binding Status}" FontSize="12"
                  Foreground="{DynamicResource Text2}" Margin="0,0,0,12"/>
       <Button Content="Scan for unnecessary apps" Height="34" Padding="18,0"
@@ -66,7 +62,7 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <TextBlock Text="DESKTOP PROGRAMS" Classes="label" Margin="0,14,0,8"
+        <TextBlock Text="DESKTOP PROGRAMS" Classes="colHead" Margin="0,14,0,8"
                    IsVisible="{Binding HasDesktopItems}"/>
         <ItemsControl ItemsSource="{Binding DesktopItems}">
           <ItemsControl.ItemTemplate>

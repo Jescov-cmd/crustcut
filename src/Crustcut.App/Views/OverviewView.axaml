@@ -26,6 +26,7 @@
     </Style>
     <Style Selector="TextBlock.key">
       <Setter Property="FontSize" Value="12.5"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="Foreground" Value="{DynamicResource Text1}"/>
       <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
@@ -33,6 +34,7 @@
     <Style Selector="TextBlock.value">
       <Setter Property="FontFamily" Value="Consolas, Cascadia Mono, monospace"/>
       <Setter Property="FontSize" Value="12.5"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
       <Setter Property="VerticalAlignment" Value="Center"/>
       <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -46,7 +48,7 @@
             BorderThickness="0,0,0,1" Padding="20,14">
       <Grid ColumnDefinitions="*,Auto">
         <StackPanel Grid.Column="0" Spacing="3">
-          <TextBlock Text="System overview" FontSize="15" FontWeight="SemiBold"
+          <TextBlock Text="System overview" FontSize="15" FontWeight="Bold"
                      Foreground="{DynamicResource Text0}"/>
           <TextBlock Text="{Binding BoostScoreSubtitle}" FontSize="11.5"
                      Foreground="{DynamicResource Text2}"/>
@@ -75,7 +77,7 @@
               <TextBlock Text="LIVE" Classes="panelTitle"/>
 
               <Border Classes="row">
-                <Grid ColumnDefinitions="*,Auto,90">
+                <Grid ColumnDefinitions="*,74,92">
                   <TextBlock Grid.Column="0" Text="Processor" Classes="key"/>
                   <TextBlock Grid.Column="1" Classes="value"
                              Text="{Binding CpuPercent, StringFormat={}{0:F0}%}"/>
@@ -85,7 +87,7 @@
               </Border>
 
               <Border Classes="row">
-                <Grid ColumnDefinitions="*,Auto,90">
+                <Grid ColumnDefinitions="*,74,92">
                   <TextBlock Grid.Column="0" Text="Memory" Classes="key"/>
                   <TextBlock Grid.Column="1" Classes="value"
                              Text="{Binding RamPercent, StringFormat={}{0:F0}%}"/>
@@ -95,7 +97,7 @@
               </Border>
 
               <Border Classes="row">
-                <Grid ColumnDefinitions="*,Auto,90">
+                <Grid ColumnDefinitions="*,74,92">
                   <TextBlock Grid.Column="0" Text="Graphics" Classes="key"/>
                   <TextBlock Grid.Column="1" Classes="value"
                              Text="{Binding GpuPercent, StringFormat={}{0:F0}%}"/>
@@ -105,7 +107,7 @@
               </Border>
 
               <Border Classes="row" BorderThickness="0">
-                <Grid ColumnDefinitions="*,Auto,90">
+                <Grid ColumnDefinitions="*,74,92">
                   <TextBlock Grid.Column="0" Text="Network" Classes="key"/>
                   <TextBlock Grid.Column="1" Classes="value" Text="{Binding NetworkText}"/>
                   <c:Sparkline Grid.Column="2" Height="18" Margin="12,0,0,0"

@@ -21,6 +21,7 @@
       <Setter Property="Margin" Value="0"/>
       <Setter Property="CornerRadius" Value="0"/>
       <Setter Property="FontSize" Value="12.5"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="Cursor" Value="Hand"/>
     </Style>
     <Style Selector="Button.nav:pointerover /template/ ContentPresenter">

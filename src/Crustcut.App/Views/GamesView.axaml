@@ -2,16 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Crustcut.App.Views.GamesView">
 
-  <UserControl.Styles>
-    <Style Selector="TextBlock.label">
-      <Setter Property="FontSize" Value="{DynamicResource FontLabel}"/>
-      <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
-    </Style>
-  </UserControl.Styles>
-
-  <DockPanel>
+  <DockPanel Margin="20,0,20,16">
     <StackPanel DockPanel.Dock="Top">
-      <TextBlock Text="GAMES" Classes="label" Height="56" VerticalAlignment="Center"/>
+      <TextBlock Text="GAMES" Classes="pageTitle" Margin="0,16,0,10"/>
       <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,16"
                  TextWrapping="Wrap"
                  Text="Detected from Steam, Xbox, Epic, Ubisoft, EA and GOG."/>

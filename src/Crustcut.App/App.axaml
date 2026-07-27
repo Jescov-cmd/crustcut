@@ -12,6 +12,7 @@
 
   <Application.Styles>
     <FluentTheme />
+    <StyleInclude Source="avares://Crustcut.App/Theme/Controls.axaml"/>
   </Application.Styles>
 
   <TrayIcon.Icons>

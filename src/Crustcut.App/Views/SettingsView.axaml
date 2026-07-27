@@ -8,7 +8,7 @@
       <Setter Property="CornerRadius" Value="{DynamicResource RadiusCard}"/>
       <Setter Property="Padding" Value="18,16"/>
       <Setter Property="Margin" Value="0,0,0,12"/>
-      <Setter Property="MaxWidth" Value="640"/>
+      <Setter Property="Width" Value="620"/>
       <Setter Property="HorizontalAlignment" Value="Left"/>
     </Style>
     <Style Selector="TextBlock.label">
@@ -23,9 +23,9 @@
     </Style>
   </UserControl.Styles>
 
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,0,20,20">
     <StackPanel>
-      <TextBlock Text="SETTINGS" Classes="label" Height="56" VerticalAlignment="Center"/>
+      <TextBlock Text="Settings" Classes="pageTitle" Margin="0,16,0,12"/>
 
       <!-- ── Memory cleanup ── -->
       <Border Classes="card">

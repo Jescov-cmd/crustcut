@@ -2,87 +2,75 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Crustcut.App.Views.OptimizeView">
 
-  <UserControl.Styles>
-    <Style Selector="Border.tile">
-      <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
-      <Setter Property="CornerRadius" Value="{DynamicResource RadiusCard}"/>
-      <Setter Property="Padding" Value="16,14"/>
-      <Setter Property="Margin" Value="0,0,12,12"/>
-      <Setter Property="Width" Value="330"/>
-    </Style>
-    <Style Selector="TextBlock.label">
-      <Setter Property="FontSize" Value="{DynamicResource FontLabel}"/>
-      <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
-    </Style>
-    <Style Selector="Border.pill">
-      <Setter Property="CornerRadius" Value="10"/>
-      <Setter Property="Padding" Value="7,2"/>
-      <Setter Property="Margin" Value="0,0,6,0"/>
-    </Style>
-  </UserControl.Styles>
-
   <DockPanel>
 
-    <StackPanel DockPanel.Dock="Top">
-      <TextBlock Text="OPTIMIZE" Classes="label" Height="56" VerticalAlignment="Center"/>
-      <TextBlock Text="{Binding StatusText}" FontSize="12"
-                 Foreground="{DynamicResource Text2}" Margin="0,0,0,14"/>
+    <Border DockPanel.Dock="Top" Classes="pageHeader">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Grid.Column="0" Spacing="3">
+          <TextBlock Text="Optimize" Classes="pageTitle"/>
+          <TextBlock Text="{Binding StatusText}" Classes="pageSubtitle"/>
+        </StackPanel>
+        <TextBox Grid.Column="1" Text="{Binding SearchText}" Watermark="Search…"
+                 Width="200" Height="28" VerticalAlignment="Center"/>
+      </Grid>
+    </Border>
 
-      <TextBox Text="{Binding SearchText}" Watermark="Search optimizations…"
-               Height="34" Margin="0,0,0,16" MaxWidth="360"
-               HorizontalAlignment="Left"
-               CornerRadius="{DynamicResource RadiusSmall}"/>
-    </StackPanel>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16,20,20">
+      <Border Classes="panel">
+        <StackPanel>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-      <ItemsControl ItemsSource="{Binding VisibleRows}">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-            <WrapPanel/>
-          </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <Border Classes="tile">
-              <Grid RowDefinitions="Auto,Auto,Auto">
+          <!-- Column headers, so the switch column reads as a column rather than a
+               floating control per row. -->
+          <Grid ColumnDefinitions="*,110,64" Margin="0,0,0,4">
+            <TextBlock Grid.Column="0" Text="Optimization" Classes="colHead"/>
+            <TextBlock Grid.Column="1" Text="Category" Classes="colHead"
+                       HorizontalAlignment="Right"/>
+            <TextBlock Grid.Column="2" Text="Enabled" Classes="colHead"
+                       HorizontalAlignment="Right"/>
+          </Grid>
 
-                <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
-                  <StackPanel Grid.Column="0">
-                    <TextBlock Text="{Binding Category}" Classes="label"/>
-                    <TextBlock Text="{Binding DisplayName}" FontSize="13.5" FontWeight="SemiBold"
-                               Foreground="{DynamicResource Text0}" TextWrapping="Wrap"
-                               Margin="0,3,10,0"/>
-                  </StackPanel>
-                  <ToggleSwitch Grid.Column="1" VerticalAlignment="Top"
-                                OnContent="" OffContent=""
-                                IsChecked="{Binding IsApplied, Mode=TwoWay}"
-                                IsEnabled="{Binding !IsBusy}"
-                                Tag="{Binding}"
-                                Click="ToggleClick"/>
-                </Grid>
+          <ItemsControl ItemsSource="{Binding VisibleRows}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Classes="row">
+                  <Grid ColumnDefinitions="*,110,64">
 
-                <TextBlock Grid.Row="1" Text="{Binding Description}" FontSize="11.5"
-                           Foreground="{DynamicResource Text2}" TextWrapping="Wrap"
-                           Margin="0,8,0,0"/>
+                    <StackPanel Grid.Column="0" Spacing="3" Margin="0,0,16,0">
+                      <TextBlock Text="{Binding DisplayName}" Classes="key"/>
+                      <TextBlock Text="{Binding Description}" Classes="sub"/>
+                      <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,3,0,0">
+                        <TextBlock Text="Needs restart" FontSize="10.5"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Warn}"
+                                   IsVisible="{Binding RequiresReboot}"/>
+                        <TextBlock Text="Runs hotter" FontSize="10.5"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Danger}"
+                                   IsVisible="{Binding CausesHeat}"/>
+                        <TextBlock Text="Caution" FontSize="10.5"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Text3}"
+                                   IsVisible="{Binding HasOtherRisk}"/>
+                      </StackPanel>
+                    </StackPanel>
 
-                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
-                  <Border Classes="pill" Background="#22FFB84D"
-                          IsVisible="{Binding RequiresReboot}">
-                    <TextBlock Text="Needs restart" FontSize="9.5" Foreground="{DynamicResource Warn}"/>
-                  </Border>
-                  <Border Classes="pill" Background="#22FF6B6B" IsVisible="{Binding CausesHeat}">
-                    <TextBlock Text="Runs hotter" FontSize="9.5" Foreground="{DynamicResource Danger}"/>
-                  </Border>
-                  <Border Classes="pill" Background="#18FFFFFF" IsVisible="{Binding HasOtherRisk}">
-                    <TextBlock Text="Caution" FontSize="9.5" Foreground="{DynamicResource Text2}"/>
-                  </Border>
-                </StackPanel>
+                    <TextBlock Grid.Column="1" Text="{Binding Category}" Classes="value"
+                               Foreground="{DynamicResource Text3}"
+                               VerticalAlignment="Top" Margin="0,1,0,0"/>
 
-              </Grid>
-            </Border>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
+                    <ToggleSwitch Grid.Column="2" OnContent="" OffContent=""
+                                  HorizontalAlignment="Right" VerticalAlignment="Top"
+                                  IsChecked="{Binding IsApplied, Mode=TwoWay}"
+                                  IsEnabled="{Binding !IsBusy}"
+                                  Tag="{Binding}" Click="ToggleClick"/>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+        </StackPanel>
+      </Border>
     </ScrollViewer>
   </DockPanel>
 </UserControl>
