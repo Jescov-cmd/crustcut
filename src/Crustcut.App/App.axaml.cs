@@ -49,8 +49,12 @@ public partial class App : Application
                 _window.Hide();
             }
 
+            // Off by default; honours whatever the user last chose.
+            _composition.Overlay.SyncWithSettings();
+
             desktop.ShutdownRequested += (_, _) =>
             {
+                _composition?.Overlay.Dispose();
                 _composition?.Overview.Dispose();
                 _guard?.Dispose();
             };

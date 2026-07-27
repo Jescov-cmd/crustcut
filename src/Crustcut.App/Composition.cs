@@ -34,6 +34,7 @@ public sealed class Composition
     public HistoryViewModel History { get; }
     public SettingsViewModel Settings { get; }
     public GamesViewModel Games { get; }
+    public OverlayService Overlay { get; }
 
     public Composition()
     {
@@ -49,8 +50,12 @@ public sealed class Composition
             .ToList();
 
         // ── Overview ──────────────────────────────────────────────────────────────────
+        // One sampler feeds both the Overview page and the overlay; two would mean two sets
+        // of performance counters polling the same hardware.
+        var sampler = new SystemSampler(new HardwareClient());
+
         Overview = new OverviewViewModel(
-            new SystemSampler(new HardwareClient()),
+            sampler,
             new ActiveTweaksStore(ActiveTweaksStore.DefaultPath()),
             Tweaks,
             new FrameSessionStore(FrameSessionStore.DefaultPath()),
@@ -72,7 +77,22 @@ public sealed class Composition
         Diagnosis = new DiagnosisViewModel(new DiagnosisService(new DiagnosisProbes()));
 
         // ── Settings ──────────────────────────────────────────────────────────────────
-        Settings = new SettingsViewModel(new AppSettingsStore(AppSettingsStore.DefaultPath()));
+        var settingsStore = new AppSettingsStore(AppSettingsStore.DefaultPath());
+        Settings = new SettingsViewModel(settingsStore);
+
+        // ── Overlay ───────────────────────────────────────────────────────────────────
+        var presentMonPath = Path.Combine(
+            AppContext.BaseDirectory, "Assets", "PresentMon", "PresentMon-x64.exe");
+        var framesDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "PrimeOSTuner", "frames");
+
+        var frames = new FrameRecordingService(
+            new PresentMonRunner(presentMonPath),
+            new FrameSessionStore(FrameSessionStore.DefaultPath()),
+            framesDir);
+
+        Overlay = new OverlayService(new OverlayViewModel(sampler, frames, ui), settingsStore);
 
         // ── Cleanup ───────────────────────────────────────────────────────────────────
         var appx = new AppxClient();
