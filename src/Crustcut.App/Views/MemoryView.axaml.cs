@@ -18,6 +18,14 @@ public partial class MemoryView : UserControl
             : $"Added {added} app(s).";
     }
 
+    private async void PriorityChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        // Persist immediately: a dropdown that forgets its value on tab-switch is worse
+        // than no dropdown.
+        if (sender is ComboBox { Tag: PriorityRuleVm rule } && DataContext is MemoryPriorityViewModel vm)
+            await vm.UpdateRuleAsync(rule);
+    }
+
     private async void RecommendedClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not MemoryPriorityViewModel vm) return;

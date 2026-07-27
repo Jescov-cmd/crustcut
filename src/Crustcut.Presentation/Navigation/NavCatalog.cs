@@ -12,23 +12,23 @@ public static class NavCatalog
 
     public static readonly IReadOnlyList<NavItem> Primary = new[]
     {
-        new NavItem("Overview",  "Overview",   ""),
+        new NavItem("Overview",  "OVERVIEW",   ""),
 
-        new NavItem("Optimize",  "Optimize",   Performance),
-        new NavItem("Diagnosis", "Diagnosis",  Performance),
-        new NavItem("Cleanup",   "Cleanup",    Performance),   // was "Bloatware"
-        new NavItem("Memory",    "Memory",     Performance),
+        new NavItem("Optimize",  "OPTIMIZE",   Performance),
+        new NavItem("Diagnosis", "DIAGNOSIS",  Performance),
+        new NavItem("Cleanup",   "CLEANUP",    Performance),   // was "Bloatware"
+        new NavItem("Memory",    "MEMORY",     Performance),
 
-        new NavItem("Games",     "Games",      Gaming),        // was "Library"
-        new NavItem("Sessions",  "Sessions",   Gaming),        // was "Sentinel"
-        new NavItem("GameBoost", "Game Boost", Gaming),
+        new NavItem("Games",     "GAMES",      Gaming),        // was "Library"
+        new NavItem("Sessions",  "SESSIONS",   Gaming),        // was "Sentinel"
+        new NavItem("GameBoost", "GAME BOOST", Gaming),
 
-        new NavItem("Guides",    "Guides",     Learn),
+        new NavItem("Guides",    "GUIDES",     Learn),
     };
 
     public static readonly IReadOnlyList<NavItem> Bottom = new[]
     {
-        new NavItem("History",  "History",  ""),
-        new NavItem("Settings", "Settings", ""),
+        new NavItem("History",  "HISTORY",  ""),
+        new NavItem("Settings", "SETTINGS", ""),
     };
 }

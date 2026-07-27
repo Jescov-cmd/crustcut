@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:Crustcut.App"
              x:Class="Crustcut.App.Views.GamesView">
 
   <DockPanel Margin="20,0,20,16">
@@ -31,7 +32,8 @@
                              Foreground="{DynamicResource Text3}"
                              HorizontalAlignment="Center" VerticalAlignment="Center"
                              TextWrapping="Wrap" TextAlignment="Center" Margin="12"/>
-                  <Image Source="{Binding CoverImagePath}" Stretch="UniformToFill"/>
+                  <Image Stretch="UniformToFill"
+                         Source="{Binding CoverImagePath, Converter={x:Static conv:PathToBitmapConverter.Instance}}"/>
                 </Panel>
                 <StackPanel Margin="11,9,11,12">
                   <TextBlock Text="{Binding DisplayName}" FontSize="12.5" FontWeight="SemiBold"

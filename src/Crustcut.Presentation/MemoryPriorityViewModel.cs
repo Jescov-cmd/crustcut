@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -14,6 +14,9 @@ public partial class MemoryPriorityViewModel : ObservableObject
     private readonly GameRegistry _games;
 
     public ObservableCollection<PriorityRuleVm> Rules { get; } = new();
+
+    /// <summary>Levels offered in the priority dropdown. Realtime is intentionally absent.</summary>
+    public static IReadOnlyList<PriorityLevel> PriorityLevels { get; } = Enum.GetValues<PriorityLevel>();
 
     [ObservableProperty] private string _activeFilter = "all"; // all | games | apps
 

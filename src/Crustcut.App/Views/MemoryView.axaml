@@ -48,11 +48,14 @@
                              TextTrimming="CharacterEllipsis" Margin="0,2,12,0"/>
                 </StackPanel>
 
-                <Border Grid.Column="1" Background="#18FFFFFF" CornerRadius="10"
-                        Padding="9,3" Margin="0,0,10,0" VerticalAlignment="Center">
-                  <TextBlock Text="{Binding Priority}" FontSize="10"
-                             Foreground="{DynamicResource AccentWheat}"/>
-                </Border>
+                <!-- Was a read-only label, so there was no way to actually change a
+                     process's priority from this page. -->
+                <ComboBox Grid.Column="1" Width="140" Height="28" Margin="0,0,12,0"
+                          VerticalAlignment="Center" FontSize="12"
+                          ItemsSource="{Binding $parent[UserControl].DataContext.PriorityLevels}"
+                          SelectedItem="{Binding Priority, Mode=TwoWay}"
+                          Tag="{Binding}"
+                          SelectionChanged="PriorityChanged"/>
 
                 <CheckBox Grid.Column="2" VerticalAlignment="Center"
                           IsChecked="{Binding ProtectFromRamCleanup, Mode=TwoWay}"

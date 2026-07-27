@@ -75,6 +75,10 @@
     <Setter Property="Height" Value="28"/>
     <Setter Property="Padding" Value="14,0"/>
     <Setter Property="CornerRadius" Value="3"/>
+    <!-- Avalonia does not centre button content by default; without these the label sits
+         top-left inside the button. -->
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="Background" Value="{DynamicResource AccentWheat}"/>
     <Setter Property="Foreground" Value="#1A1206"/>
     <Setter Property="BorderThickness" Value="0"/>
@@ -86,6 +90,10 @@
     <Setter Property="Height" Value="28"/>
     <Setter Property="Padding" Value="12,0"/>
     <Setter Property="CornerRadius" Value="3"/>
+    <!-- Avalonia does not centre button content by default; without these the label sits
+         top-left inside the button. -->
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
@@ -98,6 +106,10 @@
     <Setter Property="Height" Value="26"/>
     <Setter Property="Padding" Value="12,0"/>
     <Setter Property="CornerRadius" Value="3"/>
+    <!-- Avalonia does not centre button content by default; without these the label sits
+         top-left inside the button. -->
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="BorderBrush" Value="#4D3030"/>
@@ -125,6 +137,10 @@
   <!-- ── Inputs ── -->
   <Style Selector="TextBox">
     <Setter Property="CornerRadius" Value="3"/>
+    <!-- Avalonia does not centre button content by default; without these the label sits
+         top-left inside the button. -->
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="Background" Value="#141414"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
     <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
