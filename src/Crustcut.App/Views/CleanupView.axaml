@@ -16,11 +16,7 @@
       <TextBlock Text="Cleanup" Classes="pageTitle" Margin="0,16,0,10"/>
       <TextBlock Text="{Binding Status}" FontSize="12"
                  Foreground="{DynamicResource Text2}" Margin="0,0,0,12"/>
-      <Button Content="Scan for unnecessary apps" Height="34" Padding="18,0"
-              Margin="0,0,0,16" HorizontalAlignment="Left"
-              CornerRadius="{DynamicResource RadiusPill}"
-              Background="{DynamicResource AccentGradient}" Foreground="#26190A"
-              FontWeight="SemiBold" Cursor="Hand"
+      <Button Content="Scan for unnecessary apps" Classes="primary" Margin="0,0,0,16" HorizontalAlignment="Left"
               IsEnabled="{Binding !IsScanning}"
               Click="ScanClick"/>
     </StackPanel>
@@ -42,20 +38,9 @@
                                IsVisible="{Binding RiskNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                   </StackPanel>
 
-                  <Button Grid.Column="1" Content="Disable" Height="30" Padding="14,0"
-                          Margin="0,0,8,0" CornerRadius="{DynamicResource RadiusSmall}"
-                          Background="Transparent" BorderThickness="1"
-                          BorderBrush="{DynamicResource Hairline}"
-                          Foreground="{DynamicResource Text2}" Cursor="Hand"
-                          IsEnabled="{Binding !IsBusy}"
-                          Tag="{Binding}" Click="DisableClick"/>
+                  <Button Grid.Column="1" Content="Disable" Classes="secondary" Margin="0,0,8,0" IsEnabled="{Binding !IsBusy}" Tag="{Binding}" Click="DisableClick"/>
 
-                  <Button Grid.Column="2" Content="Remove" Height="30" Padding="14,0"
-                          CornerRadius="{DynamicResource RadiusSmall}"
-                          Background="#22FF6B6B" BorderThickness="0"
-                          Foreground="{DynamicResource Danger}" Cursor="Hand"
-                          IsEnabled="{Binding CanUninstall}"
-                          Tag="{Binding}" Click="UninstallClick"/>
+                  <Button Grid.Column="2" Content="Remove" Classes="danger" IsEnabled="{Binding CanUninstall}" Tag="{Binding}" Click="UninstallClick"/>
                 </Grid>
               </Border>
             </DataTemplate>

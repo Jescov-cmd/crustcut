@@ -22,7 +22,7 @@
           <DataTemplate>
             <Border Width="168" Margin="0,0,14,16"
                     Background="{DynamicResource SurfaceCard}"
-                    CornerRadius="{DynamicResource RadiusCard}"
+                    CornerRadius="3"
                     ClipToBounds="True">
               <StackPanel>
                 <Panel Height="224" Background="#14FFFFFF">

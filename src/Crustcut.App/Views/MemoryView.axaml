@@ -19,22 +19,15 @@
                  Text="Give the apps you care about more CPU priority, and protect them from memory cleanups. Anything with an open window is protected automatically."/>
 
       <StackPanel Orientation="Horizontal" Spacing="9" Margin="0,0,0,16">
-        <Button Content="Scan running apps" Height="32" Padding="16,0"
-                CornerRadius="{DynamicResource RadiusPill}"
-                Background="{DynamicResource AccentGradient}" Foreground="#26190A"
-                FontWeight="SemiBold" Cursor="Hand" Click="RescanClick"/>
-        <Button Content="Recommended for my games" Height="32" Padding="16,0"
-                CornerRadius="{DynamicResource RadiusPill}"
-                Background="Transparent" BorderThickness="1"
-                BorderBrush="{DynamicResource Hairline}"
-                Foreground="{DynamicResource Text2}" Cursor="Hand" Click="RecommendedClick"/>
+        <Button Content="Scan running apps" Classes="primary"   Click="RescanClick"/>
+        <Button Content="Recommended for my games" Classes="secondary" Click="RecommendedClick"/>
       </StackPanel>
 
       <TextBlock x:Name="StatusText" FontSize="11.5"
                  Foreground="{DynamicResource Text3}" Margin="0,0,0,12"/>
     </StackPanel>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
       <ItemsControl ItemsSource="{Binding Rules}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
