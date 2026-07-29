@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Crustcut.App.Views.GameBoostView">
+
+  <DockPanel Margin="20,0,20,16">
+    <StackPanel DockPanel.Dock="Top">
+      <TextBlock Text="Game Boost" Classes="pageTitle" Margin="0,16,0,10"/>
+      <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,14"
+                 TextWrapping="Wrap"
+                 Text="Applies a bundle of optimizations in one go. Everything is reversible from the Optimize page or History."/>
+    </StackPanel>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <Grid x:Name="PanelGrid" VerticalAlignment="Top">
+        <StackPanel Width="{Binding #PanelGrid.Bounds.Width}" Spacing="12">
+
+          <Border Classes="panel">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                <TextBlock Text="Basic" Classes="key"/>
+                <TextBlock Classes="sub" Margin="0,3,0,0"
+                           Text="The safe everyday set — Game Mode, GPU scheduling, mouse precision, snappier UI."/>
+              </StackPanel>
+              <Button Grid.Column="1" Content="Apply" Classes="primary" VerticalAlignment="Center"
+                      IsEnabled="{Binding !IsWorking}" Click="BasicClick"/>
+            </Grid>
+          </Border>
+
+          <Border Classes="panel">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                <TextBlock Text="Performance" Classes="key"/>
+                <TextBlock Classes="sub" Margin="0,3,0,0"
+                           Text="Basic plus the fastest power plan and network latency tweaks. Runs the system a little hotter."/>
+              </StackPanel>
+              <Button Grid.Column="1" Content="Apply" Classes="primary" VerticalAlignment="Center"
+                      IsEnabled="{Binding !IsWorking}" Click="PerformanceClick"/>
+            </Grid>
+          </Border>
+
+          <Border Classes="panel">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                <TextBlock Text="Aggressive" Classes="key"/>
+                <TextBlock Classes="sub" Margin="0,3,0,0"
+                           Text="Everything, including core parking off and visual effects trimmed. For squeezing out the last few frames."/>
+              </StackPanel>
+              <Button Grid.Column="1" Content="Apply" Classes="primary" VerticalAlignment="Center"
+                      IsEnabled="{Binding !IsWorking}" Click="AggressiveClick"/>
+            </Grid>
+          </Border>
+
+          <TextBlock Text="{Binding StatusMessage}" FontSize="12"
+                     Foreground="{DynamicResource AccentWheat}" TextWrapping="Wrap"/>
+
+          <Border Classes="panel" IsVisible="{Binding SuspendedApps.Count}">
+            <StackPanel>
+              <TextBlock Text="SUSPENDED WHILE GAMING" Classes="panelTitle"/>
+              <ItemsControl ItemsSource="{Binding SuspendedApps}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding Name}" Classes="sub" Margin="0,2"/>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+
+        </StackPanel>
+      </Grid>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

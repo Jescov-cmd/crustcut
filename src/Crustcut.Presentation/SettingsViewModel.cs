@@ -11,6 +11,7 @@ namespace Crustcut.Presentation;
 public partial class SettingsViewModel : ObservableObject
 {
     private readonly AppSettingsStore _store;
+    private readonly IAppRegistration? _registration;
     private bool _loading;
 
     [ObservableProperty] private bool _ramAutoOptimizeOnInterval;
@@ -25,9 +26,10 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty] private string _status = "";
 
-    public SettingsViewModel(AppSettingsStore store)
+    public SettingsViewModel(AppSettingsStore store, IAppRegistration? registration = null)
     {
         _store = store;
+        _registration = registration;
         Load();
     }
 
@@ -85,7 +87,13 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnRamAutoIntervalMinutesChanged(int value) { Notify(); Save(); }
     partial void OnRamAutoOptimizeOnThresholdChanged(bool value) => Save();
     partial void OnRamThresholdPercentChanged(int value) => Save();
-    partial void OnStartAtBootChanged(bool value) => Save();
+    partial void OnStartAtBootChanged(bool value)
+    {
+        // Persist the flag AND make it real: a scheduled task with highest privileges is
+        // the only way an admin-manifest app can start at logon without a UAC prompt.
+        Save();
+        if (!_loading) _registration?.SetStartAtBoot(value);
+    }
     partial void OnStartMinimizedChanged(bool value) => Save();
     partial void OnMinimizeToTrayOnCloseChanged(bool value) => Save();
     partial void OnSentinelEnabledChanged(bool value) => Save();

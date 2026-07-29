@@ -38,6 +38,12 @@ public sealed class PageFactory
         "Games" => Once(tabId, new GamesView { DataContext = _app?.Games },
                         () => _app?.Games.LoadAsync()),
 
+        "Sessions" => new SessionsView { DataContext = _app?.Sessions },
+
+        "GameBoost" => new GameBoostView { DataContext = _app?.GameBoost },
+
+        "Guides" => new GuidesView { DataContext = _app?.Guides },
+
         "Settings" => new SettingsView { DataContext = _app?.Settings },
 
         _ => new PlaceholderView(LabelFor(tabId)),

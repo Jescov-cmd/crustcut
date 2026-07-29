@@ -5,19 +5,19 @@
   <Application.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
-        <ResourceInclude Source="avares://Crustcut.App/Theme/Tokens.axaml"/>
+        <ResourceInclude Source="avares://Crustcut/Theme/Tokens.axaml"/>
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
   </Application.Resources>
 
   <Application.Styles>
     <FluentTheme />
-    <StyleInclude Source="avares://Crustcut.App/Theme/Controls.axaml"/>
+    <StyleInclude Source="avares://Crustcut/Theme/Controls.axaml"/>
   </Application.Styles>
 
   <TrayIcon.Icons>
     <TrayIcons>
-      <TrayIcon Icon="avares://Crustcut.App/Assets/bread.ico"
+      <TrayIcon Icon="avares://Crustcut/Assets/bread.ico"
                 ToolTipText="Crustcut"
                 Clicked="TrayClicked">
         <TrayIcon.Menu>

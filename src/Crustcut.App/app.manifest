@@ -2,12 +2,12 @@
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
   <assemblyIdentity version="1.0.0.0" name="Crustcut.App"/>
 
-  <!-- asInvoker during the migration so the app can be launched repeatedly without a UAC
-       prompt on every run. Elevation is restored in Phase 2 alongside autostart. -->
+  <!-- Elevated: registry/power/service tweaks need admin. Restored for release after the
+       asInvoker development phase. -->
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
     <security>
       <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
-        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
+        <requestedExecutionLevel level="requireAdministrator" uiAccess="false" />
       </requestedPrivileges>
     </security>
   </trustInfo>

@@ -59,12 +59,19 @@ public partial class App : Application
                 // the Settings page now explains it.
                 _window.Hide();
             }
-
-            // Off by default; honours whatever the user last chose.
-            _composition.Overlay.SyncWithSettings();
+            // Watching, profiles, recording, overlay, enforcement, auto-RAM.
+            _ = _composition.Engine.StartAsync();
+            // Start Menu shortcut + heal the autostart task if the exe moved.
+            try
+            {
+                _composition.Registration.EnsureStartMenuShortcut();
+                if (settings.StartAtBoot) _composition.Registration.SetStartAtBoot(true);
+            }
+            catch { }
 
             desktop.ShutdownRequested += (_, _) =>
             {
+                _composition?.Engine.Dispose();
                 _composition?.Overlay.Dispose();
                 _composition?.Overview.Dispose();
                 _guard?.Dispose();

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PrimeOSTuner.Core.Monitoring;
 using PrimeOSTuner.Core.Performance;
+using PrimeOSTuner.Core.Pipeline;
 using PrimeOSTuner.Core.Profiles;
 using PrimeOSTuner.Core.Tweaks;
 
@@ -46,13 +47,20 @@ public partial class OverviewViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<FrameSessionVm> RecentSessions { get; } = new();
 
+    private readonly OneClickOptimizer? _oneClick;
+
+    [ObservableProperty] private string _oneClickStatus = "";
+    [ObservableProperty] private bool _isOptimizing;
+
     public OverviewViewModel(
         SystemSampler sampler,
         ActiveTweaksStore activeStore,
         IEnumerable<ITweak> tweaks,
         IFrameSessionStore frameStore,
-        IUiDispatcher ui)
+        IUiDispatcher ui,
+        OneClickOptimizer? oneClick = null)
     {
+        _oneClick = oneClick;
         _sampler = sampler;
         _activeStore = activeStore;
         _tweaks = tweaks;
@@ -97,6 +105,30 @@ public partial class OverviewViewModel : ObservableObject, IDisposable
         {
             // Probe failures already get bucketed as Unknown by the calculator; a thrown
             // exception here means something deeper went wrong — don't crash the page.
+        }
+    }
+
+    /// <summary>Runs the safe one-click bundle, then refreshes the score to match reality.</summary>
+    public async Task RunOneClickAsync()
+    {
+        if (_oneClick is null || IsOptimizing) return;
+        IsOptimizing = true;
+        OneClickStatus = "Optimizing…";
+        try
+        {
+            var report = await _oneClick.RunAsync(new Progress<(int Done, int Total, string CurrentName)>(
+                p => _ui.Post(() => OneClickStatus = $"Applying {p.CurrentName} ({p.Done}/{p.Total})…")));
+            _ui.Post(() => OneClickStatus =
+                $"Done — {report.SuccessCount} applied, {report.FailureCount} failed.");
+            await RefreshBoostScoreAsync();
+        }
+        catch (Exception ex)
+        {
+            _ui.Post(() => OneClickStatus = $"Failed: {ex.Message}");
+        }
+        finally
+        {
+            _ui.Post(() => IsOptimizing = false);
         }
     }
 

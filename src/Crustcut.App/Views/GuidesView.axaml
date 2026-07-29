@@ -1,0 +1,70 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Crustcut.App.Views.GuidesView">
+
+  <DockPanel Margin="20,0,20,16">
+    <StackPanel DockPanel.Dock="Top">
+      <TextBlock Text="Guides" Classes="pageTitle" Margin="0,16,0,10"/>
+      <TextBlock Text="{Binding Status}" FontSize="12"
+                 Foreground="{DynamicResource Text2}" Margin="0,0,0,14" TextWrapping="Wrap"/>
+    </StackPanel>
+
+    <Grid ColumnDefinitions="250,14,*">
+
+      <!-- Guide list -->
+      <Border Grid.Column="0" Classes="panel" Padding="6" VerticalAlignment="Stretch">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <ListBox ItemsSource="{Binding Guides}" SelectedItem="{Binding Selected, Mode=TwoWay}"
+                   Background="Transparent">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Margin="4,3">
+                  <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="SemiBold"
+                             Foreground="{DynamicResource Text1}" TextWrapping="Wrap"/>
+                  <TextBlock Text="{Binding Meta}" FontSize="10.5"
+                             Foreground="{DynamicResource Text3}" Margin="0,2,0,0"/>
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </ScrollViewer>
+      </Border>
+
+      <!-- Guide body -->
+      <Border Grid.Column="2" Classes="panel" VerticalAlignment="Stretch">
+        <Panel>
+          <TextBlock Text="Pick a guide on the left." FontSize="12"
+                     Foreground="{DynamicResource Text3}"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                     IsVisible="{Binding !HasSelection}"/>
+          <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding HasSelection}">
+            <Grid x:Name="BodyGrid" VerticalAlignment="Top">
+              <ItemsControl ItemsSource="{Binding Blocks}" Width="{Binding #BodyGrid.Bounds.Width}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <StackPanel>
+                      <TextBlock Text="{Binding Text}" FontSize="15" FontWeight="Bold"
+                                 Foreground="{DynamicResource Text0}" TextWrapping="Wrap"
+                                 Margin="0,10,0,4" IsVisible="{Binding IsHeading}"/>
+                      <TextBlock Text="{Binding Text}" FontSize="13" FontWeight="Bold"
+                                 Foreground="{DynamicResource Text1}" TextWrapping="Wrap"
+                                 Margin="0,10,0,3" IsVisible="{Binding IsSubHeading}"/>
+                      <Grid ColumnDefinitions="14,*" IsVisible="{Binding IsBullet}" Margin="4,2">
+                        <TextBlock Grid.Column="0" Text="•" Foreground="{DynamicResource AccentWheat}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Text}" FontSize="12.5"
+                                   Foreground="{DynamicResource Text1}" TextWrapping="Wrap"/>
+                      </Grid>
+                      <TextBlock Text="{Binding Text}" FontSize="12.5"
+                                 Foreground="{DynamicResource Text1}" TextWrapping="Wrap"
+                                 Margin="0,3" IsVisible="{Binding IsParagraph}"/>
+                    </StackPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </Grid>
+          </ScrollViewer>
+        </Panel>
+      </Border>
+    </Grid>
+  </DockPanel>
+</UserControl>

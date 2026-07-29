@@ -52,11 +52,15 @@
                      Foreground="{DynamicResource Text0}"/>
           <TextBlock Text="{Binding BoostScoreSubtitle}" FontSize="11.5"
                      Foreground="{DynamicResource Text2}"/>
+          <TextBlock Text="{Binding OneClickStatus}" FontSize="11"
+                     Foreground="{DynamicResource AccentWheat}"
+                     IsVisible="{Binding OneClickStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
                     VerticalAlignment="Center">
-          <Button Content="See what changed" Classes="secondary"/>
-          <Button Content="Optimize now" Classes="primary"/>
+          <Button Content="See what changed" Classes="secondary" Click="HistoryClick"/>
+          <Button Content="Optimize now" Classes="primary"
+                  IsEnabled="{Binding !IsOptimizing}" Click="OptimizeClick"/>
         </StackPanel>
       </Grid>
     </Border>

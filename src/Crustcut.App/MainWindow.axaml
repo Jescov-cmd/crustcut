@@ -5,6 +5,7 @@
         Width="1240" Height="780" MinWidth="900" MinHeight="580"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource SurfaceBase}"
+        Icon="avares://Crustcut/Assets/bread.ico"
         FontFamily="Segoe UI">
 
   <Window.Styles>
@@ -51,13 +52,16 @@
       <!-- ===== NAV TREE ===== -->
       <Border Grid.Column="0" Background="{DynamicResource SurfaceRail}">
         <DockPanel>
-          <!-- Brand sits at the top of the rail instead of in a bar of its own. -->
-          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8"
-                      Height="42" Margin="12,0,0,0" VerticalAlignment="Center">
-            <Ellipse Width="12" Height="12" Fill="{DynamicResource AccentWheat}"
-                     VerticalAlignment="Center"/>
-            <TextBlock Text="Crustcut" FontSize="13" FontWeight="Bold"
-                       Foreground="{DynamicResource Text0}" VerticalAlignment="Center"/>
+          <!-- Brand: the 8-bit wordmark. Rendered at 2x and displayed at half size so the
+               pixels stay crisp on high-DPI displays. -->
+          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="7"
+                      Height="46" Margin="12,0,0,0" VerticalAlignment="Center">
+            <Image Source="avares://Crustcut/Assets/wordmark.png" Height="20"
+                   VerticalAlignment="Center"
+                   RenderOptions.BitmapInterpolationMode="HighQuality"/>
+            <TextBlock Text="v0.8.0" FontSize="9.5"
+                       Foreground="{DynamicResource Text3}"
+                       VerticalAlignment="Center" Margin="0,6,0,0"/>
           </StackPanel>
 
           <Border DockPanel.Dock="Bottom" Height="30" Padding="12,0"

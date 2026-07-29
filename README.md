@@ -1,8 +1,8 @@
-# Crustcut
+<p align="center"><img src="docs/wordmark.png" alt="CRUSTCUT" width="520"/></p>
 
-A Windows PC performance optimizer for gamers — built in C# / .NET 9 / WPF.
+A Windows PC performance control panel — built in C# / .NET 9 / Avalonia.
 
-Crustcut applies real, reversible Windows tweaks, detects your installed games, and
+Crustcut applies real, reversible Windows tweaks, watches the apps you run, and
 tracks in-game performance. Every optimizer maps to an actual Windows setting (registry,
 power scheme, or service) — no placebo values. Each one can be toggled off and is restored
 from a saved backup.

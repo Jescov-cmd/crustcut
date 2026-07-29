@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Crustcut.App.Views.SessionsView">
+
+  <DockPanel Margin="20,0,20,16">
+    <StackPanel DockPanel.Dock="Top">
+      <TextBlock Text="Sessions" Classes="pageTitle" Margin="0,16,0,10"/>
+      <TextBlock Text="{Binding Status}" FontSize="12"
+                 Foreground="{DynamicResource Text2}" Margin="0,0,0,12" TextWrapping="Wrap"/>
+
+      <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,14">
+        <ToggleSwitch OnContent="" OffContent="" IsChecked="{Binding Enabled, Mode=TwoWay}"/>
+        <TextBlock Text="Watch performance while apps run" FontSize="12.5" FontWeight="SemiBold"
+                   Foreground="{DynamicResource Text1}" VerticalAlignment="Center"/>
+      </StackPanel>
+    </StackPanel>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <Grid x:Name="PanelGrid" VerticalAlignment="Top">
+        <Border Classes="panel" Width="{Binding #PanelGrid.Bounds.Width}">
+          <StackPanel>
+            <Border Classes="row">
+              <Grid ColumnDefinitions="*,90,90,90,150">
+                <TextBlock Grid.Column="0" Text="Application" Classes="colHead"/>
+                <TextBlock Grid.Column="1" Text="Avg FPS" Classes="colHead" HorizontalAlignment="Right"/>
+                <TextBlock Grid.Column="2" Text="1% low" Classes="colHead" HorizontalAlignment="Right"/>
+                <TextBlock Grid.Column="3" Text="Length" Classes="colHead" HorizontalAlignment="Right"/>
+                <TextBlock Grid.Column="4" Text="When" Classes="colHead" HorizontalAlignment="Right"/>
+              </Grid>
+            </Border>
+
+            <ItemsControl ItemsSource="{Binding Rows}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Classes="row">
+                    <Grid ColumnDefinitions="*,90,90,90,150">
+                      <TextBlock Grid.Column="0" Text="{Binding GameName}" Classes="key"
+                                 TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Grid.Column="1" Text="{Binding AvgFpsValue}" Classes="value"/>
+                      <TextBlock Grid.Column="2" Text="{Binding OnePctLowValue}" Classes="value"
+                                 Foreground="{DynamicResource Text2}"/>
+                      <TextBlock Grid.Column="3" Text="{Binding DurationDisplay}" Classes="value"
+                                 Foreground="{DynamicResource Text2}"/>
+                      <TextBlock Grid.Column="4" Text="{Binding StartedAtDisplay}" Classes="value"
+                                 Foreground="{DynamicResource Text3}"/>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>
