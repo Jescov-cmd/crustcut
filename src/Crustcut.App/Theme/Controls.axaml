@@ -49,6 +49,10 @@
     <Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="Foreground" Value="{DynamicResource Text1}"/>
     <Setter Property="VerticalAlignment" Value="Center"/>
+    <!-- Without wrap, the longest title dictates a MINIMUM row width — at narrow window
+         sizes every row then overflowed the panel and shoved the switch column past the
+         border. (Diagnosed from the layout dump: row grid 653 wide inside a 607 panel.) -->
+    <Setter Property="TextWrapping" Value="Wrap"/>
   </Style>
   <Style Selector="TextBlock.sub">
     <Setter Property="FontSize" Value="11.5"/>
@@ -124,8 +128,17 @@
 
   <!-- ── Toggle: Fluent's default is a bright red/blue accent that clashes with the
        palette. Repainted to the wheat accent. ── -->
+  <!-- Fluent's ToggleSwitch reserves width for an On/Off content label even when the
+       content is empty, so the control is ~12px wider than it looks and overflowed its
+       column, bleeding over the panel border at narrow window sizes. Strip the
+       reservation so the switch is exactly the knob. -->
   <Style Selector="ToggleSwitch">
     <Setter Property="MinWidth" Value="0"/>
+    <Setter Property="Padding" Value="0"/>
+  </Style>
+  <Style Selector="ToggleSwitch /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="IsVisible" Value="False"/>
+    <Setter Property="Margin" Value="0"/>
   </Style>
   <Style Selector="ToggleSwitch:checked /template/ Border#SwitchKnobBounds">
     <Setter Property="Background" Value="{DynamicResource AccentWheat}"/>

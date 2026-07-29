@@ -1,7 +1,9 @@
+using System.Text;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 
 namespace Crustcut.App.Services;
 
@@ -59,8 +61,42 @@ public static class SelfScreenshot
             var dir = System.IO.Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(dir)) System.IO.Directory.CreateDirectory(dir);
             bitmap.Save(path);
+
+            // Ground truth for layout debugging: pixel-measuring screenshots kept producing
+            // wrong theories about WHY something overflowed. This writes what the layout
+            // system actually decided.
+            DumpLayout(window, path + ".layout.txt");
         });
 
+        await ShutdownAsync();
+        return;
+
+        static void DumpLayout(Window window, string outPath)
+        {
+            try
+            {
+                var sb = new StringBuilder();
+                void Walk(Visual v, int depth)
+                {
+                    var c = v as Control;
+                    var name = (c?.Name is { } n ? "#" + n : "") +
+                               (c is StyledElement se && se.Classes.Count > 0
+                                   ? " ." + string.Join(".", se.Classes) : "");
+                    var topLeft = v.TranslatePoint(new Point(0, 0), window) ?? default;
+                    sb.AppendLine(
+                        $"{new string(' ', depth * 2)}{v.GetType().Name}{name}  " +
+                        $"x={topLeft.X:F0} y={topLeft.Y:F0} w={v.Bounds.Width:F0} h={v.Bounds.Height:F0}");
+                    foreach (var child in v.GetVisualChildren()) Walk(child, depth + 1);
+                }
+                Walk(window, 0);
+                System.IO.File.WriteAllText(outPath, sb.ToString());
+            }
+            catch { /* debug aid only */ }
+        }
+    }
+
+    private static async Task ShutdownAsync()
+    {
         // Graceful shutdown, NOT Environment.Exit — Exit(0) killed an in-flight settings
         // write mid-file and tore priority-rules.json. Writes are atomic now, but there's
         // no reason to hard-kill the process either.

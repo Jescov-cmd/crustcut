@@ -22,10 +22,11 @@
     </StackPanel>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <Grid x:Name="PanelGrid">
       <ItemsControl ItemsSource="{Binding Findings}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Border Classes="row">
+            <Border Classes="row" Width="{Binding #PanelGrid.Bounds.Width}">
               <StackPanel>
                 <StackPanel Orientation="Horizontal" Spacing="8">
                   <Border CornerRadius="9" Padding="8,2" Background="#22FF6B6B"
@@ -56,6 +57,7 @@
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>
+    </Grid>
     </ScrollViewer>
   </DockPanel>
 </UserControl>

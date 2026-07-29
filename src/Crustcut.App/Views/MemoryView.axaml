@@ -28,10 +28,11 @@
     </StackPanel>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
+      <Grid x:Name="PanelGrid">
       <ItemsControl ItemsSource="{Binding Rules}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Border Classes="row">
+            <Border Classes="row" Width="{Binding #PanelGrid.Bounds.Width}">
               <Grid ColumnDefinitions="*,140,Auto,Auto">
                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                   <TextBlock Text="{Binding DisplayName}" FontSize="13" FontWeight="SemiBold"
@@ -66,6 +67,7 @@
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>
+    </Grid>
     </ScrollViewer>
   </DockPanel>
 </UserControl>

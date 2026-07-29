@@ -22,12 +22,13 @@
     </StackPanel>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <Grid x:Name="PanelGrid">
       <StackPanel>
 
         <ItemsControl ItemsSource="{Binding Items}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Border Classes="row">
+              <Border Classes="row" Width="{Binding #PanelGrid.Bounds.Width}">
                 <Grid ColumnDefinitions="*,Auto,Auto">
                   <StackPanel Grid.Column="0" VerticalAlignment="Center">
                     <TextBlock Text="{Binding DisplayName}" FontSize="13" FontWeight="SemiBold"
@@ -52,7 +53,7 @@
         <ItemsControl ItemsSource="{Binding DesktopItems}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Border Classes="row">
+              <Border Classes="row" Width="{Binding #PanelGrid.Bounds.Width}">
                 <StackPanel>
                   <TextBlock Text="{Binding ProgramName}" FontSize="13" FontWeight="SemiBold"
                              Foreground="{DynamicResource Text0}"/>
@@ -65,6 +66,7 @@
         </ItemsControl>
 
       </StackPanel>
+    </Grid>
     </ScrollViewer>
   </DockPanel>
 </UserControl>

@@ -17,14 +17,17 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16,26,20">
       <Border Classes="panel">
-        <StackPanel>
+        <!-- Grid, NOT StackPanel: Avalonia StackPanel measures children with unconstrained
+             width, so the ItemsControl took its natural width and rows overflowed the
+             panel at narrow window sizes (rows 653 wide inside a 607 panel, switches
+             bleeding past the border). Grid passes the real width down, which also lets
+             text wrapping engage. -->
+        <Grid x:Name="PanelGrid" RowDefinitions="Auto,Auto">
 
-          <!-- Column headers, so the switch column reads as a column rather than a
-               floating control per row. -->
-          <!-- Wrapped in the same Border.row the data rows use. Sitting outside it, the
-               header went through different layout and its columns landed ~44px off. -->
-          <Border Classes="row">
-            <Grid ColumnDefinitions="*,120,58">
+          <!-- Column headers, wrapped in the same Border.row the data rows use so both go
+               through identical layout and the columns align. -->
+          <Border Grid.Row="0" Classes="row">
+            <Grid ColumnDefinitions="*,120,72">
               <TextBlock Grid.Column="0" Text="Optimization" Classes="colHead"/>
               <TextBlock Grid.Column="1" Text="Category" Classes="colHead" HorizontalAlignment="Right"/>
               <TextBlock Grid.Column="2" Text="On" Classes="colHead"
@@ -32,11 +35,16 @@
             </Grid>
           </Border>
 
-          <ItemsControl ItemsSource="{Binding VisibleRows}">
+          <ItemsControl Grid.Row="1" ItemsSource="{Binding VisibleRows}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <Border Classes="row">
-                  <Grid ColumnDefinitions="*,120,58">
+                <!-- Explicit width from the panel grid: the ItemsControl's internal
+                     StackPanel measures items with INFINITE width (verified via layout
+                     dump), so wrapping never engages and rows take natural width —
+                     overflowing the panel at narrow sizes. Binding the row to a
+                     width-constrained ancestor is what restores a finite measure. -->
+                <Border Classes="row" Width="{Binding #PanelGrid.Bounds.Width}">
+                  <Grid ColumnDefinitions="*,120,72">
 
                     <StackPanel Grid.Column="0" Spacing="3" Margin="0,0,16,0">
                       <TextBlock Text="{Binding DisplayName}" Classes="key"/>
@@ -75,7 +83,7 @@
             </ItemsControl.ItemTemplate>
           </ItemsControl>
 
-        </StackPanel>
+        </Grid>
       </Border>
     </ScrollViewer>
   </DockPanel>
