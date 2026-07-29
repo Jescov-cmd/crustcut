@@ -83,10 +83,10 @@
     <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="MinHeight" Value="30"/>
     <Setter Property="Padding" Value="16,0"/>
-    <Setter Property="CornerRadius" Value="2"/>
+    <Setter Property="CornerRadius" Value="15"/>
     <Setter Property="FontSize" Value="12"/>
     <Setter Property="FontWeight" Value="Bold"/>
-    <Setter Property="Background" Value="#2C2C2C"/>
+    <Setter Property="Background" Value="Transparent"/>
     <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
     <Setter Property="BorderBrush" Value="#4A4A4A"/>
     <Setter Property="BorderThickness" Value="1"/>
@@ -100,8 +100,8 @@
   <!-- Fluent's template drives the visual state from the ContentPresenter, so hover and
        pressed have to be repainted there or they revert to its own accent. -->
   <Style Selector="Button:pointerover /template/ ContentPresenter">
-    <Setter Property="Background" Value="#3A3A3A"/>
-    <Setter Property="BorderBrush" Value="#5E5E5E"/>
+    <Setter Property="Background" Value="#2A2A2A"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentWheat}"/>
     <Setter Property="TextElement.Foreground" Value="{DynamicResource Text0}"/>
   </Style>
   <Style Selector="Button:pressed /template/ ContentPresenter">
@@ -111,8 +111,7 @@
   <Style Selector="Button.primary">
     <Setter Property="Background" Value="{DynamicResource AccentWheat}"/>
     <Setter Property="Foreground" Value="#1A1206"/>
-    <Setter Property="BorderThickness" Value="0"/>
-    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentWheat}"/>
   </Style>
   <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
     <Setter Property="Background" Value="#F0BC74"/>
