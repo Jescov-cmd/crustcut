@@ -19,8 +19,8 @@
                  Text="Give the apps you care about more CPU priority, and protect them from memory cleanups. Anything with an open window is protected automatically."/>
 
       <StackPanel Orientation="Horizontal" Spacing="9" Margin="0,0,0,16">
-        <Button Content="Scan running apps" Classes="primary"   Click="RescanClick"/>
-        <Button Content="Recommended for my games" Classes="secondary" Click="RecommendedClick"/>
+        <Button Content="SCAN RUNNING APPS" Classes="primary"   Click="RescanClick"/>
+        <Button Content="RECOMMENDED FOR MY GAMES" Classes="secondary" Click="RecommendedClick"/>
       </StackPanel>
 
       <TextBlock x:Name="StatusText" FontSize="11.5"

@@ -96,6 +96,33 @@
         </StackPanel>
       </Border>
 
+      <!-- ── Performance overlay ── -->
+      <Border Classes="card">
+        <StackPanel Spacing="12">
+          <TextBlock Text="IN-GAME OVERLAY" Classes="label"/>
+          <CheckBox IsChecked="{Binding OverlayEnabled, Mode=TwoWay}"
+                    Content="Show the performance overlay"
+                    Foreground="{DynamicResource Text1}"/>
+          <CheckBox IsChecked="{Binding OverlayOnlyInGame, Mode=TwoWay}"
+                    Content="Only while a game is running"
+                    Foreground="{DynamicResource Text1}"/>
+          <StackPanel Orientation="Horizontal" Spacing="14">
+            <CheckBox IsChecked="{Binding OverlayShowFps, Mode=TwoWay}" Content="FPS"
+                      Foreground="{DynamicResource Text1}"/>
+            <CheckBox IsChecked="{Binding OverlayShowCpu, Mode=TwoWay}" Content="CPU"
+                      Foreground="{DynamicResource Text1}"/>
+            <CheckBox IsChecked="{Binding OverlayShowGpu, Mode=TwoWay}" Content="GPU"
+                      Foreground="{DynamicResource Text1}"/>
+            <CheckBox IsChecked="{Binding OverlayShowRam, Mode=TwoWay}" Content="RAM"
+                      Foreground="{DynamicResource Text1}"/>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button Content="REPOSITION" Classes="secondary" Click="RepositionClick"/>
+            <TextBlock Text="or press Ctrl+Shift+O in game" Classes="hint" VerticalAlignment="Center"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
       <!-- ── Monitoring ── -->
       <Border Classes="card">
         <StackPanel Spacing="12">

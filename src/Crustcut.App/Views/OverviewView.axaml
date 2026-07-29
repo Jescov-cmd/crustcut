@@ -58,8 +58,8 @@
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
                     VerticalAlignment="Center">
-          <Button Content="See what changed" Classes="secondary" Click="HistoryClick"/>
-          <Button Content="Optimize now" Classes="primary"
+          <Button Content="SEE WHAT CHANGED" Classes="secondary" Click="HistoryClick"/>
+          <Button Content="OPTIMIZE NOW" Classes="primary"
                   IsEnabled="{Binding !IsOptimizing}" Click="OptimizeClick"/>
         </StackPanel>
       </Grid>

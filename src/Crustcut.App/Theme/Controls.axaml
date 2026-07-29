@@ -81,13 +81,13 @@
   <Style Selector="Button">
     <Setter Property="HorizontalContentAlignment" Value="Center"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
-    <Setter Property="MinHeight" Value="30"/>
-    <Setter Property="Padding" Value="16,0"/>
-    <Setter Property="CornerRadius" Value="15"/>
-    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="MinHeight" Value="26"/>
+    <Setter Property="Padding" Value="14,0"/>
+    <Setter Property="CornerRadius" Value="13"/>
+    <Setter Property="FontSize" Value="10.5"/>
     <Setter Property="FontWeight" Value="Bold"/>
     <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text2}"/>
     <Setter Property="BorderBrush" Value="#4A4A4A"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="Cursor" Value="Hand"/>

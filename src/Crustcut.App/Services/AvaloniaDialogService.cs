@@ -91,7 +91,7 @@ public sealed class AvaloniaDialogService : IDialogService
 
             var cancel = new Button
             {
-                Content = "Cancel",
+                Content = "CANCEL",
                 Height = 32,
                 Padding = new Avalonia.Thickness(18, 0),
                 CornerRadius = new Avalonia.CornerRadius(16),
@@ -104,7 +104,7 @@ public sealed class AvaloniaDialogService : IDialogService
 
             var confirm = new Button
             {
-                Content = confirmLabel,
+                Content = confirmLabel.ToUpperInvariant(),
                 Height = 32,
                 Padding = new Avalonia.Thickness(20, 0),
                 CornerRadius = new Avalonia.CornerRadius(16),

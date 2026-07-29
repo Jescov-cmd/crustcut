@@ -149,10 +149,10 @@ public sealed class Composition
 
         History = new HistoryViewModel(history);
         Diagnosis = new DiagnosisViewModel(new DiagnosisService(new DiagnosisProbes()));
-        Registration = new AppRegistrationService();
-        Settings = new SettingsViewModel(settingsStore, Registration);
-
         Overlay = new OverlayService(new OverlayViewModel(sampler, frames, ui), settingsStore);
+
+        Registration = new AppRegistrationService();
+        Settings = new SettingsViewModel(settingsStore, Registration, Overlay);
 
         var appx = new AppxClient();
         Cleanup = new CleanupViewModel(

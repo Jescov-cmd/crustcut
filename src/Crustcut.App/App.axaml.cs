@@ -111,5 +111,11 @@ public partial class App : Application
 
     private void TrayOpenClick(object? sender, EventArgs e) => ShowWindow();
 
+    private async void TrayOptimizeClick(object? sender, EventArgs e)
+    {
+        try { if (_composition is not null) await _composition.Overview.RunOneClickAsync(); }
+        catch { /* tray action must never crash the app */ }
+    }
+
     private void TrayExitClick(object? sender, EventArgs e) => Shutdown();
 }

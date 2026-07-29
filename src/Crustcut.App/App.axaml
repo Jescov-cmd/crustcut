@@ -23,6 +23,7 @@
         <TrayIcon.Menu>
           <NativeMenu>
             <NativeMenuItem Header="Open Crustcut" Click="TrayOpenClick"/>
+            <NativeMenuItem Header="Optimize now" Click="TrayOptimizeClick"/>
             <NativeMenuItemSeparator/>
             <NativeMenuItem Header="Exit" Click="TrayExitClick"/>
           </NativeMenu>

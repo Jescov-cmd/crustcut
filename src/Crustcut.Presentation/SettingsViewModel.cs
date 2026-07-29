@@ -12,6 +12,7 @@ public partial class SettingsViewModel : ObservableObject
 {
     private readonly AppSettingsStore _store;
     private readonly IAppRegistration? _registration;
+    private readonly IOverlayControl? _overlay;
     private bool _loading;
 
     [ObservableProperty] private bool _ramAutoOptimizeOnInterval;
@@ -24,12 +25,21 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private bool _minimizeToTrayOnClose;
     [ObservableProperty] private bool _sentinelEnabled;
 
+    [ObservableProperty] private bool _overlayEnabled;
+    [ObservableProperty] private bool _overlayOnlyInGame;
+    [ObservableProperty] private bool _overlayShowFps;
+    [ObservableProperty] private bool _overlayShowCpu;
+    [ObservableProperty] private bool _overlayShowGpu;
+    [ObservableProperty] private bool _overlayShowRam;
+
     [ObservableProperty] private string _status = "";
 
-    public SettingsViewModel(AppSettingsStore store, IAppRegistration? registration = null)
+    public SettingsViewModel(
+        AppSettingsStore store, IAppRegistration? registration = null, IOverlayControl? overlay = null)
     {
         _store = store;
         _registration = registration;
+        _overlay = overlay;
         Load();
     }
 
@@ -53,6 +63,12 @@ public partial class SettingsViewModel : ObservableObject
             StartMinimized = s.StartMinimized;
             MinimizeToTrayOnClose = s.MinimizeToTrayOnClose;
             SentinelEnabled = s.SentinelEnabled;
+            OverlayEnabled = s.OverlayEnabled;
+            OverlayOnlyInGame = s.OverlayOnlyInGame;
+            OverlayShowFps = s.OverlayShowFps;
+            OverlayShowCpu = s.OverlayShowCpu;
+            OverlayShowGpu = s.OverlayShowGpu;
+            OverlayShowRam = s.OverlayShowRam;
         }
         finally
         {
@@ -78,6 +94,12 @@ public partial class SettingsViewModel : ObservableObject
         s.StartMinimized = StartMinimized;
         s.MinimizeToTrayOnClose = MinimizeToTrayOnClose;
         s.SentinelEnabled = SentinelEnabled;
+        s.OverlayEnabled = OverlayEnabled;
+        s.OverlayOnlyInGame = OverlayOnlyInGame;
+        s.OverlayShowFps = OverlayShowFps;
+        s.OverlayShowCpu = OverlayShowCpu;
+        s.OverlayShowGpu = OverlayShowGpu;
+        s.OverlayShowRam = OverlayShowRam;
         _store.Save(s);
 
         Status = $"Saved at {DateTime.Now:HH:mm:ss}.";
@@ -97,6 +119,20 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnStartMinimizedChanged(bool value) => Save();
     partial void OnMinimizeToTrayOnCloseChanged(bool value) => Save();
     partial void OnSentinelEnabledChanged(bool value) => Save();
+    partial void OnOverlayEnabledChanged(bool value) { Save(); _overlay?.Sync(); }
+    partial void OnOverlayOnlyInGameChanged(bool value) { Save(); _overlay?.Sync(); }
+    partial void OnOverlayShowFpsChanged(bool value) => Save();
+    partial void OnOverlayShowCpuChanged(bool value) => Save();
+    partial void OnOverlayShowGpuChanged(bool value) => Save();
+    partial void OnOverlayShowRamChanged(bool value) => Save();
+
+    /// <summary>Shows the overlay (if hidden) and enters drag-to-reposition mode.</summary>
+    public void RepositionOverlay()
+    {
+        if (_overlay is null) return;
+        if (!OverlayEnabled) OverlayEnabled = true;   // saves + syncs via the hook
+        _overlay.ToggleEditMode();
+    }
 
     private void Notify() => OnPropertyChanged(nameof(IntervalIsAggressive));
 }

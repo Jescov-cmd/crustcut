@@ -10,7 +10,7 @@ namespace Crustcut.App.Services;
 /// Owns the overlay window: creates it on demand, applies the saved position and metric
 /// choices, and persists the position after a drag.
 /// </summary>
-public sealed class OverlayService : IDisposable
+public sealed class OverlayService : IDisposable, Crustcut.Presentation.IOverlayControl
 {
     private readonly OverlayViewModel _vm;
     private readonly AppSettingsStore _store;
@@ -71,10 +71,15 @@ public sealed class OverlayService : IDisposable
         _store.Save(s);
     }
 
-    /// <summary>Shows or hides the overlay to match the saved OverlayEnabled setting.</summary>
+    void Crustcut.Presentation.IOverlayControl.Sync()
+        => Avalonia.Threading.Dispatcher.UIThread.Post(SyncWithSettings);
+
+    /// <summary>Shows or hides the overlay to match saved settings. With OverlayOnlyInGame
+    /// set, the overlay stays hidden here and the game-start event shows it.</summary>
     public void SyncWithSettings()
     {
-        if (_store.Load().OverlayEnabled) Show();
+        var s = _store.Load();
+        if (s.OverlayEnabled && !s.OverlayOnlyInGame) Show();
         else Hide();
     }
 

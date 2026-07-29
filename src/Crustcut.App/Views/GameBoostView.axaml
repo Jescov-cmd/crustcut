@@ -21,7 +21,7 @@
                 <TextBlock Classes="sub" Margin="0,3,0,0"
                            Text="The safe everyday set — Game Mode, GPU scheduling, mouse precision, snappier UI."/>
               </StackPanel>
-              <Button Grid.Column="1" Content="Apply" Classes="primary" VerticalAlignment="Center"
+              <Button Grid.Column="1" Content="APPLY" Classes="primary" VerticalAlignment="Center"
                       IsEnabled="{Binding !IsWorking}" Click="BasicClick"/>
             </Grid>
           </Border>
@@ -33,7 +33,7 @@
                 <TextBlock Classes="sub" Margin="0,3,0,0"
                            Text="Basic plus the fastest power plan and network latency tweaks. Runs the system a little hotter."/>
               </StackPanel>
-              <Button Grid.Column="1" Content="Apply" Classes="primary" VerticalAlignment="Center"
+              <Button Grid.Column="1" Content="APPLY" Classes="primary" VerticalAlignment="Center"
                       IsEnabled="{Binding !IsWorking}" Click="PerformanceClick"/>
             </Grid>
           </Border>
@@ -45,7 +45,7 @@
                 <TextBlock Classes="sub" Margin="0,3,0,0"
                            Text="Everything, including core parking off and visual effects trimmed. For squeezing out the last few frames."/>
               </StackPanel>
-              <Button Grid.Column="1" Content="Apply" Classes="primary" VerticalAlignment="Center"
+              <Button Grid.Column="1" Content="APPLY" Classes="primary" VerticalAlignment="Center"
                       IsEnabled="{Binding !IsWorking}" Click="AggressiveClick"/>
             </Grid>
           </Border>
