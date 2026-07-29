@@ -59,8 +59,12 @@ public partial class App : Application
                 // the Settings page now explains it.
                 _window.Hide();
             }
-            // Watching, profiles, recording, overlay, enforcement, auto-RAM.
-            _ = _composition.Engine.StartAsync();
+            // Watching, profiles, recording, overlay, enforcement, auto-RAM. On a
+            // background thread: started from here, its continuations would otherwise run
+            // on the UI thread — crash recovery and tweak re-enforcement spawn subprocesses
+            // and made the whole app "not responding" for seconds after launch. UI-touching
+            // parts inside marshal themselves via IUiDispatcher.
+            _ = Task.Run(() => _composition.Engine.StartAsync());
             // Start Menu shortcut + heal the autostart task if the exe moved.
             try
             {

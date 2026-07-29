@@ -58,52 +58,36 @@ public partial class MemoryPriorityViewModel : ObservableObject
     {
         var existingPaths = new HashSet<string>(
             Rules.Select(r => r.ExePath), StringComparer.OrdinalIgnoreCase);
+
+        // Candidate gathering walks game install dirs and Program Files — all of it stays
+        // off the UI thread; only the row adds below run on it.
+        var candidates = await Task.Run(async () =>
+        {
+            var list = new List<PriorityRule>();
+
+            // 1. Games from the library.
+            foreach (var game in await _games.GetAllAsync())
+            {
+                if (string.IsNullOrEmpty(game.InstallPath)) continue;
+                var exePath = ResolveLaunchExe(game.InstallPath);
+                if (exePath is null) continue;
+                list.Add(new PriorityRule(exePath, game.DisplayName,
+                    PriorityLevel.Normal, false, false, IsGame: true));
+            }
+
+            // 2 + 3. Running, then installed-but-not-running user apps.
+            foreach (var (path, name) in EnumerateRunningUserApps().Concat(EnumerateInstalledUserApps()))
+                list.Add(new PriorityRule(path, name,
+                    PriorityLevel.Normal, false, false, IsGame: false));
+
+            return list;
+        });
+
         var added = 0;
-
-        // 1. Games from the library.
-        var games = await _games.GetAllAsync();
-        foreach (var game in games)
+        foreach (var rule in candidates)
         {
-            if (string.IsNullOrEmpty(game.InstallPath)) continue;
-            var exePath = ResolveLaunchExe(game.InstallPath);
-            if (exePath is null) continue;
-            if (!existingPaths.Add(exePath)) continue;
-
-            Rules.Add(new PriorityRuleVm(new PriorityRule(
-                ExePath: exePath,
-                DisplayName: game.DisplayName,
-                Priority: PriorityLevel.Normal,
-                ProtectFromRamCleanup: false,
-                GameBooster: false,
-                IsGame: true)));
-            added++;
-        }
-
-        // 2. Currently-running user-installed apps.
-        foreach (var (path, name) in EnumerateRunningUserApps())
-        {
-            if (!existingPaths.Add(path)) continue;
-            Rules.Add(new PriorityRuleVm(new PriorityRule(
-                ExePath: path,
-                DisplayName: name,
-                Priority: PriorityLevel.Normal,
-                ProtectFromRamCleanup: false,
-                GameBooster: false,
-                IsGame: false)));
-            added++;
-        }
-
-        // 3. Installed-but-not-running user apps (Program Files / LocalAppData\Programs).
-        foreach (var (path, name) in EnumerateInstalledUserApps())
-        {
-            if (!existingPaths.Add(path)) continue;
-            Rules.Add(new PriorityRuleVm(new PriorityRule(
-                ExePath: path,
-                DisplayName: name,
-                Priority: PriorityLevel.Normal,
-                ProtectFromRamCleanup: false,
-                GameBooster: false,
-                IsGame: false)));
+            if (!existingPaths.Add(rule.ExePath)) continue;
+            Rules.Add(new PriorityRuleVm(rule));
             added++;
         }
 
@@ -145,21 +129,24 @@ public partial class MemoryPriorityViewModel : ObservableObject
     {
         var existingPaths = new HashSet<string>(
             Rules.Select(r => r.ExePath), StringComparer.OrdinalIgnoreCase);
+
+        // The Program Files walk touches hundreds of directories — off the UI thread, or
+        // the tab freezes while it runs.
+        var found = await Task.Run(() =>
+            EnumerateRunningUserApps().Concat(EnumerateInstalledUserApps()).ToList());
+
         var added = 0;
-        foreach (var source in new[] { EnumerateRunningUserApps(), EnumerateInstalledUserApps() })
+        foreach (var (path, name) in found)
         {
-            foreach (var (path, name) in source)
-            {
-                if (!existingPaths.Add(path)) continue;
-                Rules.Add(new PriorityRuleVm(new PriorityRule(
-                    ExePath: path,
-                    DisplayName: name,
-                    Priority: PriorityLevel.Normal,
-                    ProtectFromRamCleanup: false,
-                    GameBooster: false,
-                    IsGame: false)));
-                added++;
-            }
+            if (!existingPaths.Add(path)) continue;
+            Rules.Add(new PriorityRuleVm(new PriorityRule(
+                ExePath: path,
+                DisplayName: name,
+                Priority: PriorityLevel.Normal,
+                ProtectFromRamCleanup: false,
+                GameBooster: false,
+                IsGame: false)));
+            added++;
         }
         if (added > 0) await PersistAsync();
         return added;

@@ -68,8 +68,16 @@ public sealed class GameRegistry
 
     public async Task<IReadOnlyList<KnownGame>> GetAllAsync()
     {
-        var result = new List<KnownGame>(GetScannedGames());
-        foreach (var g in await _added.LoadAsync())
+        // The cold scan walks six launchers' disks and registry keys and takes seconds.
+        // Without Task.Run all of that runs synchronously on the CALLER's thread before
+        // the first await — when a view-model called this, the whole scan ran on the UI
+        // thread and the app showed "not responding".
+        // ConfigureAwait(false): continuations never need the caller's context, so a
+        // blocking caller (GetAwaiter().GetResult()) can't deadlock against a UI
+        // synchronisation context. This exact deadlock froze app startup once.
+        var scanned = await Task.Run(GetScannedGames).ConfigureAwait(false);
+        var result = new List<KnownGame>(scanned);
+        foreach (var g in await _added.LoadAsync().ConfigureAwait(false))
             result.Add(g);
         return result;
     }

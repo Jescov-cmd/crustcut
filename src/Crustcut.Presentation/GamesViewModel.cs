@@ -50,14 +50,23 @@ public partial class GamesViewModel : ObservableObject
         IsLoading = true;
         Tiles.Clear();
 
-        var games = await _registry.GetAllAsync();
-        foreach (var g in games)
+        // Entire data phase off-thread (scan + one profile lookup per game); only the
+        // collection mutations run back on the UI thread.
+        var (games, tiles) = await Task.Run(async () =>
         {
-            var tile = new GameTileViewModel(g);
-            var assigned = await _profiles.GetProfileForAsync(g.Id);
-            tile.AssignedMode = assigned ?? "(none)";
-            Tiles.Add(tile);
-        }
+            var all = await _registry.GetAllAsync();
+            var built = new List<GameTileViewModel>(all.Count);
+            foreach (var g in all)
+            {
+                var tile = new GameTileViewModel(g);
+                var assigned = await _profiles.GetProfileForAsync(g.Id);
+                tile.AssignedMode = assigned ?? "(none)";
+                built.Add(tile);
+            }
+            return (all, built);
+        });
+
+        foreach (var tile in tiles) Tiles.Add(tile);
 
         // Only nag about the SGDB key if the user has at least one non-Steam game in
         // their library — every Steam game is already covered by the CDN fetcher.

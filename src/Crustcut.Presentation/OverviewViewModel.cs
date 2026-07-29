@@ -87,7 +87,9 @@ public partial class OverviewViewModel : ObservableObject, IDisposable
     {
         try
         {
-            var result = await BoostScoreCalculator.ComputeAsync(_tweaks);
+            // Off-thread: probing 40+ tweaks spawns powercfg subprocesses; on the UI
+            // thread this froze the app for seconds right after launch.
+            var result = await Task.Run(() => BoostScoreCalculator.ComputeAsync(_tweaks));
             _ui.Post(() =>
             {
                 BoostScore = result.Score;
