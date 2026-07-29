@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Crustcut.Presentation;
 
@@ -28,7 +29,7 @@ public partial class MemoryView : UserControl
 
     private async void ProtectChanged(object? sender, RoutedEventArgs e)
     {
-        if (sender is CheckBox { Tag: PriorityRuleVm rule } && DataContext is MemoryPriorityViewModel vm)
+        if (sender is ToggleButton { Tag: PriorityRuleVm rule } && DataContext is MemoryPriorityViewModel vm)
             await vm.UpdateRuleAsync(rule);
     }
 

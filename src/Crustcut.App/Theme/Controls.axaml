@@ -81,26 +81,31 @@
   <Style Selector="Button">
     <Setter Property="HorizontalContentAlignment" Value="Center"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
-    <Setter Property="MinHeight" Value="28"/>
-    <Setter Property="Padding" Value="14,0"/>
-    <Setter Property="CornerRadius" Value="3"/>
+    <Setter Property="MinHeight" Value="30"/>
+    <Setter Property="Padding" Value="16,0"/>
+    <Setter Property="CornerRadius" Value="2"/>
     <Setter Property="FontSize" Value="12"/>
-    <Setter Property="FontWeight" Value="SemiBold"/>
-    <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
-    <Setter Property="Foreground" Value="{DynamicResource Text1}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="Background" Value="#2C2C2C"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
+    <Setter Property="BorderBrush" Value="#4A4A4A"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <!-- The whole button shifts a pixel on press — the same hard-shadow language as the
+       8-bit wordmark, and reads as a physical push. -->
+  <Style Selector="Button:pressed">
+    <Setter Property="RenderTransform" Value="translate(1px,1px)"/>
   </Style>
   <!-- Fluent's template drives the visual state from the ContentPresenter, so hover and
        pressed have to be repainted there or they revert to its own accent. -->
   <Style Selector="Button:pointerover /template/ ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource SurfaceSelected}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
+    <Setter Property="Background" Value="#3A3A3A"/>
+    <Setter Property="BorderBrush" Value="#5E5E5E"/>
     <Setter Property="TextElement.Foreground" Value="{DynamicResource Text0}"/>
   </Style>
   <Style Selector="Button:pressed /template/ ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource SurfaceHover}"/>
+    <Setter Property="Background" Value="#242424"/>
   </Style>
 
   <Style Selector="Button.primary">
@@ -124,6 +129,30 @@
   <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
     <Setter Property="Background" Value="#2A1818"/>
     <Setter Property="TextElement.Foreground" Value="{DynamicResource Danger}"/>
+  </Style>
+
+  <!-- ── Protect pill (Memory rows): labelled toggle, wheat when active ── -->
+  <Style Selector="ToggleButton.protect">
+    <Setter Property="MinHeight" Value="26"/>
+    <Setter Property="Padding" Value="12,0"/>
+    <Setter Property="CornerRadius" Value="13"/>
+    <Setter Property="FontSize" Value="10.5"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
+    <Setter Property="BorderBrush" Value="#4A4A4A"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="ToggleButton.protect:checked /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AccentWheat}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentWheat}"/>
+    <Setter Property="TextElement.Foreground" Value="#1A1206"/>
+  </Style>
+  <Style Selector="ToggleButton.protect:pointerover /template/ ContentPresenter">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentWheat}"/>
   </Style>
 
   <!-- ── Toggle: Fluent's default is a bright red/blue accent that clashes with the

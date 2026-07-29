@@ -51,12 +51,11 @@
 
                 <!-- Click handler persists — a checkbox that only flips the in-memory
                      property forgets itself on the next visit. -->
-                <CheckBox Grid.Column="2" VerticalAlignment="Center" Margin="0,0,10,0"
+                <ToggleButton Grid.Column="2" Classes="protect" Content="PROTECT"
+                          Margin="0,0,10,0" VerticalAlignment="Center"
                           IsChecked="{Binding ProtectFromRamCleanup, Mode=TwoWay}"
-                          Content="Protect"
-                          Foreground="{DynamicResource Text2}" FontSize="11"
-                          Tag="{Binding}"
-                          Click="ProtectChanged"/>
+                          ToolTip.Tip="Never trim this app's memory"
+                          Tag="{Binding}" Click="ProtectChanged"/>
 
                 <Button Grid.Column="3" Content="✕" Classes="danger"
                         MinHeight="24" Height="24" Padding="8,0" FontSize="11"
