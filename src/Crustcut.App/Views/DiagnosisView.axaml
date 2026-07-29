@@ -5,7 +5,7 @@
   <UserControl.Styles>
     <Style Selector="Border.row">
       <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
-      <Setter Property="CornerRadius" Value="{DynamicResource RadiusSmall}"/>
+      <Setter Property="CornerRadius" Value="4"/>
       <Setter Property="Padding" Value="14,12"/>
       <Setter Property="Margin" Value="0,0,0,8"/>
     </Style>

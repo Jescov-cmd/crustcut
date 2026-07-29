@@ -5,14 +5,14 @@
   <UserControl.Styles>
     <Style Selector="Border.card">
       <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
-      <Setter Property="CornerRadius" Value="{DynamicResource RadiusCard}"/>
+      <Setter Property="CornerRadius" Value="4"/>
       <Setter Property="Padding" Value="18,16"/>
       <Setter Property="Margin" Value="0,0,0,12"/>
       <Setter Property="Width" Value="620"/>
       <Setter Property="HorizontalAlignment" Value="Left"/>
     </Style>
     <Style Selector="TextBlock.label">
-      <Setter Property="FontSize" Value="{DynamicResource FontLabel}"/>
+      <Setter Property="FontSize" Value="11"/>
       <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
     </Style>
     <Style Selector="TextBlock.hint">

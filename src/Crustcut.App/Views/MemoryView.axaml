@@ -5,7 +5,7 @@
   <UserControl.Styles>
     <Style Selector="Border.row">
       <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
-      <Setter Property="CornerRadius" Value="{DynamicResource RadiusSmall}"/>
+      <Setter Property="CornerRadius" Value="4"/>
       <Setter Property="Padding" Value="14,11"/>
       <Setter Property="Margin" Value="0,0,0,8"/>
     </Style>
@@ -42,7 +42,7 @@
                              TextTrimming="CharacterEllipsis" Margin="0,2,12,0"/>
                 </StackPanel>
 
-                <ComboBox Grid.Column="1" Width="140" Height="28" Margin="0,0,12,0"
+                <ComboBox Grid.Column="1" Width="140" Height="26" Margin="0,0,12,0"
                           VerticalAlignment="Center" FontSize="12"
                           ItemsSource="{Binding $parent[UserControl].DataContext.PriorityLevels}"
                           SelectedItem="{Binding Priority, Mode=TwoWay}"
@@ -57,8 +57,12 @@
                           ToolTip.Tip="Never trim this app's memory"
                           Tag="{Binding}" Click="ProtectChanged"/>
 
-                <Button Grid.Column="3" Content="✕" Classes="danger"
-                        MinHeight="24" Height="24" Padding="8,0" FontSize="11"
+                <!-- Same dark fill and border as the dropdown beside it, same 26px height
+                     as the pill — one row, one control language. -->
+                <Button Grid.Column="3" Content="✕"
+                        MinHeight="26" Height="26" MinWidth="32" Padding="0"
+                        Background="#1F1F1F" BorderBrush="#4A4A4A"
+                        Foreground="{DynamicResource Danger}" FontSize="12"
                         VerticalAlignment="Center" ToolTip.Tip="Remove this rule"
                         Tag="{Binding}" Click="RemoveClick"/>
               </Grid>
