@@ -69,6 +69,29 @@ public class FrameTimeStatsCalculatorTests
     }
 
     [Fact]
+    public void MaxFps_is_not_inflated_by_a_single_freak_fast_frame()
+    {
+        // A real session: ~144fps throughout, plus ONE 0.5ms double-present glitch.
+        // Naive max (1000/min) would report 2000 FPS "highest" — the Siege session on this
+        // machine showed exactly that shape (MaxFps 1303 from a 0.77ms row). The metric
+        // must reflect the fastest sustained frames, not one outlier.
+        var samples = Enumerable.Repeat(6.94, 2000).Append(0.5).ToList();
+
+        var stats = FrameTimeStatsCalculator.Compute(samples);
+
+        stats.MaxFps.Should().BeApproximately(144.0, 2.0);
+    }
+
+    [Fact]
+    public void MaxFps_still_works_for_short_sessions()
+    {
+        var stats = FrameTimeStatsCalculator.Compute(
+            Enumerable.Repeat(10.0, 20).ToList());
+
+        stats.MaxFps.Should().BeApproximately(100.0, 0.5);
+    }
+
+    [Fact]
     public void Compute_sets_MaxFrameTimeMs_to_the_largest_sample()
     {
         var samples = new List<double> { 16.67, 16.67, 200.0, 16.67 };

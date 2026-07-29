@@ -26,6 +26,18 @@ public partial class MemoryView : UserControl
             await vm.UpdateRuleAsync(rule);
     }
 
+    private async void ProtectChanged(object? sender, RoutedEventArgs e)
+    {
+        if (sender is CheckBox { Tag: PriorityRuleVm rule } && DataContext is MemoryPriorityViewModel vm)
+            await vm.UpdateRuleAsync(rule);
+    }
+
+    private async void RemoveClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: PriorityRuleVm rule } && DataContext is MemoryPriorityViewModel vm)
+            await vm.RemoveAsync(rule);
+    }
+
     private async void RecommendedClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not MemoryPriorityViewModel vm) return;

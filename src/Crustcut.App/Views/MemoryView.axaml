@@ -32,7 +32,7 @@
         <ItemsControl.ItemTemplate>
           <DataTemplate>
             <Border Classes="row">
-              <Grid ColumnDefinitions="*,Auto,Auto">
+              <Grid ColumnDefinitions="*,140,Auto,Auto">
                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                   <TextBlock Text="{Binding DisplayName}" FontSize="13" FontWeight="SemiBold"
                              Foreground="{DynamicResource Text0}"/>
@@ -41,8 +41,6 @@
                              TextTrimming="CharacterEllipsis" Margin="0,2,12,0"/>
                 </StackPanel>
 
-                <!-- Was a read-only label, so there was no way to actually change a
-                     process's priority from this page. -->
                 <ComboBox Grid.Column="1" Width="140" Height="28" Margin="0,0,12,0"
                           VerticalAlignment="Center" FontSize="12"
                           ItemsSource="{Binding $parent[UserControl].DataContext.PriorityLevels}"
@@ -50,10 +48,19 @@
                           Tag="{Binding}"
                           SelectionChanged="PriorityChanged"/>
 
-                <CheckBox Grid.Column="2" VerticalAlignment="Center"
+                <!-- Click handler persists — a checkbox that only flips the in-memory
+                     property forgets itself on the next visit. -->
+                <CheckBox Grid.Column="2" VerticalAlignment="Center" Margin="0,0,10,0"
                           IsChecked="{Binding ProtectFromRamCleanup, Mode=TwoWay}"
                           Content="Protect"
-                          Foreground="{DynamicResource Text2}" FontSize="11"/>
+                          Foreground="{DynamicResource Text2}" FontSize="11"
+                          Tag="{Binding}"
+                          Click="ProtectChanged"/>
+
+                <Button Grid.Column="3" Content="✕" Classes="danger"
+                        MinHeight="24" Height="24" Padding="8,0" FontSize="11"
+                        VerticalAlignment="Center" ToolTip.Tip="Remove this rule"
+                        Tag="{Binding}" Click="RemoveClick"/>
               </Grid>
             </Border>
           </DataTemplate>

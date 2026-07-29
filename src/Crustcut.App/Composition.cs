@@ -106,8 +106,23 @@ public sealed class Composition
 
         // ── Memory ────────────────────────────────────────────────────────────────────
         var priorityStore = new PriorityRuleStore(PriorityRuleStore.DefaultPath());
+        var priorityClient = new PriorityClient();
         var booster = new GameBooster(new SafeRamCleaner(new WorkingSetTrimmer()));
-        var engine = new PriorityRuleEngine(new WmiProcessWatcher(), new PriorityClient(), booster);
+        var engine = new PriorityRuleEngine(new WmiProcessWatcher(), priorityClient, booster);
+
+        // The engine previously only got rules when the Memory tab was first opened, so on
+        // most launches it enforced nothing. Migrate the legacy BelowNormal defaults FIRST
+        // (old builds bulk-deprioritised every scanned app, VS Code included), then feed the
+        // engine. Start() needs admin for WMI process events — guarded so a non-elevated
+        // run degrades to no enforcement instead of crashing.
+        var migrationMarker = Path.Combine(
+            Path.GetDirectoryName(PriorityRuleStore.DefaultPath())!, "priority-rules.migrated-v08");
+        _ = Task.Run(async () =>
+        {
+            await PriorityRuleMigrations.RunOnceAsync(priorityStore, migrationMarker);
+            try { await engine.ReloadAsync(await priorityStore.LoadAsync()); } catch { }
+        });
+        try { engine.Start(); } catch { /* WMI denied when not elevated */ }
 
         var gameRegistry = new GameRegistry(
             new SteamLibraryScanner(),
@@ -121,7 +136,7 @@ public sealed class Composition
             },
             new AddedGamesStore(AddedGamesStore.DefaultPath()));
 
-        Memory = new MemoryPriorityViewModel(priorityStore, engine, gameRegistry);
+        Memory = new MemoryPriorityViewModel(priorityStore, engine, gameRegistry, priorityClient);
 
         // ── Games ─────────────────────────────────────────────────────────────────────
         // One HttpClient for every art/lookup client — creating one per client is the

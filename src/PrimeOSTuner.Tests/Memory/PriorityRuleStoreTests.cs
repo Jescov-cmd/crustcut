@@ -21,6 +21,80 @@ public class PriorityRuleStoreTests
     }
 
     [Fact]
+    public async Task LoadAsync_salvages_a_torn_file_instead_of_returning_empty()
+    {
+        // A process killed mid-write leaves the file truncated mid-object. Returning empty
+        // here is what destroyed real user data: the caller saw "no rules" and
+        // auto-populate overwrote 53 tuned rules with defaults.
+        var dir = Path.Combine(Path.GetTempPath(), $"primeos-torn-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(dir);
+        var path = Path.Combine(dir, "rules.json");
+        try
+        {
+            var store = new PriorityRuleStore(path);
+            await store.SaveAsync(new[]
+            {
+                new PriorityRule(@"C:\a.exe", "A", PriorityLevel.High, true, true, true),
+                new PriorityRule(@"C:\b.exe", "B", PriorityLevel.Normal, false, false, false),
+                new PriorityRule(@"C:\c.exe", "C", PriorityLevel.AboveNormal, false, false, false),
+            });
+
+            // Tear the file the way a hard kill does: truncate mid-way through the last object.
+            var raw = await File.ReadAllTextAsync(path);
+            await File.WriteAllTextAsync(path, raw[..(raw.LastIndexOf("\"DisplayName\"") + 8)]);
+
+            var loaded = await store.LoadAsync();
+
+            loaded.Should().HaveCount(2, "the two complete objects are salvageable");
+            loaded[0].DisplayName.Should().Be("A");
+            loaded[1].DisplayName.Should().Be("B");
+            Directory.GetFiles(dir, "*.corrupt-*").Should().NotBeEmpty(
+                "the torn original must be backed up, not silently discarded");
+
+            // The salvage must also persist, so the next load doesn't re-salvage.
+            (await store.LoadAsync()).Should().HaveCount(2);
+        }
+        finally { try { Directory.Delete(dir, true); } catch { } }
+    }
+
+    [Fact]
+    public async Task LoadAsync_of_unsalvageable_garbage_backs_up_and_returns_empty()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), $"primeos-garbage-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(dir);
+        var path = Path.Combine(dir, "rules.json");
+        try
+        {
+            await File.WriteAllTextAsync(path, "not json at all");
+            var store = new PriorityRuleStore(path);
+
+            (await store.LoadAsync()).Should().BeEmpty();
+            Directory.GetFiles(dir, "*.corrupt-*").Should().NotBeEmpty();
+        }
+        finally { try { Directory.Delete(dir, true); } catch { } }
+    }
+
+    [Fact]
+    public async Task SaveAsync_leaves_no_temp_file_behind()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), $"primeos-tmp-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(dir);
+        var path = Path.Combine(dir, "rules.json");
+        try
+        {
+            var store = new PriorityRuleStore(path);
+            await store.SaveAsync(new[]
+            {
+                new PriorityRule(@"C:\a.exe", "A", PriorityLevel.Normal, false, false, false),
+            });
+
+            Directory.GetFiles(dir).Should().ContainSingle()
+                .Which.Should().EndWith("rules.json");
+        }
+        finally { try { Directory.Delete(dir, true); } catch { } }
+    }
+
+    [Fact]
     public async Task SaveAsync_then_LoadAsync_round_trips_rules()
     {
         var path = Path.Combine(Path.GetTempPath(), $"primeos-test-{Guid.NewGuid():N}.json");

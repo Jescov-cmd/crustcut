@@ -61,6 +61,16 @@ public static class SelfScreenshot
             bitmap.Save(path);
         });
 
-        Environment.Exit(0);
+        // Graceful shutdown, NOT Environment.Exit — Exit(0) killed an in-flight settings
+        // write mid-file and tore priority-rules.json. Writes are atomic now, but there's
+        // no reason to hard-kill the process either.
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (Avalonia.Application.Current?.ApplicationLifetime
+                is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+                desktop.Shutdown();
+            else
+                Environment.Exit(0);
+        });
     }
 }

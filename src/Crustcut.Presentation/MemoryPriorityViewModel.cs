@@ -12,6 +12,7 @@ public partial class MemoryPriorityViewModel : ObservableObject
     private readonly PriorityRuleStore _store;
     private readonly PriorityRuleEngine _engine;
     private readonly GameRegistry _games;
+    private readonly IPriorityClient? _priority;
 
     public ObservableCollection<PriorityRuleVm> Rules { get; } = new();
 
@@ -23,11 +24,13 @@ public partial class MemoryPriorityViewModel : ObservableObject
     [ObservableProperty] private bool _multiSelectMode;
 
     public MemoryPriorityViewModel(
-        PriorityRuleStore store, PriorityRuleEngine engine, GameRegistry games)
+        PriorityRuleStore store, PriorityRuleEngine engine, GameRegistry games,
+        IPriorityClient? priority = null)
     {
         _store = store;
         _engine = engine;
         _games = games;
+        _priority = priority;
     }
 
     public async Task LoadAsync()
@@ -270,12 +273,31 @@ public partial class MemoryPriorityViewModel : ObservableObject
     public async Task RemoveAsync(PriorityRuleVm vm)
     {
         Rules.Remove(vm);
+        // Removing a rule stops future enforcement but doesn't touch the running process —
+        // restore Normal so a deprioritised app doesn't stay stuck until its next restart.
+        ApplyToRunningProcesses(vm.ExePath, PriorityLevel.Normal);
         await PersistAsync();
+        await SyncEngineAsync();
     }
 
     public async Task UpdateRuleAsync(PriorityRuleVm vm)
     {
+        // The engine only acts on process START, so without this a priority change would
+        // do nothing until the app was next relaunched.
+        ApplyToRunningProcesses(vm.ExePath, vm.Priority);
         await PersistAsync();
+        await SyncEngineAsync();
+    }
+
+    private void ApplyToRunningProcesses(string exePath, PriorityLevel level)
+    {
+        if (_priority is null) return;
+        try
+        {
+            foreach (var pid in _priority.FindPidsForExe(exePath))
+                _priority.TrySetPriority(pid, level);
+        }
+        catch { /* enforcement is best-effort; the rule itself is already saved */ }
     }
 
     public async Task<(int Added, int Updated)> ApplyRecommendedToAllGamesAsync()

@@ -22,7 +22,10 @@ public static class FrameTimeStatsCalculator
         var p99  = Percentile(valid, 0.99);
         var p999 = Percentile(valid, 0.999);
         var max  = valid[^1];
-        var min  = valid[0];   // fastest frame → highest FPS
+        // "Highest FPS" uses the fastest-1% boundary, not the single fastest frame — one
+        // 0.5ms double-present glitch would otherwise report a 2000 FPS "highest" for a
+        // 144fps session. (Observed for real: a 106s Siege session claimed MaxFps 1303.)
+        var fastP01 = Percentile(valid, 0.01);
 
         return new FrameSessionStats(
             AvgFps: avgFps,
@@ -33,7 +36,7 @@ public static class FrameTimeStatsCalculator
             P999FrameTimeMs: p999,
             MaxFrameTimeMs: max,
             SampleCount: valid.Length,
-            MaxFps: 1000.0 / min);
+            MaxFps: 1000.0 / fastP01);
     }
 
     // Percentile on a pre-sorted ascending array. Uses floor(pct * N) so that

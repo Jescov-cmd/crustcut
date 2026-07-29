@@ -50,6 +50,9 @@ public static class ResilientJsonFile
         finally { gate.Release(); }
     }
 
+    // Writes are atomic (temp file + move): in-place FileMode.Create truncates first, so a
+    // process dying mid-write leaves a torn file. That destroyed priority-rules.json once;
+    // every store routed through here gets the same protection.
     public static async Task WriteTextAsync(string path, string contents)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
@@ -57,13 +60,13 @@ public static class ResilientJsonFile
         await gate.WaitAsync().ConfigureAwait(false);
         try
         {
+            var tmp = path + ".tmp";
             for (int attempt = 0; ; attempt++)
             {
                 try
                 {
-                    using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
-                    using var sw = new StreamWriter(fs);
-                    await sw.WriteAsync(contents).ConfigureAwait(false);
+                    await File.WriteAllTextAsync(tmp, contents).ConfigureAwait(false);
+                    File.Move(tmp, path, overwrite: true);
                     return;
                 }
                 catch (IOException) when (attempt < MaxRetries) { await Task.Delay(RetryDelayMs).ConfigureAwait(false); }
@@ -117,13 +120,13 @@ public static class ResilientJsonFile
         gate.Wait();
         try
         {
+            var tmp = path + ".tmp";
             for (int attempt = 0; ; attempt++)
             {
                 try
                 {
-                    using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
-                    using var sw = new StreamWriter(fs);
-                    sw.Write(contents);
+                    File.WriteAllText(tmp, contents);
+                    File.Move(tmp, path, overwrite: true);
                     return;
                 }
                 catch (IOException) when (attempt < MaxRetries) { Thread.Sleep(RetryDelayMs); }

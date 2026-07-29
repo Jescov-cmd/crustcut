@@ -37,17 +37,58 @@ public sealed class PriorityRuleStore
             if (!File.Exists(_filePath)) return Array.Empty<PriorityRule>();
             var json = await ReadWithRetryAsync();
             if (string.IsNullOrWhiteSpace(json)) return Array.Empty<PriorityRule>();
-            return JsonSerializer.Deserialize<List<PriorityRule>>(json, Opts)
-                ?? new List<PriorityRule>();
-        }
-        catch (JsonException)
-        {
-            return Array.Empty<PriorityRule>();
+
+            try
+            {
+                return JsonSerializer.Deserialize<List<PriorityRule>>(json, Opts)
+                    ?? new List<PriorityRule>();
+            }
+            catch (JsonException)
+            {
+                // A torn file (process killed mid-write) must NOT read as "no rules" —
+                // callers treat empty as first-run and auto-populate straight over the
+                // user's data. Back up the original, salvage every complete entry, and
+                // persist the salvage so the next load is clean.
+                TryBackupCorrupt(json);
+                var salvaged = TrySalvageTruncatedArray(json);
+                if (salvaged.Count > 0)
+                    await WriteWithRetryAsync(JsonSerializer.Serialize(salvaged, Opts));
+                return salvaged;
+            }
         }
         finally
         {
             _gate.Release();
         }
+    }
+
+    private void TryBackupCorrupt(string json)
+    {
+        try
+        {
+            File.WriteAllText(
+                _filePath + ".corrupt-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss"), json);
+        }
+        catch { /* the backup is best-effort; salvage still proceeds */ }
+    }
+
+    // Recovers complete entries from a truncated JSON array by trimming back to each
+    // closing brace until the remainder parses. O(entries) attempts, tiny files.
+    private static List<PriorityRule> TrySalvageTruncatedArray(string json)
+    {
+        var cut = json.LastIndexOf('}');
+        while (cut > 0)
+        {
+            var candidate = json[..(cut + 1)].TrimEnd().TrimEnd(',') + "]";
+            try
+            {
+                var parsed = JsonSerializer.Deserialize<List<PriorityRule>>(candidate, Opts);
+                if (parsed is not null) return parsed;
+            }
+            catch (JsonException) { }
+            cut = json.LastIndexOf('}', cut - 1);
+        }
+        return new List<PriorityRule>();
     }
 
     public async Task SaveAsync(IEnumerable<PriorityRule> rules)
@@ -84,15 +125,18 @@ public sealed class PriorityRuleStore
         }
     }
 
+    // Atomic: write a sibling temp file, then move it over the target. In-place truncate-
+    // then-write is how a hard-killed process left this file torn mid-object and cost the
+    // user their rules.
     private async Task WriteWithRetryAsync(string json)
     {
+        var tmp = _filePath + ".tmp";
         for (int attempt = 0; ; attempt++)
         {
             try
             {
-                using var fs = new FileStream(_filePath, FileMode.Create, FileAccess.Write, FileShare.Read);
-                using var sw = new StreamWriter(fs);
-                await sw.WriteAsync(json);
+                await File.WriteAllTextAsync(tmp, json);
+                File.Move(tmp, _filePath, overwrite: true);
                 return;
             }
             catch (IOException) when (attempt < 8)
