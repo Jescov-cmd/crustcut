@@ -17,7 +17,7 @@
 
   <TrayIcon.Icons>
     <TrayIcons>
-      <TrayIcon Icon="avares://Crustcut/Assets/bread.ico"
+      <TrayIcon Icon="avares://Crustcut/Assets/icon.ico"
                 ToolTipText="Crustcut"
                 Clicked="TrayClicked">
         <TrayIcon.Menu>

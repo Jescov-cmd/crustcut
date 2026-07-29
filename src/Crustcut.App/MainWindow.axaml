@@ -5,7 +5,7 @@
         Width="1240" Height="780" MinWidth="900" MinHeight="580"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource SurfaceBase}"
-        Icon="avares://Crustcut/Assets/bread.ico"
+        Icon="avares://Crustcut/Assets/icon.ico"
         FontFamily="Segoe UI">
 
   <Window.Styles>
