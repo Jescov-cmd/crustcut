@@ -21,8 +21,8 @@
 
   <ItemGroup>
     <!-- PresentMon must sit next to the exe as a real file (it gets spawned as a
-         subprocess), so it is linked from the WPF assets rather than embedded. -->
-    <None Include="..\PrimeOSTuner.UI\Assets\PresentMon\PresentMon-x64.exe"
+         subprocess), so it is copied to output rather than embedded. -->
+    <None Include="Assets\PresentMon\PresentMon-x64.exe"
           Link="Assets\PresentMon\PresentMon-x64.exe"
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
@@ -36,6 +36,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Crustcut.Presentation\Crustcut.Presentation.csproj" />
     <ProjectReference Include="..\PrimeOSTuner.Core\PrimeOSTuner.Core.csproj" />
+    <ProjectReference Include="..\PrimeOSTuner.Core.Windows\PrimeOSTuner.Core.Windows.csproj" />
     <ProjectReference Include="..\PrimeOSTuner.Win\PrimeOSTuner.Win.csproj" />
   </ItemGroup>
 </Project>
