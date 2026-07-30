@@ -5,6 +5,16 @@ public interface IPriorityClient
     /// <summary>Set CPU priority class on a process. Returns true on success, false if process is gone or access denied.</summary>
     bool TrySetPriority(int pid, PriorityLevel level);
 
+    /// <summary>
+    /// Hard-cap how much physical RAM a process may keep resident. The process keeps
+    /// running; anything over the cap is paged out instead of held. Returns false if the
+    /// process is gone, access is denied, or the platform has no such mechanism.
+    /// </summary>
+    bool TrySetMemoryLimit(int pid, int limitMb);
+
+    /// <summary>Remove a previously applied memory cap. Best-effort; false on failure.</summary>
+    bool TryClearMemoryLimit(int pid);
+
     /// <summary>Returns PIDs whose main module path matches one of the given EXE paths (case-insensitive).</summary>
     IReadOnlyList<int> FindPidsForExe(string exePath);
 

@@ -119,6 +119,28 @@ public class PriorityRuleStoreTests
     }
 
     [Fact]
+    public async Task Memory_limit_round_trips_and_old_files_without_it_still_load()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"primeos-test-{Guid.NewGuid():N}.json");
+        try
+        {
+            var store = new PriorityRuleStore(path);
+            await store.SaveAsync(new[]
+            {
+                new PriorityRule(@"C:\Apps\edge.exe", "Edge", PriorityLevel.Normal, false, false, false,
+                                 MemoryLimitMb: 1024),
+            });
+            (await store.LoadAsync())[0].MemoryLimitMb.Should().Be(1024);
+
+            // A pre-v0.9.1 rules file has no MemoryLimitMb property at all.
+            await File.WriteAllTextAsync(path,
+                """[{"ExePath":"C:\\a.exe","DisplayName":"A","Priority":2,"ProtectFromRamCleanup":false,"GameBooster":false,"IsGame":false}]""");
+            (await store.LoadAsync())[0].MemoryLimitMb.Should().BeNull();
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
     public async Task LoadAsync_returns_empty_on_malformed_json_without_throwing()
     {
         var path = Path.Combine(Path.GetTempPath(), $"primeos-test-{Guid.NewGuid():N}.json");

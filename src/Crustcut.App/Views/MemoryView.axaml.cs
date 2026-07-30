@@ -27,6 +27,17 @@ public partial class MemoryView : UserControl
             await vm.UpdateRuleAsync(rule);
     }
 
+    private async void MemoryLimitChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        // Re-binding fires SelectionChanged with a transient NULL selection before the
+        // real value is restored — persisting at that moment would silently wipe the
+        // user's limit. Only a real selection is worth acting on; UpdateRuleAsync then
+        // no-ops unless the value actually differs from what's persisted.
+        if (sender is ComboBox { SelectedItem: null }) return;
+        if (sender is ComboBox { Tag: PriorityRuleVm rule } && DataContext is MemoryPriorityViewModel vm)
+            await vm.UpdateRuleAsync(rule);
+    }
+
     private async void ProtectChanged(object? sender, RoutedEventArgs e)
     {
         if (sender is ToggleButton { Tag: PriorityRuleVm rule } && DataContext is MemoryPriorityViewModel vm)

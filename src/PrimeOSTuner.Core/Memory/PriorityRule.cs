@@ -6,5 +6,7 @@ public sealed record PriorityRule(
     PriorityLevel Priority,
     bool ProtectFromRamCleanup,
     bool GameBooster,                // run SafeRamCleaner ~2s after launch
-    bool IsGame                      // tagged from GameLibrary at add time
+    bool IsGame,                     // tagged from GameLibrary at add time
+    int? MemoryLimitMb = null        // hard working-set cap; null = unlimited. Optional with
+                                     // a default so rule files from before the field still load.
 );

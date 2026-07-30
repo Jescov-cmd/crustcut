@@ -16,7 +16,7 @@
       <TextBlock Text="Memory" Classes="pageTitle" Margin="0,16,0,10"/>
       <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,14"
                  TextWrapping="Wrap"
-                 Text="Give the apps you care about more CPU priority, and protect them from memory cleanups. Anything with an open window is protected automatically."/>
+                 Text="Give the apps you care about more CPU priority, cap how much memory an app may keep, and protect favourites from cleanups. Anything with an open window is protected automatically."/>
 
       <StackPanel Orientation="Horizontal" Spacing="9" Margin="0,0,0,16">
         <Button Content="SCAN RUNNING APPS" Classes="primary"   Click="RescanClick"/>
@@ -33,7 +33,7 @@
         <ItemsControl.ItemTemplate>
           <DataTemplate>
             <Border Classes="row" Width="{Binding #PanelGrid.Bounds.Width}">
-              <Grid ColumnDefinitions="*,140,Auto,Auto">
+              <Grid ColumnDefinitions="*,140,104,Auto,Auto">
                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                   <TextBlock Text="{Binding DisplayName}" FontSize="13" FontWeight="SemiBold"
                              Foreground="{DynamicResource Text0}"/>
@@ -42,16 +42,26 @@
                              TextTrimming="CharacterEllipsis" Margin="0,2,12,0"/>
                 </StackPanel>
 
-                <ComboBox Grid.Column="1" Width="140" Height="26" Margin="0,0,12,0"
+                <ComboBox Grid.Column="1" Width="140" Height="26" Margin="0,0,10,0"
                           VerticalAlignment="Center" FontSize="12"
                           ItemsSource="{Binding $parent[UserControl].DataContext.PriorityLevels}"
                           SelectedItem="{Binding Priority, Mode=TwoWay}"
                           Tag="{Binding}"
                           SelectionChanged="PriorityChanged"/>
 
+                <!-- Hard RAM cap, Edge-resource-controls style: the app keeps running but
+                     can't hold more memory than this — the excess pages out instead. -->
+                <ComboBox Grid.Column="2" Width="104" Height="26" Margin="0,0,10,0"
+                          VerticalAlignment="Center" FontSize="12"
+                          ItemsSource="{Binding $parent[UserControl].DataContext.MemoryLimitOptions}"
+                          SelectedItem="{Binding MemoryLimit, Mode=TwoWay}"
+                          ToolTip.Tip="Most memory this app may keep in RAM. Anything above spills to disk — too low a cap can slow the app."
+                          Tag="{Binding}"
+                          SelectionChanged="MemoryLimitChanged"/>
+
                 <!-- Click handler persists — a checkbox that only flips the in-memory
                      property forgets itself on the next visit. -->
-                <ToggleButton Grid.Column="2" Classes="protect" Content="PROTECT"
+                <ToggleButton Grid.Column="3" Classes="protect" Content="PROTECT"
                           Margin="0,0,10,0" VerticalAlignment="Center"
                           IsChecked="{Binding ProtectFromRamCleanup, Mode=TwoWay}"
                           ToolTip.Tip="Never trim this app's memory"
@@ -59,7 +69,7 @@
 
                 <!-- Same dark fill and border as the dropdown beside it, same 26px height
                      as the pill — one row, one control language. -->
-                <Button Grid.Column="3" Content="✕"
+                <Button Grid.Column="4" Content="✕"
                         MinHeight="26" Height="26" MinWidth="32" Padding="0"
                         Background="#1F1F1F" BorderBrush="#4A4A4A"
                         Foreground="{DynamicResource Danger}" FontSize="12"

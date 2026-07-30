@@ -51,6 +51,9 @@ public sealed class PriorityRuleEngine : IDisposable
         if (!matchingPids.Contains(e.Pid)) return;
 
         _priority.TrySetPriority(e.Pid, rule.Priority);
+        // Working-set caps die with the process, so every fresh launch gets re-capped here.
+        if (rule.MemoryLimitMb is int limitMb)
+            _priority.TrySetMemoryLimit(e.Pid, limitMb);
 
         if (rule.GameBooster)
         {

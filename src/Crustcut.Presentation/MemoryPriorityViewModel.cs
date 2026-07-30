@@ -19,6 +19,9 @@ public partial class MemoryPriorityViewModel : ObservableObject
     /// <summary>Levels offered in the priority dropdown. Realtime is intentionally absent.</summary>
     public static IReadOnlyList<PriorityLevel> PriorityLevels { get; } = Enum.GetValues<PriorityLevel>();
 
+    /// <summary>Preset caps for the per-app memory-limit dropdown (view binds via DataContext).</summary>
+    public static IReadOnlyList<MemoryLimitOption> MemoryLimitOptions => PriorityRuleVm.MemoryLimitOptions;
+
     [ObservableProperty] private string _activeFilter = "all"; // all | games | apps
 
     [ObservableProperty] private bool _multiSelectMode;
@@ -261,37 +264,56 @@ public partial class MemoryPriorityViewModel : ObservableObject
     {
         Rules.Remove(vm);
         // Removing a rule stops future enforcement but doesn't touch the running process —
-        // restore Normal so a deprioritised app doesn't stay stuck until its next restart.
-        await Task.Run(() => ApplyToRunningProcesses(vm.ExePath, PriorityLevel.Normal));
+        // restore Normal and lift any memory cap so the app isn't stuck until restart.
+        await Task.Run(() => ApplyToRunningProcesses(vm.ExePath, PriorityLevel.Normal, memoryLimitMb: null));
         await PersistAsync();
         await SyncEngineAsync();
     }
 
+    private CancellationTokenSource? _updateDebounce;
+
+    /// <summary>
+    /// Persist + enforce rule edits, DEBOUNCED. ComboBox bindings fire SelectionChanged
+    /// with transient values while a view (re)binds — a crash mid-bind once persisted
+    /// those transients and bulk-rewrote every rule to BelowNormal. Waiting for the UI to
+    /// settle, then comparing every row against what's on disk, means only values that
+    /// still differ after the dust clears are treated as real user edits.
+    /// </summary>
     public async Task UpdateRuleAsync(PriorityRuleVm vm)
     {
-        // ComboBoxes re-fire SelectionChanged whenever the view re-attaches (ItemsSource
-        // re-bind resets and restores the selection). Only a value that actually differs
-        // from what's persisted is a user edit — everything else must be a no-op, or every
-        // tab visit runs one process-table scan PER ROW on the UI thread.
-        var current = vm.ToRule();
-        if (current == vm.LastSaved) return;
-        vm.LastSaved = current;
+        _updateDebounce?.Cancel();
+        var cts = new CancellationTokenSource();
+        _updateDebounce = cts;
+        try { await Task.Delay(400, cts.Token); }
+        catch (TaskCanceledException) { return; }
+
+        // Settle-time snapshot: every row that genuinely differs from its persisted state.
+        var dirty = Rules.Where(r => r.ToRule() != r.LastSaved).ToList();
+        if (dirty.Count == 0) return;
 
         // The engine only acts on process START, so without this a priority change would
         // do nothing until the app was next relaunched. Scanning pids walks every running
         // process — worker thread, never the UI's.
-        await Task.Run(() => ApplyToRunningProcesses(vm.ExePath, vm.Priority));
-        await PersistAsync();
+        await Task.Run(() =>
+        {
+            foreach (var r in dirty)
+                ApplyToRunningProcesses(r.ExePath, r.Priority, r.MemoryLimit?.Mb);
+        });
+        await PersistAsync();   // refreshes LastSaved for every row
         await SyncEngineAsync();
     }
 
-    private void ApplyToRunningProcesses(string exePath, PriorityLevel level)
+    private void ApplyToRunningProcesses(string exePath, PriorityLevel level, int? memoryLimitMb)
     {
         if (_priority is null) return;
         try
         {
             foreach (var pid in _priority.FindPidsForExe(exePath))
+            {
                 _priority.TrySetPriority(pid, level);
+                if (memoryLimitMb is int mb) _priority.TrySetMemoryLimit(pid, mb);
+                else _priority.TryClearMemoryLimit(pid);
+            }
         }
         catch { /* enforcement is best-effort; the rule itself is already saved */ }
     }

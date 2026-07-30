@@ -47,6 +47,39 @@ public class PriorityRuleEngineTests
     }
 
     [Fact]
+    public async Task Applies_memory_limit_when_rule_has_one()
+    {
+        var watcher = new TestWatcher();
+        var priority = new Mock<IPriorityClient>();
+        priority.Setup(p => p.FindPidsForExe(@"C:\Apps\edge.exe")).Returns(new[] { 4321 });
+        var engine = new PriorityRuleEngine(watcher, priority.Object, new Mock<IGameBooster>().Object);
+        await engine.ReloadAsync(new[]
+        {
+            Rule(@"C:\Apps\edge.exe", PriorityLevel.Normal) with { MemoryLimitMb = 1024 }
+        });
+        engine.Start();
+
+        watcher.RaiseStarted(4321, "edge.exe");
+
+        priority.Verify(p => p.TrySetMemoryLimit(4321, 1024), Times.Once);
+    }
+
+    [Fact]
+    public async Task Does_not_touch_memory_limit_when_rule_has_none()
+    {
+        var watcher = new TestWatcher();
+        var priority = new Mock<IPriorityClient>();
+        priority.Setup(p => p.FindPidsForExe(@"C:\Games\cs2.exe")).Returns(new[] { 1234 });
+        var engine = new PriorityRuleEngine(watcher, priority.Object, new Mock<IGameBooster>().Object);
+        await engine.ReloadAsync(new[] { Rule(@"C:\Games\cs2.exe") });
+        engine.Start();
+
+        watcher.RaiseStarted(1234, "cs2.exe");
+
+        priority.Verify(p => p.TrySetMemoryLimit(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
     public async Task Ignores_unmatched_process_starts()
     {
         var watcher = new TestWatcher();
