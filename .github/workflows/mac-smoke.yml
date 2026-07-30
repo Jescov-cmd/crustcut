@@ -1,0 +1,49 @@
+name: mac-smoke
+
+# Runs the macOS build on a real Apple Silicon runner and captures in-app
+# self-screenshots of every mac-visible tab. This is the closest thing we have
+# to a Mac on the desk: the app launches for real, MacHardwareClient samples a
+# real Mac, and the PNGs come back as artifacts.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - '.github/workflows/mac-smoke.yml'
+
+jobs:
+  smoke:
+    runs-on: macos-15   # arm64 (Apple Silicon)
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Publish mac build
+        run: dotnet publish src/Crustcut.App/Crustcut.App.csproj -c Release -f net9.0 -r osx-arm64 --self-contained -o out --nologo
+
+      - name: Launch app and capture each tab
+        run: |
+          mkdir -p shots
+          for tab in Overview Games Guides Settings; do
+            echo "=== $tab ==="
+            ./out/Crustcut --screenshot "shots/$tab.png" --screenshot-tab "$tab" --screenshot-size 1280x800 || echo "FAILED: $tab (exit $?)"
+          done
+          ls -la shots/
+
+      - name: Report hardware sample sanity
+        run: |
+          sysctl -n hw.memsize
+          vm_stat | head -5
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mac-screenshots
+          path: |
+            shots/
+          if-no-files-found: warn
