@@ -107,7 +107,9 @@ public partial class GameBoostViewModel : ObservableObject
         StatusMessage = $"Applying {profile.DisplayName}…";
         try
         {
-            var result = await _applier.ApplyAsync(profile);
+            // Task.Run: profile application runs synchronous tweak bodies (powercfg,
+            // registry) — off the UI thread or every mode click freezes the app.
+            var result = await Task.Run(() => _applier.ApplyAsync(profile));
             StatusMessage = $"{profile.DisplayName}: {result.SuccessCount} applied, {result.FailureCount} failed.";
         }
         catch (Exception ex)

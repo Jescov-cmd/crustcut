@@ -44,8 +44,11 @@ public partial class DiagnosisViewModel : ObservableObject
         Findings.Clear();
         try
         {
+            // Progress is constructed HERE so it captures the UI context — its callback
+            // then marshals back automatically while RunAsync's WMI/counter probes run on
+            // a worker thread instead of freezing the page.
             var progress = new Progress<string>(m => Status = m);
-            var results = await _service.RunAsync(progress);
+            var results = await Task.Run(() => _service.RunAsync(progress));
 
             // Problems first, then warnings, then passes — the reason someone opens this page
             // is to find what's wrong, so what's wrong goes at the top.

@@ -123,8 +123,10 @@ public partial class OverviewViewModel : ObservableObject, IDisposable
         OneClickStatus = "Optimizing…";
         try
         {
-            var report = await _oneClick.RunAsync(new Progress<(int Done, int Total, string CurrentName)>(
-                p => _ui.Post(() => OneClickStatus = $"Applying {p.CurrentName} ({p.Done}/{p.Total})…")));
+            // Task.Run: the bundle applies dozens of tweaks whose bodies run synchronously
+            // (powercfg et al) — on the UI thread this froze the app for the whole run.
+            var report = await Task.Run(() => _oneClick.RunAsync(new Progress<(int Done, int Total, string CurrentName)>(
+                p => _ui.Post(() => OneClickStatus = $"Applying {p.CurrentName} ({p.Done}/{p.Total})…"))));
             _ui.Post(() => OneClickStatus =
                 $"Done — {report.SuccessCount} applied, {report.FailureCount} failed.");
             await RefreshBoostScoreAsync();

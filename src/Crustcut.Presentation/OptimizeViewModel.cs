@@ -144,7 +144,7 @@ public partial class OptimizeViewModel : ObservableObject
         {
             // Re-probe so "active" means detected-active. If an apply silently didn't take,
             // or a revert failed, the toggle snaps back to the truth.
-            try { row.IsApplied = await row.Tweak.ProbeAsync() == TweakState.Applied; }
+            try { row.IsApplied = await Task.Run(() => row.Tweak.ProbeAsync()) == TweakState.Applied; }
             catch { /* probe failure: leave the optimistic state alone */ }
             row.IsBusy = false;
         }
@@ -152,7 +152,10 @@ public partial class OptimizeViewModel : ObservableObject
 
     private async Task ApplyAsync(TweakRowVm row)
     {
-        var result = await row.Tweak.ApplyAsync();
+        // Task.Run: most tweaks do their work SYNCHRONOUSLY inside ApplyAsync (powercfg
+        // subprocesses, registry writes) — awaited directly, all of it ran on the UI
+        // thread and froze the app for every toggle click.
+        var result = await Task.Run(() => row.Tweak.ApplyAsync());
         if (!result.Succeeded)
         {
             await _dialogs.ShowAsync(row.DisplayName, $"Failed: {result.Error}", DialogKind.Error);
@@ -178,15 +181,16 @@ public partial class OptimizeViewModel : ObservableObject
     private async Task RevertAsync(TweakRowVm row)
     {
         TweakResult revert;
-        if (row.UndoData is not null)
+        if (row.UndoData is string undoData)
         {
-            revert = await row.Tweak.RevertAsync(row.UndoData);
+            // Task.Run for the same reason as ApplyAsync — tweak bodies are synchronous.
+            revert = await Task.Run(() => row.Tweak.RevertAsync(undoData));
         }
         else if (row.Tweak is ISelfRevertingTweak selfRevert)
         {
             // Applied before tracking, outside the app, or history cleared — restore the
             // default so the toggle can't get stuck ON.
-            revert = await selfRevert.RevertToDefaultAsync();
+            revert = await Task.Run(() => selfRevert.RevertToDefaultAsync());
         }
         else
         {
