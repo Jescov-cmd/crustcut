@@ -25,7 +25,9 @@ public static class NavCatalog
         new NavItem("Sessions",  "SESSIONS",   Gaming, WindowsOnly: true),        // was "Sentinel"
         new NavItem("GameBoost", "GAME BOOST", Gaming, WindowsOnly: true),
 
-        new NavItem("Guides",    "GUIDES",     Learn),
+        // Every current guide is PC-hardware/Windows content (BIOS, NVIDIA panel, XMP…).
+        // Windows-only until mac guides are written.
+        new NavItem("Guides",    "GUIDES",     Learn, WindowsOnly: true),
     };
 
     private static readonly IReadOnlyList<NavItem> BottomAll = new[]

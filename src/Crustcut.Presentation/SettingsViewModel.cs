@@ -49,6 +49,10 @@ public partial class SettingsViewModel : ObservableObject
     /// </summary>
     public bool IntervalIsAggressive => RamAutoOptimizeOnInterval && RamAutoIntervalMinutes < 5;
 
+    /// <summary>Settings cards for Windows-only subsystems (RAM cleaner, schtasks
+    /// autostart, PresentMon overlay/sentinel) bind their visibility to this.</summary>
+    public bool IsWindows => OperatingSystem.IsWindows();
+
     public void Load()
     {
         _loading = true;

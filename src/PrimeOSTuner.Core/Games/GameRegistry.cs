@@ -150,10 +150,15 @@ public sealed class GameRegistry
             }
         }
 
-        foreach (var g in StaticGameCatalog.All)
+        // The static catalog lists Windows installs (exe names, Windows launchers) — on
+        // other platforms it would advertise games the machine can't even run.
+        if (OperatingSystem.IsWindows())
         {
-            if (g.SteamAppId is not null && seenSteamIds.Contains(g.SteamAppId)) continue;
-            result.Add(g);
+            foreach (var g in StaticGameCatalog.All)
+            {
+                if (g.SteamAppId is not null && seenSteamIds.Contains(g.SteamAppId)) continue;
+                result.Add(g);
+            }
         }
 
         return result;

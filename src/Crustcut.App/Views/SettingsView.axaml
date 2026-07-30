@@ -28,7 +28,7 @@
       <TextBlock Text="Settings" Classes="pageTitle" Margin="0,16,0,12"/>
 
       <!-- ── Memory cleanup ── -->
-      <Border Classes="card">
+      <Border Classes="card" IsVisible="{Binding IsWindows}">
         <StackPanel Spacing="12">
           <TextBlock Text="MEMORY CLEANUP" Classes="label"/>
 
@@ -72,7 +72,7 @@
       </Border>
 
       <!-- ── Startup ── -->
-      <Border Classes="card">
+      <Border Classes="card" IsVisible="{Binding IsWindows}">
         <StackPanel Spacing="12">
           <TextBlock Text="STARTUP" Classes="label"/>
 
@@ -97,7 +97,7 @@
       </Border>
 
       <!-- ── Performance overlay ── -->
-      <Border Classes="card">
+      <Border Classes="card" IsVisible="{Binding IsWindows}">
         <StackPanel Spacing="12">
           <TextBlock Text="IN-GAME OVERLAY" Classes="label"/>
           <CheckBox IsChecked="{Binding OverlayEnabled, Mode=TwoWay}"
@@ -124,7 +124,7 @@
       </Border>
 
       <!-- ── Monitoring ── -->
-      <Border Classes="card">
+      <Border Classes="card" IsVisible="{Binding IsWindows}">
         <StackPanel Spacing="12">
           <TextBlock Text="MONITORING" Classes="label"/>
           <StackPanel>

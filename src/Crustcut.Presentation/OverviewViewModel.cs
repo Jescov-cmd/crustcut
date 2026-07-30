@@ -40,6 +40,10 @@ public partial class OverviewViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _boostScoreTier = "—";
     [ObservableProperty] private string _boostScoreSubtitle = "Computing…";
 
+    /// <summary>False on platforms with no tweaks (macOS) — hides optimize actions
+    /// and stops the score card claiming a "POOR" rating over an empty set.</summary>
+    public bool HasTweakSurface => _tweaks.Any();
+
     public ObservableCollection<double> CpuHistory { get; } = new();
     public ObservableCollection<double> RamHistory { get; } = new();
     public ObservableCollection<double> GpuHistory { get; } = new();
@@ -93,7 +97,8 @@ public partial class OverviewViewModel : ObservableObject, IDisposable
             _ui.Post(() =>
             {
                 BoostScore = result.Score;
-                BoostScoreTier = result.Tier;
+                // An empty tweak set is "nothing to rate", not a 0/100 "POOR" system.
+                BoostScoreTier = result.Total == 0 ? "—" : result.Tier;
                 // Honest framing: we PROBE the system state, so a tweak whose value
                 // already matches Windows defaults reads as "applied" without the user
                 // doing anything. The label has to make that clear — "X optimizations
