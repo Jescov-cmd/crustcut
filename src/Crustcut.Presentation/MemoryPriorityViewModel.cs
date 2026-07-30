@@ -262,16 +262,25 @@ public partial class MemoryPriorityViewModel : ObservableObject
         Rules.Remove(vm);
         // Removing a rule stops future enforcement but doesn't touch the running process —
         // restore Normal so a deprioritised app doesn't stay stuck until its next restart.
-        ApplyToRunningProcesses(vm.ExePath, PriorityLevel.Normal);
+        await Task.Run(() => ApplyToRunningProcesses(vm.ExePath, PriorityLevel.Normal));
         await PersistAsync();
         await SyncEngineAsync();
     }
 
     public async Task UpdateRuleAsync(PriorityRuleVm vm)
     {
+        // ComboBoxes re-fire SelectionChanged whenever the view re-attaches (ItemsSource
+        // re-bind resets and restores the selection). Only a value that actually differs
+        // from what's persisted is a user edit — everything else must be a no-op, or every
+        // tab visit runs one process-table scan PER ROW on the UI thread.
+        var current = vm.ToRule();
+        if (current == vm.LastSaved) return;
+        vm.LastSaved = current;
+
         // The engine only acts on process START, so without this a priority change would
-        // do nothing until the app was next relaunched.
-        ApplyToRunningProcesses(vm.ExePath, vm.Priority);
+        // do nothing until the app was next relaunched. Scanning pids walks every running
+        // process — worker thread, never the UI's.
+        await Task.Run(() => ApplyToRunningProcesses(vm.ExePath, vm.Priority));
         await PersistAsync();
         await SyncEngineAsync();
     }
@@ -358,7 +367,13 @@ public partial class MemoryPriorityViewModel : ObservableObject
 
     private async Task PersistAsync()
     {
-        var rules = Rules.Select(vm => vm.ToRule()).ToList();
+        var rules = new List<PriorityRule>(Rules.Count);
+        foreach (var vm in Rules)
+        {
+            var rule = vm.ToRule();
+            vm.LastSaved = rule;   // keep the phantom-change detector in step with disk
+            rules.Add(rule);
+        }
         await _store.SaveAsync(rules);
         await SyncEngineAsync();
     }

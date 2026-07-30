@@ -23,11 +23,12 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var (shotPath, shotTab, shotW, shotH) = SelfScreenshot.Parse(Program.Args);
+            var navStressPath = NavStress.Parse(Program.Args);
 
             // The screenshot run is a throwaway process: skip the single-instance guard so
             // it can run while the real app is open.
             _guard = new SingleInstanceGuard();
-            if (shotPath is null && !_guard.TryAcquire())
+            if (shotPath is null && navStressPath is null && !_guard.TryAcquire())
             {
                 // Another copy is already running and has been asked to surface.
                 desktop.Shutdown();
@@ -51,6 +52,11 @@ public partial class App : Application
                 if (shotW > 0 && shotH > 0) { _window.Width = shotW; _window.Height = shotH; }
                 _window.Show();
                 _ = SelfScreenshot.CaptureThenExitAsync(_window, shotPath);
+            }
+            else if (navStressPath is not null)
+            {
+                _window.Show();
+                _ = NavStress.RunThenExitAsync(_window, navStressPath, () => Shutdown());
             }
             else if (settings.StartMinimized)
             {

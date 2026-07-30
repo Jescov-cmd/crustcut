@@ -20,6 +20,14 @@ public partial class PriorityRuleVm : ObservableObject
 
     public string ExeName => Path.GetFileName(ExePath);
 
+    /// <summary>
+    /// The rule as last persisted. Lets UpdateRuleAsync tell a REAL user edit apart from
+    /// the phantom SelectionChanged every ComboBox fires when its ItemsSource re-binds on
+    /// tab attach — those phantoms used to trigger a full process-table scan per row,
+    /// which is what froze the Memory tab on every visit.
+    /// </summary>
+    public PriorityRule LastSaved { get; set; }
+
     public PriorityRuleVm(PriorityRule rule)
     {
         _displayName = rule.DisplayName;
@@ -28,6 +36,7 @@ public partial class PriorityRuleVm : ObservableObject
         _protectFromRamCleanup = rule.ProtectFromRamCleanup;
         _gameBooster = rule.GameBooster;
         _isGame = rule.IsGame;
+        LastSaved = rule;
     }
 
     public PriorityRule ToRule() => new(
