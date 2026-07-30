@@ -23,6 +23,12 @@ public partial class GamesViewModel : ObservableObject
 
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private bool _showApiKeyPrompt;
+    [ObservableProperty] private bool _showEmptyState;
+
+    /// <summary>Only Steam exists on macOS; naming six Windows launchers there is noise.</summary>
+    public string DetectionSourcesText => OperatingSystem.IsWindows()
+        ? "Detected from Steam, Xbox, Epic, Ubisoft, EA and GOG."
+        : "Detected from your Steam library.";
 
     public ObservableCollection<GameTileViewModel> Tiles { get; } = new();
 
@@ -72,6 +78,7 @@ public partial class GamesViewModel : ObservableObject
         // their library — every Steam game is already covered by the CDN fetcher.
         var hasNonSteamGame = games.Any(g => string.IsNullOrEmpty(g.SteamAppId));
         ShowApiKeyPrompt = hasNonSteamGame && !_sgdb.HasApiKey;
+        ShowEmptyState = Tiles.Count == 0;
         IsLoading = false;
 
         _ = LoadCoversAsync();

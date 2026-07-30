@@ -8,7 +8,10 @@
       <TextBlock Text="Games" Classes="pageTitle" Margin="0,16,0,10"/>
       <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,16"
                  TextWrapping="Wrap"
-                 Text="Detected from Steam, Xbox, Epic, Ubisoft, EA and GOG."/>
+                 Text="{Binding DetectionSourcesText}"/>
+      <TextBlock FontSize="12" Foreground="{DynamicResource Text3}" Margin="0,0,0,16"
+                 TextWrapping="Wrap" IsVisible="{Binding ShowEmptyState}"
+                 Text="No games found yet. Install a game and reopen this tab."/>
     </StackPanel>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">

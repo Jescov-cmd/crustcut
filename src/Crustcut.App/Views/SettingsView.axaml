@@ -137,6 +137,18 @@
         </StackPanel>
       </Border>
 
+      <!-- ── About: the one card that exists on every platform, so Settings is never
+           an empty page (on macOS all four cards above are hidden). ── -->
+      <Border Classes="card">
+        <StackPanel Spacing="6">
+          <TextBlock Text="ABOUT" Classes="label"/>
+          <TextBlock Text="{Binding AboutText}" FontSize="12"
+                     Foreground="{DynamicResource Text1}"/>
+          <TextBlock Classes="hint" IsVisible="{Binding !IsWindows}"
+                     Text="Early preview on this platform — optimization features are Windows-only for now."/>
+        </StackPanel>
+      </Border>
+
       <TextBlock Text="{Binding Status}" Classes="hint" Margin="2,0,0,24"/>
     </StackPanel>
   </ScrollViewer>

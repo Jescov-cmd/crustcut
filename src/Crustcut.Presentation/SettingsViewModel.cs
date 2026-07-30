@@ -53,6 +53,11 @@ public partial class SettingsViewModel : ObservableObject
     /// autostart, PresentMon overlay/sentinel) bind their visibility to this.</summary>
     public bool IsWindows => OperatingSystem.IsWindows();
 
+    public string AboutText =>
+        // Entry assembly = Crustcut.App, which carries the real <Version>.
+        $"Crustcut {System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "?"}" +
+        $" on {(OperatingSystem.IsWindows() ? "Windows" : OperatingSystem.IsMacOS() ? "macOS" : "Linux")}";
+
     public void Load()
     {
         _loading = true;
