@@ -116,13 +116,27 @@ public sealed class BackgroundEngine : IDisposable
         _sampler.Sampled += OnSampled;
     }
 
+    /// <summary>Trimming below this much RAM pressure is pure harm: evicted pages don't
+    /// free (their apps still own them) — Windows just compresses them and burns CPU
+    /// faulting them back. Verified live: a 2-minute sweep drove Memory Compression to
+    /// the top of the process list while the user sat at 90%+ "used".</summary>
+    private const double RamPressureFloorPercent = 70;
+
+    /// <summary>Sweeping every process's working set more often than this guarantees
+    /// thrash — trimmed pages barely settle before the next eviction.</summary>
+    private const int MinIntervalMinutes = 5;
+
+    private double _lastRamPercent;
+
     private async Task AutoRamTickAsync()
     {
         try
         {
             var s = SafeSettings();
             if (!s.RamAutoOptimizeOnInterval || s.RamAutoIntervalMinutes <= 0) return;
-            if ((DateTime.UtcNow - _lastAutoRamUtc).TotalMinutes < s.RamAutoIntervalMinutes) return;
+            var minutes = Math.Max(MinIntervalMinutes, s.RamAutoIntervalMinutes);
+            if ((DateTime.UtcNow - _lastAutoRamUtc).TotalMinutes < minutes) return;
+            if (_lastRamPercent < RamPressureFloorPercent) return;
             await RunRamCleanupAsync();
         }
         catch { }
@@ -132,6 +146,7 @@ public sealed class BackgroundEngine : IDisposable
     {
         try
         {
+            _lastRamPercent = sample.RamPercent;
             var s = SafeSettings();
             if (!s.RamAutoOptimizeOnThreshold) { _thresholdFired = false; return; }
 

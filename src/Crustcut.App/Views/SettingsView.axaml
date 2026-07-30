@@ -41,16 +41,18 @@
               <TextBlock Text="Every" Foreground="{DynamicResource Text2}"
                          FontSize="12" VerticalAlignment="Center"/>
               <NumericUpDown Value="{Binding RamAutoIntervalMinutes, Mode=TwoWay}"
-                             Minimum="1" Maximum="120" Increment="1" Width="110"
+                             Minimum="5" Maximum="120" Increment="1" Width="110"
                              FormatString="0"/>
               <TextBlock Text="minutes" Foreground="{DynamicResource Text2}"
                          FontSize="12" VerticalAlignment="Center"/>
             </StackPanel>
 
+            <TextBlock Classes="hint"
+                       Text="Scheduled cleanup only runs when memory is actually above 70% — evicting memory that apps still need just makes Windows compress it and burn CPU putting it back."/>
             <Border Background="#22FFB84D" CornerRadius="8" Padding="11,8" Margin="0,10,0,0"
                     IsVisible="{Binding IntervalIsAggressive}">
               <TextBlock FontSize="11" Foreground="{DynamicResource Warn}" TextWrapping="Wrap"
-                         Text="That's a full sweep of every process roughly 30 times an hour. Cleanup now leaves apps you're using alone, but 10 minutes or more is plenty."/>
+                         Text="Short intervals re-evict memory before it settles. 10 minutes or more is plenty."/>
             </Border>
           </StackPanel>
 
