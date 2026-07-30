@@ -37,7 +37,7 @@ public sealed class AppxClient : IAppxClient
         // short Name, not the full name), so the pipeline removed nothing and the uninstall
         // silently no-op'd — the app "succeeded" but the package was never removed.
         // -ErrorAction Stop forces a non-zero exit on failure so RunPowerShellAsync throws.
-        var script = $"Remove-AppxPackage -Package '{packageFullName}' -ErrorAction Stop";
+        var script = $"Remove-AppxPackage -Package '{PsQuote(packageFullName)}' -ErrorAction Stop";
         await RunPowerShellAsync(script, ct);
     }
 
@@ -46,10 +46,19 @@ public sealed class AppxClient : IAppxClient
         // Get-AppxProvisionedPackage matches on DisplayName (which equals package Name).
         var script = $@"
 Get-AppxProvisionedPackage -Online |
-  Where-Object {{ $_.DisplayName -eq '{packageName}' }} |
+  Where-Object {{ $_.DisplayName -eq '{PsQuote(packageName)}' }} |
   Remove-AppxProvisionedPackage -Online -ErrorAction Stop";
         await RunPowerShellAsync(script, ct);
     }
+
+    /// <summary>
+    /// Makes a value safe inside a single-quoted PowerShell literal. Package names come
+    /// from Get-AppxPackage and our own catalog, but names are attacker-influenceable in
+    /// principle (any installer picks its own) — never let one break out of its quotes.
+    /// Doubling ' is the complete escape for PowerShell single-quoted strings; $, `, and
+    /// " have no meaning inside them.
+    /// </summary>
+    private static string PsQuote(string value) => value.Replace("'", "''");
 
     private static async Task<string> RunPowerShellAsync(string script, CancellationToken ct)
     {
