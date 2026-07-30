@@ -68,6 +68,7 @@ public partial class TweakRowVm : ObservableObject
         // Fallback for legacy tweaks (no Category property).
         if (tweak.Id.StartsWith("game.nagle") || tweak.Id.StartsWith("game.network"))
             return ("network", "Network");
+        if (tweak.Id.Contains("ram-cleaner")) return ("system", "System");
         return ("fps", "FPS & Latency");
     }
 }

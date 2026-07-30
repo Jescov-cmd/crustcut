@@ -2,7 +2,7 @@ using PrimeOSTuner.Core.Memory;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class RamCleanerTweak : ITweak
+public sealed class RamCleanerTweak : IOneShotTweak
 {
     private readonly SafeRamCleaner _cleaner;
     private readonly IRamCleanerProtectList _protectList;
@@ -37,14 +37,20 @@ public sealed class RamCleanerTweak : ITweak
     {
         // Enumerating every process and trimming is heavy synchronous work; keep it off the
         // UI thread so the window stays responsive.
-        var trimmed = await Task.Run(() =>
+        var report = await Task.Run(() =>
         {
             var protectedPids = _priority.FindPidsForExes(_protectList.Get());
             // launchingPid 0 == nothing extra to protect beyond the structural rules.
             return _cleaner.RunAsync(0, protectedPids, ct);
         }, ct);
 
-        return TweakResult.Success($"{{\"trimmed\":{trimmed}}}");
+        // The message is the whole point — a silent cleanup is indistinguishable from a
+        // broken one. Freed is a real measurement (working-set delta), not an estimate.
+        var freedMb = report.FreedBytes / (1024 * 1024);
+        var message = report.Trimmed == 0
+            ? "Nothing to clean — everything running is either in use or already lean."
+            : $"Freed {freedMb} MB from {report.Trimmed} background app(s).";
+        return TweakResult.Success($"{{\"trimmed\":{report.Trimmed}}}", message);
     }
 
     public Task<TweakResult> RevertAsync(string undoData, CancellationToken ct = default)

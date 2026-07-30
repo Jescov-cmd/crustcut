@@ -33,7 +33,7 @@ public class SafeRamCleanerTests
         var cleaner = new SafeRamCleaner(trimmer.Object);
         var trimmed = await cleaner.RunAsync(launchingPid: 9999, protectedPids: Array.Empty<int>());
 
-        trimmed.Should().Be(0);
+        trimmed.Trimmed.Should().Be(0);
         trimmer.Verify(t => t.TrimWorkingSet(It.IsAny<int>()), Times.Never);
     }
 
@@ -49,7 +49,7 @@ public class SafeRamCleanerTests
         var cleaner = new SafeRamCleaner(trimmer.Object);
         var trimmed = await cleaner.RunAsync(launchingPid: 9999, protectedPids: Array.Empty<int>());
 
-        trimmed.Should().Be(1);
+        trimmed.Trimmed.Should().Be(1);
         trimmer.Verify(t => t.TrimWorkingSet(300), Times.Once);
     }
 
@@ -65,7 +65,7 @@ public class SafeRamCleanerTests
         var cleaner = new SafeRamCleaner(trimmer.Object);
         var trimmed = await cleaner.RunAsync(launchingPid: 9999, protectedPids: Array.Empty<int>());
 
-        trimmed.Should().Be(0);
+        trimmed.Trimmed.Should().Be(0);
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class SafeRamCleanerTests
         var cleaner = new SafeRamCleaner(trimmer.Object);
         var trimmed = await cleaner.RunAsync(launchingPid: 100, protectedPids: new[] { 200 });
 
-        trimmed.Should().Be(1);
+        trimmed.Trimmed.Should().Be(1);
         trimmer.Verify(t => t.TrimWorkingSet(300), Times.Once);
         trimmer.Verify(t => t.TrimWorkingSet(100), Times.Never);
         trimmer.Verify(t => t.TrimWorkingSet(200), Times.Never);
@@ -118,7 +118,7 @@ public class SafeRamCleanerTests
         var cleaner = new SafeRamCleaner(trimmer.Object);
         var trimmed = await cleaner.RunAsync(launchingPid: 9999, protectedPids: Array.Empty<int>());
 
-        trimmed.Should().Be(0);
+        trimmed.Trimmed.Should().Be(0);
     }
 
     [Fact]
@@ -135,7 +135,7 @@ public class SafeRamCleanerTests
         var cleaner = new SafeRamCleaner(trimmer.Object);
         var trimmed = await cleaner.RunAsync(launchingPid: 9999, protectedPids: Array.Empty<int>());
 
-        trimmed.Should().Be(1);
+        trimmed.Trimmed.Should().Be(1);
         trimmer.Verify(t => t.TrimWorkingSet(700), Times.Once);
         trimmer.Verify(t => t.TrimWorkingSet(0), Times.Never);
     }
@@ -153,7 +153,25 @@ public class SafeRamCleanerTests
         var cleaner = new SafeRamCleaner(trimmer.Object);
         var trimmed = await cleaner.RunAsync(launchingPid: 9999, protectedPids: Array.Empty<int>());
 
-        trimmed.Should().Be(0);
+        trimmed.Trimmed.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Reports_measured_freed_bytes_from_working_set_shrinkage()
+    {
+        var before = new[] { new ProcessSnapshot(300, "indexer", 600_000_000, ParentPid: 1) };
+        var after  = new[] { new ProcessSnapshot(300, "indexer", 100_000_000, ParentPid: 1) };
+        var trimmer = new Mock<IWorkingSetTrimmer>();
+        trimmer.SetupSequence(t => t.Snapshot())
+               .Returns(before.ToList())
+               .Returns(after.ToList());
+        trimmer.Setup(t => t.ForegroundPid()).Returns(0);
+
+        var cleaner = new SafeRamCleaner(trimmer.Object);
+        var report = await cleaner.RunAsync(launchingPid: 9999, protectedPids: Array.Empty<int>());
+
+        report.Trimmed.Should().Be(1);
+        report.FreedBytes.Should().Be(500_000_000);
     }
 
     [Fact]
@@ -169,7 +187,7 @@ public class SafeRamCleanerTests
         var cleaner = new SafeRamCleaner(trimmer.Object);
         var trimmed = await cleaner.RunAsync(9999, Array.Empty<int>(), cts.Token);
 
-        trimmed.Should().Be(0);
+        trimmed.Trimmed.Should().Be(0);
         trimmer.Verify(t => t.TrimWorkingSet(It.IsAny<int>()), Times.Never);
     }
 }

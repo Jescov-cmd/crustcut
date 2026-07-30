@@ -4,6 +4,7 @@ using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PrimeOSTuner.Core.Games;
 using PrimeOSTuner.Core.Memory;
+using PrimeOSTuner.Core.Tweaks;
 
 namespace Crustcut.Presentation;
 
@@ -13,6 +14,7 @@ public partial class MemoryPriorityViewModel : ObservableObject
     private readonly PriorityRuleEngine _engine;
     private readonly GameRegistry _games;
     private readonly IPriorityClient? _priority;
+    private readonly ITweak? _ramCleaner;
 
     public ObservableCollection<PriorityRuleVm> Rules { get; } = new();
 
@@ -28,12 +30,35 @@ public partial class MemoryPriorityViewModel : ObservableObject
 
     public MemoryPriorityViewModel(
         PriorityRuleStore store, PriorityRuleEngine engine, GameRegistry games,
-        IPriorityClient? priority = null)
+        IPriorityClient? priority = null, ITweak? ramCleaner = null)
     {
         _store = store;
         _engine = engine;
         _games = games;
         _priority = priority;
+        _ramCleaner = ramCleaner;
+    }
+
+    /// <summary>
+    /// Runs the safe RAM cleanup on demand and returns a human-readable result line
+    /// ("Freed 240 MB from 6 background app(s)."). This is THE missing piece that made
+    /// the optimizer feel dead: cleanup previously only ran from background schedules,
+    /// with no button and no feedback.
+    /// </summary>
+    public async Task<string> CleanNowAsync()
+    {
+        if (_ramCleaner is null) return "RAM cleanup isn't available on this platform.";
+        try
+        {
+            var result = await _ramCleaner.ApplyAsync();   // Task.Runs internally
+            return result.Succeeded
+                ? result.Message ?? "Done."
+                : $"Cleanup failed: {result.Error}";
+        }
+        catch (Exception ex)
+        {
+            return $"Cleanup failed: {ex.Message}";
+        }
     }
 
     public async Task LoadAsync()

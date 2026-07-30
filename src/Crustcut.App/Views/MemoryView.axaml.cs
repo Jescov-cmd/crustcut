@@ -9,6 +9,15 @@ public partial class MemoryView : UserControl
 {
     public MemoryView() => InitializeComponent();
 
+    private async void CleanNowClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MemoryPriorityViewModel vm) return;
+        CleanNowButton.IsEnabled = false;
+        StatusText.Text = "Cleaning up…";
+        try { StatusText.Text = await vm.CleanNowAsync(); }
+        finally { CleanNowButton.IsEnabled = true; }
+    }
+
     private async void RescanClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not MemoryPriorityViewModel vm) return;

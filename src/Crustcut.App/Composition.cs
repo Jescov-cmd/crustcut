@@ -86,6 +86,13 @@ public sealed class Composition
             catch { return Array.Empty<string>(); }
         });
 
+        // ── Memory cleaner (built early: it joins the tweak list as a one-shot action) ─
+        var priorityStore = new PriorityRuleStore(PriorityRuleStore.DefaultPath());
+        var priorityClient = new PriorityClient();
+        var protectList = new StorePriorityProtectList(priorityStore);
+        var ramCleaner = new SafeRamCleaner(new WorkingSetTrimmer());
+        var ramTweak = new RamCleanerTweak(ramCleaner, protectList, priorityClient);
+
         // ── Tweaks: full set — hand-written + registry-driven catalog ─────────────────
         var registryClient = new RegistryClient();
         var powerClient = new PowerPlanClient();
@@ -122,7 +129,9 @@ public sealed class Composition
             .LoadFromFile(RegistryTweakCatalog.DefaultPath())
             .Select(d => (ITweak)new RegistryTweak(d, registryClient));
 
-        Tweaks = handWritten.Concat(catalog).ToList();
+        // "Free up RAM now" rides along as a one-shot action: RUN button on Optimize,
+        // excluded from the boost score and the one-click bundle by IOneShotTweak.
+        Tweaks = handWritten.Concat(catalog).Append(ramTweak).ToList();
 
         var oneClick = new OneClickOptimizer(Tweaks, history);
         var applier = new ProfileApplier(Tweaks, history);
@@ -171,10 +180,6 @@ public sealed class Composition
             dialogs);
 
         // ── Memory ────────────────────────────────────────────────────────────────────
-        var priorityStore = new PriorityRuleStore(PriorityRuleStore.DefaultPath());
-        var priorityClient = new PriorityClient();
-        var protectList = new StorePriorityProtectList(priorityStore);
-        var ramCleaner = new SafeRamCleaner(new WorkingSetTrimmer());
         var booster = new GameBooster(ramCleaner);
         var engine = new PriorityRuleEngine(new WmiProcessWatcher(), priorityClient, booster);
 
@@ -191,9 +196,7 @@ public sealed class Composition
         });
         try { engine.Start(); } catch { /* WMI denied when not elevated */ }
 
-        Memory = new MemoryPriorityViewModel(priorityStore, engine, gameRegistry, priorityClient);
-
-        var ramTweak = new RamCleanerTweak(ramCleaner, protectList, priorityClient);
+        Memory = new MemoryPriorityViewModel(priorityStore, engine, gameRegistry, priorityClient, ramTweak);
 
         // ── Game watcher + lifecycle inputs (lifecycle itself starts in the engine) ───
         var watcher = new GameProcessWatcher(

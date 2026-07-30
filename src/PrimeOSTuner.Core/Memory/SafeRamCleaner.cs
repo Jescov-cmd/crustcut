@@ -1,5 +1,8 @@
 namespace PrimeOSTuner.Core.Memory;
 
+/// <summary>What one cleanup pass actually did.</summary>
+public sealed record RamCleanReport(int Trimmed, long FreedBytes);
+
 /// <summary>
 /// Trims working sets of genuinely idle background processes, while never touching an
 /// application the user is working in. Pure logic — all OS access goes through
@@ -26,18 +29,19 @@ public sealed class SafeRamCleaner
     }
 
     /// <summary>
-    /// Trims every process that is above the size threshold and not protected.
-    /// Returns how many processes were trimmed.
+    /// Trims every process that is above the size threshold and not protected. Returns
+    /// what actually happened — count AND measured bytes released — so the UI can show
+    /// the user real impact instead of silence.
     /// </summary>
     /// <param name="launchingPid">A process to always protect (e.g. the game being started).</param>
     /// <param name="protectedPids">Additional pids the user has explicitly protected.</param>
-    public Task<int> RunAsync(int launchingPid, IEnumerable<int> protectedPids, CancellationToken ct = default)
+    public Task<RamCleanReport> RunAsync(int launchingPid, IEnumerable<int> protectedPids, CancellationToken ct = default)
     {
         var snapshot = _trimmer.Snapshot();
         var protectedSet = ComputeProtectedPids(
             snapshot, _trimmer.ForegroundPid(), protectedPids, launchingPid);
 
-        var trimmed = 0;
+        var beforeByPid = new Dictionary<int, long>();
         foreach (var s in snapshot)
         {
             if (ct.IsCancellationRequested) break;
@@ -47,11 +51,21 @@ public sealed class SafeRamCleaner
             if (s.Pid == 0) continue;
             if (protectedSet.Contains(s.Pid)) continue;
             if (s.WorkingSetBytes < MinWorkingSetThreshold) continue;
+            beforeByPid[s.Pid] = s.WorkingSetBytes;
             _trimmer.TrimWorkingSet(s.Pid);
-            trimmed++;
         }
 
-        return Task.FromResult(trimmed);
+        // EmptyWorkingSet is synchronous, so a fresh snapshot immediately reflects the
+        // trim. Freed = how much smaller the trimmed processes actually got.
+        long freed = 0;
+        if (beforeByPid.Count > 0)
+        {
+            var afterByPid = _trimmer.Snapshot().ToDictionary(s => s.Pid, s => s.WorkingSetBytes);
+            foreach (var (pid, before) in beforeByPid)
+                freed += Math.Max(0, before - afterByPid.GetValueOrDefault(pid, 0));
+        }
+
+        return Task.FromResult(new RamCleanReport(beforeByPid.Count, freed));
     }
 
     /// <summary>
