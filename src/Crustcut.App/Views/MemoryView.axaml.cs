@@ -18,6 +18,13 @@ public partial class MemoryView : UserControl
         finally { CleanNowButton.IsEnabled = true; }
     }
 
+    private async void RecommendedLimitsClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MemoryPriorityViewModel vm) return;
+        StatusText.Text = "Measuring running apps…";
+        StatusText.Text = await vm.ApplyRecommendedLimitsAsync();
+    }
+
     private async void RescanClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not MemoryPriorityViewModel vm) return;

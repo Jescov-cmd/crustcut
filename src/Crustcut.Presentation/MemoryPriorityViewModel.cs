@@ -343,6 +343,66 @@ public partial class MemoryPriorityViewModel : ObservableObject
         catch { /* enforcement is best-effort; the rule itself is already saved */ }
     }
 
+    /// <summary>
+    /// Sets a measured, meaningful cap on every running non-game app: the smallest preset
+    /// that still gives the app's LARGEST process ~25% headroom over what it uses right
+    /// now (floor 512 MB). That lets the app run normally today but stops it ballooning
+    /// tomorrow. Caps are per process — for multi-process apps (browsers, editors) a cap
+    /// far above any single process would never bite, which is why "just pick 1 GB" felt
+    /// dead. Games are never capped.
+    /// </summary>
+    public async Task<string> ApplyRecommendedLimitsAsync()
+    {
+        if (_priority is null) return "Not available on this platform.";
+
+        var candidates = Rules.Where(r => !r.IsGame).ToList();
+        var set = 0;
+
+        var planned = await Task.Run(() =>
+        {
+            var result = new List<(PriorityRuleVm Vm, MemoryLimitOption Option)>();
+            foreach (var vm in candidates)
+            {
+                long largest = 0;
+                foreach (var pid in _priority.FindPidsForExe(vm.ExePath))
+                {
+                    try { using var p = Process.GetProcessById(pid); largest = Math.Max(largest, p.WorkingSet64); }
+                    catch { /* exited between scan and read */ }
+                }
+                if (largest == 0) continue;   // not running — no measurement to base a cap on
+
+                var wantMb = Math.Max(512, (long)(largest * 1.25 / (1024 * 1024)));
+                var option = PriorityRuleVm.MemoryLimitOptions
+                    .Where(o => o.Mb is int mb && mb >= wantMb)
+                    .OrderBy(o => o.Mb)
+                    .FirstOrDefault();
+                if (option is null) continue;  // app legitimately needs more than the largest preset
+                result.Add((vm, option));
+            }
+            return result;
+        });
+
+        foreach (var (vm, option) in planned)
+        {
+            if (vm.MemoryLimit?.Mb == option.Mb) continue;
+            vm.MemoryLimit = option;
+            set++;
+        }
+
+        if (set == 0)
+            return "No changes — running apps are already capped sensibly or not running.";
+
+        // Persist first (refreshes LastSaved so the ComboBox-change debounce sees nothing
+        // dirty), then enforce on the running processes.
+        await PersistAsync();
+        await Task.Run(() =>
+        {
+            foreach (var (vm, option) in planned)
+                ApplyToRunningProcesses(vm.ExePath, vm.Priority, option.Mb);
+        });
+        return $"Set limits on {set} app(s), based on what each uses right now plus headroom.";
+    }
+
     public async Task<(int Added, int Updated)> ApplyRecommendedToAllGamesAsync()
     {
         var games = (await _games.GetAllAsync())
