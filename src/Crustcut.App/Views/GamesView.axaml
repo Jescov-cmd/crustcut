@@ -32,8 +32,10 @@
                              Foreground="{DynamicResource Text3}"
                              HorizontalAlignment="Center" VerticalAlignment="Center"
                              TextWrapping="Wrap" TextAlignment="Center" Margin="12"/>
+                  <!-- conv:AsyncImage decodes off the UI thread at thumbnail size; a
+                       converter here decoded every cover full-size ON the UI thread. -->
                   <Image Stretch="UniformToFill"
-                         Source="{Binding CoverImagePath, Converter={x:Static conv:PathToBitmapConverter.Instance}}"/>
+                         conv:AsyncImage.SourcePath="{Binding CoverImagePath}"/>
                 </Panel>
                 <StackPanel Margin="11,9,11,12">
                   <TextBlock Text="{Binding DisplayName}" FontSize="12.5" FontWeight="SemiBold"

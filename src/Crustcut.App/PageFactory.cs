@@ -13,10 +13,25 @@ public sealed class PageFactory
 {
     private readonly Composition? _app;
     private readonly HashSet<string> _loaded = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, Control> _cache = new(StringComparer.Ordinal);
 
     public PageFactory(Composition? app) => _app = app;
 
-    public Control Create(string tabId) => tabId switch
+    /// <summary>
+    /// Views are built ONCE and reused on every later visit. Rebuilding per navigation
+    /// re-instantiated every control template on the UI thread — on Memory that meant
+    /// dozens of ComboBox rows realized from scratch per click, which is exactly the
+    /// "tab freezes when opened" the user kept hitting.
+    /// </summary>
+    public Control Create(string tabId)
+    {
+        if (_cache.TryGetValue(tabId, out var cached)) return cached;
+        var view = Build(tabId);
+        _cache[tabId] = view;
+        return view;
+    }
+
+    private Control Build(string tabId) => tabId switch
     {
         "Overview" => new OverviewView { DataContext = _app?.Overview },
 
