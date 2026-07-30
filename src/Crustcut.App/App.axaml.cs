@@ -70,19 +70,25 @@ public partial class App : Application
             // on the UI thread — crash recovery and tweak re-enforcement spawn subprocesses
             // and made the whole app "not responding" for seconds after launch. UI-touching
             // parts inside marshal themselves via IUiDispatcher.
-            _ = Task.Run(() => _composition.Engine.StartAsync());
-            // Start Menu shortcut + heal the autostart task if the exe moved.
-            try
+            // Engine is null on macOS — no Windows subsystems to run.
+            if (_composition.Engine is { } engine)
+                _ = Task.Run(() => engine.StartAsync());
+            // Start Menu shortcut + heal the autostart task if the exe moved (Windows-only
+            // concepts: schtasks + .lnk shortcuts).
+            if (OperatingSystem.IsWindows())
             {
-                _composition.Registration.EnsureStartMenuShortcut();
-                if (settings.StartAtBoot) _composition.Registration.SetStartAtBoot(true);
+                try
+                {
+                    _composition.Registration.EnsureStartMenuShortcut();
+                    if (settings.StartAtBoot) _composition.Registration.SetStartAtBoot(true);
+                }
+                catch { }
             }
-            catch { }
 
             desktop.ShutdownRequested += (_, _) =>
             {
-                _composition?.Engine.Dispose();
-                _composition?.Overlay.Dispose();
+                _composition?.Engine?.Dispose();
+                _composition?.Overlay?.Dispose();
                 _composition?.Overview.Dispose();
                 _guard?.Dispose();
             };

@@ -1,50 +1,57 @@
 using Crustcut.App.Services;
 using Crustcut.Presentation;
-using PrimeOSTuner.Core.Bloatware;
-using PrimeOSTuner.Core.Diagnosis;
 using PrimeOSTuner.Core.Games;
 using PrimeOSTuner.Core.History;
-using PrimeOSTuner.Core.Lifecycle;
 using PrimeOSTuner.Core.Memory;
 using PrimeOSTuner.Core.Monitoring;
 using PrimeOSTuner.Core.Performance;
 using PrimeOSTuner.Core.Pipeline;
 using PrimeOSTuner.Core.Profiles;
-using PrimeOSTuner.Core.Sentinel;
 using PrimeOSTuner.Core.Settings;
 using PrimeOSTuner.Core.Tweaks;
 using PrimeOSTuner.Win;
-using PrimeOSTuner.Win.Suspension;
 using PrimeOSTuner.Win.Launchers;
 using PrimeOSTuner.Win.Steam;
 using PrimeOSTuner.Win.SteamGridDb;
 using PrimeOSTuner.Win.Xbox;
+#if WINDOWS
+using PrimeOSTuner.Core.Bloatware;
+using PrimeOSTuner.Core.Diagnosis;
+using PrimeOSTuner.Core.Lifecycle;
+using PrimeOSTuner.Core.Sentinel;
+using PrimeOSTuner.Win.Suspension;
+#else
+using PrimeOSTuner.Mac;
+#endif
 
 namespace Crustcut.App;
 
 /// <summary>
 /// Builds the object graph by hand. A container buys little here — the graph is shallow,
-/// explicit construction keeps startup cost visible, and it avoids a second DI setup while
-/// the WPF app still owns the original one.
+/// explicit construction keeps startup cost visible. On Windows this is the full product;
+/// on macOS only the platform-neutral subsystems are constructed (Overview monitoring,
+/// Games library, Guides, Settings) and the rest stay null with their tabs hidden by
+/// <see cref="Crustcut.Presentation.Navigation.NavCatalog"/>.
 /// </summary>
 public sealed class Composition
 {
     public IReadOnlyList<ITweak> Tweaks { get; }
     public OverviewViewModel Overview { get; }
-    public OptimizeViewModel Optimize { get; }
-    public CleanupViewModel Cleanup { get; }
-    public MemoryPriorityViewModel Memory { get; }
-    public DiagnosisViewModel Diagnosis { get; }
-    public HistoryViewModel History { get; }
+    public OptimizeViewModel? Optimize { get; }
+    public CleanupViewModel? Cleanup { get; }
+    public MemoryPriorityViewModel? Memory { get; }
+    public DiagnosisViewModel? Diagnosis { get; }
+    public HistoryViewModel? History { get; }
     public SettingsViewModel Settings { get; }
     public GamesViewModel Games { get; }
-    public SessionsViewModel Sessions { get; }
-    public GameBoostViewModel GameBoost { get; }
+    public SessionsViewModel? Sessions { get; }
+    public GameBoostViewModel? GameBoost { get; }
     public GuidesViewModel Guides { get; }
-    public OverlayService Overlay { get; }
-    public BackgroundEngine Engine { get; }
+    public OverlayService? Overlay { get; }
+    public BackgroundEngine? Engine { get; }
     public AppRegistrationService Registration { get; }
 
+#if WINDOWS
     public Composition()
     {
         var dialogs = new AvaloniaDialogService();
@@ -228,6 +235,50 @@ public sealed class Composition
             new GameProfileStore(GameProfileStore.DefaultPath()),
             new SessionTweakStore(SessionTweakStore.DefaultPath()));
     }
+#else
+    /// <summary>
+    /// macOS graph — UNTESTED ON REAL HARDWARE. Monitoring comes from
+    /// <see cref="MacHardwareClient"/>, the game library from Steam's on-disk manifests.
+    /// No tweak surface exists on macOS, so Tweaks is empty and the boost score reports
+    /// "no tweaks available" honestly.
+    /// </summary>
+    public Composition()
+    {
+        var ui = new AvaloniaDispatcher();
+        var settingsStore = new AppSettingsStore(AppSettingsStore.DefaultPath());
+
+        var gameRegistry = new GameRegistry(
+            new MacSteamLibraryScanner(),
+            new NullXboxLibraryScanner(),
+            Array.Empty<IExternalGameScanner>(),
+            new AddedGamesStore(AddedGamesStore.DefaultPath()));
+
+        Tweaks = Array.Empty<ITweak>();
+
+        var sampler = new SystemSampler(new MacHardwareClient());
+        var frameStore = new FrameSessionStore(FrameSessionStore.DefaultPath());
+
+        Overview = new OverviewViewModel(
+            sampler, new ActiveTweaksStore(ActiveTweaksStore.DefaultPath()),
+            Tweaks, frameStore, ui);
+
+        Registration = new AppRegistrationService();
+        Settings = new SettingsViewModel(settingsStore, Registration, Overlay);
+
+        var http = new HttpClient();
+        var artCache = new ArtCache(ArtCache.DefaultDir(), http);
+        Games = new GamesViewModel(
+            gameRegistry,
+            new GameProfileStore(GameProfileStore.DefaultPath()),
+            new SteamGridDbClient(http, SteamGridDbSettings.Load()),
+            artCache,
+            new SteamCdnCoverFetcher(artCache),
+            new SteamAppLookup(http),
+            ui);
+
+        Guides = new GuidesViewModel();
+    }
+#endif
 }
 
 /// <summary>Enumerable that resolves its source on first enumeration, not at construction.</summary>

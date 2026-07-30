@@ -37,7 +37,7 @@ public sealed class PageFactory
 
         // Probing every tweak is slow, so it runs on first visit rather than at startup.
         "Optimize" => Once(tabId, new OptimizeView { DataContext = _app?.Optimize },
-                           () => _app?.Optimize.InitializeAppliedStatesAsync()),
+                           () => _app?.Optimize?.InitializeAppliedStatesAsync()),
 
         // Cleanup and Diagnosis deliberately do NOT auto-run: both are slow, and neither
         // should happen without the user asking for it.
@@ -45,10 +45,10 @@ public sealed class PageFactory
         "Diagnosis" => new DiagnosisView { DataContext = _app?.Diagnosis },
 
         "Memory" => Once(tabId, new MemoryView { DataContext = _app?.Memory },
-                         () => _app?.Memory.LoadAsync()),
+                         () => _app?.Memory?.LoadAsync()),
 
         "History" => Once(tabId, new HistoryView { DataContext = _app?.History },
-                          () => _app?.History.LoadAsync()),
+                          () => _app?.History?.LoadAsync()),
 
         "Games" => Once(tabId, new GamesView { DataContext = _app?.Games },
                         () => _app?.Games.LoadAsync()),

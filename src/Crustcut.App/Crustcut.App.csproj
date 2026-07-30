@@ -1,25 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <!-- net9.0-windows is the shipping Windows build (defines WINDOWS for #if).
+         Plain net9.0 is the macOS/other build: same UI shell, Windows-only subsystems
+         compiled out, mac capability layer wired in Composition's #else branch. -->
+    <TargetFrameworks>net9.0-windows;net9.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
     <!-- Reflection bindings for now; compiled bindings get switched on in Phase 2 once
          every view has an x:DataType. -->
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
     <AssemblyName>Crustcut</AssemblyName>
-    <Version>0.8.0</Version>
+    <Version>0.9.0</Version>
     <RootNamespace>Crustcut.App</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-windows'">
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0-windows'">
     <!-- PresentMon must sit next to the exe as a real file (it gets spawned as a
          subprocess), so it is copied to output rather than embedded. -->
     <None Include="Assets\PresentMon\PresentMon-x64.exe"
@@ -36,7 +42,14 @@
   <ItemGroup>
     <ProjectReference Include="..\Crustcut.Presentation\Crustcut.Presentation.csproj" />
     <ProjectReference Include="..\PrimeOSTuner.Core\PrimeOSTuner.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0-windows'">
     <ProjectReference Include="..\PrimeOSTuner.Core.Windows\PrimeOSTuner.Core.Windows.csproj" />
     <ProjectReference Include="..\PrimeOSTuner.Win\PrimeOSTuner.Win.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+    <ProjectReference Include="..\PrimeOSTuner.Mac\PrimeOSTuner.Mac.csproj" />
   </ItemGroup>
 </Project>

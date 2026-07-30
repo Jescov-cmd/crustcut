@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- macOS capability layer: implements the Core platform interfaces with mac-native
+       sources (sysctl, vm_stat, ps, Steam's on-disk library manifests). Platform-neutral
+       TFM so it builds anywhere; only meaningful at runtime on macOS. -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PrimeOSTuner.Core\PrimeOSTuner.Core.csproj" />
+  </ItemGroup>
+
+</Project>
