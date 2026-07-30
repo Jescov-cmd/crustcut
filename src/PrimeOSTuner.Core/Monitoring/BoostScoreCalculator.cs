@@ -19,7 +19,9 @@ public static class BoostScoreCalculator
 
     public static async Task<Result> ComputeAsync(IEnumerable<ITweak> tweaks, CancellationToken ct = default)
     {
-        var eligible = tweaks.Where(t => !t.IsDestructive).ToList();
+        // One-shot actions (cache flushes, health checks) probe NotApplied forever — they
+        // have no "on" state, so counting them makes 100 permanently unreachable.
+        var eligible = tweaks.Where(t => !t.IsDestructive && t is not IOneShotTweak).ToList();
         double points = 0;
         int counted = 0;
 

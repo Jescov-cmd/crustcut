@@ -13,11 +13,19 @@ public partial class TweakRowVm : ObservableObject
     [ObservableProperty] private bool _isApplied;
     [ObservableProperty] private bool _isBusy;
 
+    /// <summary>Result line shown under a one-shot action after it runs ("DNS cache cleared.").</summary>
+    [ObservableProperty] private string _oneShotStatus = "";
+
     public string? UndoData { get; set; }
 
     public string DisplayName => Tweak.DisplayName;
     public string Description => Tweak.Description;
     public bool RequiresReboot => Tweak.RequiresReboot;
+
+    /// <summary>One-time actions render as a RUN button, never a toggle — there is no
+    /// "on" state for a cache flush to hold, so a switch would always snap back off.</summary>
+    public bool IsOneShot => Tweak is IOneShotTweak;
+    public bool IsToggle => !IsOneShot;
 
     public TweakRowVm(ITweak tweak)
     {

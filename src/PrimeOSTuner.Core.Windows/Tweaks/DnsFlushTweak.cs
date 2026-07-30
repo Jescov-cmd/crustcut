@@ -6,7 +6,7 @@ namespace PrimeOSTuner.Core.Tweaks;
 /// Runs <c>ipconfig /flushdns</c>. One-shot, no state, no undo.
 /// Useful when DNS records are stale (e.g. a site moved IPs and you can't reach it).
 /// </summary>
-public sealed class DnsFlushTweak : ITweak
+public sealed class DnsFlushTweak : IOneShotTweak
 {
     public string Id => "core.dns-flush";
     public string DisplayName => "Flush DNS cache";

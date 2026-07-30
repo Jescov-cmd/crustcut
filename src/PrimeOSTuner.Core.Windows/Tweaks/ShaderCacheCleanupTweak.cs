@@ -9,7 +9,7 @@ namespace PrimeOSTuner.Core.Tweaks;
 /// Touches: %LOCALAPPDATA%\NVIDIA\{GLCache,DXCache},
 /// %LOCALAPPDATA%\AMD\{DxCache,GLCache}, and %LOCALAPPDATA%\D3DSCache.
 /// </summary>
-public sealed class ShaderCacheCleanupTweak : ITweak
+public sealed class ShaderCacheCleanupTweak : IOneShotTweak
 {
     private static readonly string LocalAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 

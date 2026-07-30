@@ -49,6 +49,10 @@
                     <StackPanel Grid.Column="0" Spacing="3" Margin="0,0,16,0">
                       <TextBlock Text="{Binding DisplayName}" Classes="key"/>
                       <TextBlock Text="{Binding Description}" Classes="sub"/>
+                      <!-- Result line for one-shot actions ("DNS cache cleared."). -->
+                      <TextBlock Text="{Binding OneShotStatus}" FontSize="10.5"
+                                 Foreground="{DynamicResource Good}"
+                                 IsVisible="{Binding OneShotStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                       <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,3,0,0">
                         <TextBlock Text="Needs restart" FontSize="10.5"
                                    FontWeight="SemiBold"
@@ -72,11 +76,20 @@
                                HorizontalAlignment="Right"
                                VerticalAlignment="Top" Margin="0,1,0,0"/>
 
+                    <!-- Persistent settings get a toggle; one-time actions get RUN — a
+                         switch for "flush a cache" always snapped back off and read as
+                         broken, because there is no state for it to hold. -->
                     <ToggleSwitch Grid.Column="2" OnContent="" OffContent=""
                                   HorizontalAlignment="Right" VerticalAlignment="Top"
                                   IsChecked="{Binding IsApplied, Mode=TwoWay}"
                                   IsEnabled="{Binding !IsBusy}"
+                                  IsVisible="{Binding IsToggle}"
                                   Tag="{Binding}" Click="ToggleClick"/>
+                    <Button Grid.Column="2" Content="RUN" Classes="secondary"
+                            HorizontalAlignment="Right" VerticalAlignment="Top"
+                            IsEnabled="{Binding !IsBusy}"
+                            IsVisible="{Binding IsOneShot}"
+                            Tag="{Binding}" Click="RunClick"/>
                   </Grid>
                 </Border>
               </DataTemplate>

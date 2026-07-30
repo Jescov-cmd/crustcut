@@ -9,7 +9,7 @@ namespace PrimeOSTuner.Core.Tweaks;
 /// "Apply" doesn't fix anything — it just reports the count and names. Marked non-destructive
 /// so it's eligible for one-click runs (the run cost is a single WMI query).
 /// </summary>
-public sealed class DriverHealthCheckTweak : ITweak
+public sealed class DriverHealthCheckTweak : IOneShotTweak
 {
     public string Id => "core.driver-health";
     public string DisplayName => "Check driver health";

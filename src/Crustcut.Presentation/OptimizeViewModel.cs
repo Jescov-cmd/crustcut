@@ -99,7 +99,9 @@ public partial class OptimizeViewModel : ObservableObject
                 catch { /* enforcement is best-effort; never block the page on it */ }
             }
 
-            var total = _allRows.Count;
+            // One-shot actions can never be "active" — counting them made the total
+            // unreachable and the score look permanently unfinished.
+            var total = _allRows.Count(r => r.IsToggle);
             StatusText = appliedIds.Count == 0
                 ? $"No optimizations active yet — toggle any of the {total} tiles to apply one."
                 : $"{appliedIds.Count} of {total} optimizations active. Toggle any tile to change it.";
@@ -107,6 +109,37 @@ public partial class OptimizeViewModel : ObservableObject
         catch
         {
             StatusText = "Toggle each tile on or off. The tile lights up while a tweak is active.";
+        }
+    }
+
+    /// <summary>Runs a one-shot action (cache flush, health check) and surfaces its result
+    /// line under the row. No undo, no session tracking — there is nothing to persist.</summary>
+    public async Task RunOneShotAsync(TweakRowVm row)
+    {
+        row.IsBusy = true;
+        row.OneShotStatus = "Running…";
+        try
+        {
+            var result = await Task.Run(() => row.Tweak.ApplyAsync());
+            if (result.Succeeded)
+            {
+                row.OneShotStatus = string.IsNullOrWhiteSpace(result.Message) ? "Done." : result.Message!;
+            }
+            else
+            {
+                row.OneShotStatus = "";
+                await _dialogs.ShowAsync(row.DisplayName, $"Failed: {result.Error}", DialogKind.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            row.OneShotStatus = "";
+            await _dialogs.ShowAsync($"{row.DisplayName} — error",
+                $"{ex.GetType().Name}: {ex.Message}", DialogKind.Error);
+        }
+        finally
+        {
+            row.IsBusy = false;
         }
     }
 

@@ -16,7 +16,10 @@ public sealed class OneClickOptimizer
 
     public async Task<OptimizeReport> RunAsync(IProgress<(int Done, int Total, string CurrentName)>? progress = null, CancellationToken ct = default)
     {
-        var safe = _tweaks.Where(t => !t.IsDestructive).ToList();
+        // One-shot actions are excluded too: "optimize now" means "turn on the good
+        // settings", not "wipe caches you didn't ask to wipe" (a shader-cache wipe makes
+        // the next game session STUTTER while it rebuilds — the opposite of a boost).
+        var safe = _tweaks.Where(t => !t.IsDestructive && t is not IOneShotTweak).ToList();
         var skippedDestructive = _tweaks.Count - safe.Count;
         var applied = new List<string>();
         var failures = new List<(string, string)>();

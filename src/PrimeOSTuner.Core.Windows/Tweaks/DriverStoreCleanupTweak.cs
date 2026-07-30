@@ -13,7 +13,7 @@ namespace PrimeOSTuner.Core.Tweaks;
 /// Implementation: shells out to pnputil. Marked destructive so one-click never runs it without
 /// explicit user opt-in. Requires admin (pnputil /delete-driver needs elevation).
 /// </summary>
-public sealed class DriverStoreCleanupTweak : ITweak
+public sealed class DriverStoreCleanupTweak : IOneShotTweak
 {
     public string Id => "core.driver-store-cleanup";
     public string DisplayName => "Clean old driver packages";

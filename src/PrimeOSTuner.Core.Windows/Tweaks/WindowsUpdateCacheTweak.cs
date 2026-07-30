@@ -7,7 +7,7 @@ namespace PrimeOSTuner.Core.Tweaks;
 /// cache. Often grows to several GB and frequently fixes "Windows Update stuck" symptoms.
 /// Stops the wuauserv service first so files aren't held open, then restarts it.
 /// </summary>
-public sealed class WindowsUpdateCacheTweak : ITweak
+public sealed class WindowsUpdateCacheTweak : IOneShotTweak
 {
     private static readonly string CachePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.Windows),

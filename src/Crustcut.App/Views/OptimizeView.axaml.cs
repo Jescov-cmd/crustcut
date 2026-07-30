@@ -8,6 +8,13 @@ public partial class OptimizeView : UserControl
 {
     public OptimizeView() => InitializeComponent();
 
+    private async void RunClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: TweakRowVm row }) return;
+        if (DataContext is not OptimizeViewModel vm) return;
+        await vm.RunOneShotAsync(row);
+    }
+
     private async void ToggleClick(object? sender, RoutedEventArgs e)
     {
         if (sender is not ToggleSwitch sw || sw.Tag is not TweakRowVm row) return;
