@@ -90,7 +90,16 @@ public sealed class Composition
         var priorityStore = new PriorityRuleStore(PriorityRuleStore.DefaultPath());
         var priorityClient = new PriorityClient();
         var protectList = new StorePriorityProtectList(priorityStore);
-        var ramCleaner = new SafeRamCleaner(new WorkingSetTrimmer());
+        var trimmer = new WorkingSetTrimmer();
+        var ramCleaner = new SafeRamCleaner(trimmer);
+        // Clean our own house first: before any cleanup pass, Crustcut compacts its own
+        // heap and trims its own working set. A memory optimizer idling at 150+ MB
+        // undermines everything it claims.
+        Action selfTrim = () =>
+        {
+            GC.Collect(2, GCCollectionMode.Optimized, blocking: false);
+            trimmer.TrimWorkingSet(Environment.ProcessId);
+        };
         var ramTweak = new RamCleanerTweak(ramCleaner, protectList, priorityClient);
         var deepRamTweak = new RamCleanerTweak(ramCleaner, protectList, priorityClient, RamCleanMode.Deep);
         var standbyClient = new StandbyListClient();
@@ -241,7 +250,7 @@ public sealed class Composition
             new ActiveTweaksStore(ActiveTweaksStore.DefaultPath()),
             new GameProfileStore(GameProfileStore.DefaultPath()),
             new SessionTweakStore(SessionTweakStore.DefaultPath()),
-            standbyClient, deepRamTweak);
+            standbyClient, deepRamTweak, selfTrim);
     }
 #else
     /// <summary>

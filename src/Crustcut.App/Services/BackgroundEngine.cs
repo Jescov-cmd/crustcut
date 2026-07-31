@@ -44,6 +44,7 @@ public sealed class BackgroundEngine : IDisposable
 
     private readonly IStandbyListClient? _standby;
     private readonly RamCleanerTweak? _deepRamTweak;
+    private readonly Action? _selfTrim;
 
     public BackgroundEngine(
         GameProcessWatcher watcher, ISentinelService sentinel,
@@ -52,8 +53,9 @@ public sealed class BackgroundEngine : IDisposable
         IUiDispatcher ui, ProfileApplier applier, IBackgroundSuspenderService suspender,
         ActiveTweaksStore activeStore, GameProfileStore profileStore,
         SessionTweakStore sessionTweaks, IStandbyListClient? standby = null,
-        RamCleanerTweak? deepRamTweak = null)
+        RamCleanerTweak? deepRamTweak = null, Action? selfTrim = null)
     {
+        _selfTrim = selfTrim;
         _watcher = watcher; _sentinel = sentinel; _frames = frames;
         _overlay = overlay; _settings = settings; _tweaks = tweaks; _ramTweak = ramTweak;
         _sampler = sampler; _ui = ui; _applier = applier; _suspender = suspender;
@@ -303,6 +305,7 @@ public sealed class BackgroundEngine : IDisposable
         try
         {
             _lastAutoRamUtc = DateTime.UtcNow;
+            try { _selfTrim?.Invoke(); } catch { }   // our own house first
             var result = await tweak.ApplyAsync();
             EngineLog.Log($"cleanup ({trigger}): {(result.Succeeded ? result.Message : "FAILED: " + result.Error)}");
         }
