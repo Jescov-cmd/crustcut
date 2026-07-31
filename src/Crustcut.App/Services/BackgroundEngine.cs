@@ -43,6 +43,7 @@ public sealed class BackgroundEngine : IDisposable
     private bool _ramRunning;
 
     private readonly IStandbyListClient? _standby;
+    private readonly RamCleanerTweak? _deepRamTweak;
 
     public BackgroundEngine(
         GameProcessWatcher watcher, ISentinelService sentinel,
@@ -50,13 +51,15 @@ public sealed class BackgroundEngine : IDisposable
         IReadOnlyList<ITweak> tweaks, RamCleanerTweak ramTweak, SystemSampler sampler,
         IUiDispatcher ui, ProfileApplier applier, IBackgroundSuspenderService suspender,
         ActiveTweaksStore activeStore, GameProfileStore profileStore,
-        SessionTweakStore sessionTweaks, IStandbyListClient? standby = null)
+        SessionTweakStore sessionTweaks, IStandbyListClient? standby = null,
+        RamCleanerTweak? deepRamTweak = null)
     {
         _watcher = watcher; _sentinel = sentinel; _frames = frames;
         _overlay = overlay; _settings = settings; _tweaks = tweaks; _ramTweak = ramTweak;
         _sampler = sampler; _ui = ui; _applier = applier; _suspender = suspender;
         _activeStore = activeStore; _profileStore = profileStore; _sessionTweaks = sessionTweaks;
         _standby = standby;
+        _deepRamTweak = deepRamTweak;
     }
 
     public async Task StartAsync()
@@ -157,11 +160,19 @@ public sealed class BackgroundEngine : IDisposable
         EngineLog.Log($"standby: free {free / (1024 * 1024)} MB, cache {cache / (1024 * 1024)} MB — purge {(ok ? "ok" : "REFUSED")}");
     }
 
+    private long _lastCleanFreedBytes = -1;   // -1 = no clean measured yet
+
     private async Task AutoRamTickAsync()
     {
         try
         {
             var s = SafeSettings();
+            if (s.RamAdaptiveEnabled && _standby is not null)
+            {
+                await AdaptiveTickAsync();
+                return;
+            }
+
             MaybePurgeStandby(s);
             string? skip = null;
             var minutes = Math.Max(MinIntervalMinutes, s.RamAutoIntervalMinutes);
@@ -180,9 +191,46 @@ public sealed class BackgroundEngine : IDisposable
             }
             _lastSkipReason = "";
             EngineLog.Log($"tick: running scheduled cleanup (RAM {_lastRamPercent:F0}%)");
-            await RunRamCleanupAsync("scheduled");
+            await RunRamCleanupAsync("scheduled", _ramTweak);
         }
         catch (Exception ex) { EngineLog.Log($"tick: failed: {ex.Message}"); }
+    }
+
+    /// <summary>One adaptive evaluation: read pressure, let the policy decide, act, log.</summary>
+    private async Task AdaptiveTickAsync()
+    {
+        var snapshot = new RamPressureSnapshot(
+            _lastRamPercent,
+            _standby!.GetFreeBytes(),
+            _standby.GetStandbyBytes(),
+            _standby.GetPageInputPerSec());
+
+        var decision = AdaptiveRamPolicy.Decide(
+            snapshot, DateTime.UtcNow - _lastAutoRamUtc, _lastCleanFreedBytes);
+
+        if (decision.PurgeStandby && DateTime.UtcNow - _lastStandbyPurgeUtc >= StandbyPurgeCooldown)
+        {
+            _lastStandbyPurgeUtc = DateTime.UtcNow;
+            var ok = _standby.TryPurge();
+            EngineLog.Log($"adaptive: standby purge ({decision.Reason}) — {(ok ? "ok" : "REFUSED")}");
+        }
+
+        if (!decision.Clean)
+        {
+            if (decision.Reason != _lastSkipReason)
+            {
+                EngineLog.Log($"adaptive: idle — {decision.Reason}");
+                _lastSkipReason = decision.Reason;
+            }
+            return;
+        }
+
+        _lastSkipReason = "";
+        var tweak = decision.Mode == RamCleanMode.Deep && _deepRamTweak is not null
+            ? _deepRamTweak : _ramTweak;
+        EngineLog.Log($"adaptive: {decision.Mode} clean — {decision.Reason}");
+        await RunRamCleanupAsync($"adaptive-{decision.Mode}", tweak);
+        _lastCleanFreedBytes = (RamCleanLog.TryRead()?.FreedMb ?? -1) * 1024 * 1024;
     }
 
     private void OnSampled(object? sender, SystemSample sample)
@@ -191,6 +239,8 @@ public sealed class BackgroundEngine : IDisposable
         {
             _lastRamPercent = sample.RamPercent;
             var s = SafeSettings();
+            // Adaptive mode owns all cleanup decisions; the fixed threshold stands down.
+            if (s.RamAdaptiveEnabled) { _thresholdFired = false; return; }
             if (!s.RamAutoOptimizeOnThreshold) { _thresholdFired = false; return; }
 
             if (sample.RamPercent >= s.RamThresholdPercent)
@@ -199,7 +249,7 @@ public sealed class BackgroundEngine : IDisposable
                 {
                     _thresholdFired = true;
                     EngineLog.Log($"threshold: RAM {sample.RamPercent:F0}% crossed {s.RamThresholdPercent}% — cleaning");
-                    _ = RunRamCleanupAsync("threshold");
+                    _ = RunRamCleanupAsync("threshold", _ramTweak);
                 }
             }
             else if (sample.RamPercent < s.RamThresholdPercent - 5)
@@ -212,14 +262,14 @@ public sealed class BackgroundEngine : IDisposable
         catch { }
     }
 
-    private async Task RunRamCleanupAsync(string trigger)
+    private async Task RunRamCleanupAsync(string trigger, RamCleanerTweak tweak)
     {
         if (_ramRunning) return;
         _ramRunning = true;
         try
         {
             _lastAutoRamUtc = DateTime.UtcNow;
-            var result = await _ramTweak.ApplyAsync();
+            var result = await tweak.ApplyAsync();
             EngineLog.Log($"cleanup ({trigger}): {(result.Succeeded ? result.Message : "FAILED: " + result.Error)}");
         }
         catch (Exception ex) { EngineLog.Log($"cleanup ({trigger}): threw: {ex.Message}"); }

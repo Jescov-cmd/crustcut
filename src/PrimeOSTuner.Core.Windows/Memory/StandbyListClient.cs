@@ -48,6 +48,24 @@ public sealed class StandbyListClient : IStandbyListClient
 
     public long GetFreeBytes() => ReadCounter("Free & Zero Page List Bytes");
 
+    // Rate counter: must be the SAME instance across reads — NextValue() returns the rate
+    // since the previous call (first call is always 0). The engine polls once a minute,
+    // which gives a solid average.
+    private PerformanceCounter? _pageInput;
+
+    public double GetPageInputPerSec()
+    {
+        try
+        {
+            _pageInput ??= new PerformanceCounter("Memory", "Pages Input/sec", readOnly: true);
+            return _pageInput.NextValue();
+        }
+        catch
+        {
+            return 0;   // counter unavailable — thrash guard just never triggers
+        }
+    }
+
     public bool TryPurge()
     {
         try

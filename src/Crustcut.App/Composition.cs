@@ -241,7 +241,7 @@ public sealed class Composition
             new ActiveTweaksStore(ActiveTweaksStore.DefaultPath()),
             new GameProfileStore(GameProfileStore.DefaultPath()),
             new SessionTweakStore(SessionTweakStore.DefaultPath()),
-            standbyClient);
+            standbyClient, deepRamTweak);
     }
 #else
     /// <summary>

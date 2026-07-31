@@ -16,4 +16,8 @@ public interface IStandbyListClient
 
     /// <summary>Asks the memory manager to drop the standby lists. Needs admin. False on refusal.</summary>
     bool TryPurge();
+
+    /// <summary>Hard-fault page-in rate (pages read from disk per second). The adaptive
+    /// policy's thrash guard: high values mean the system is already paying for evictions.</summary>
+    double GetPageInputPerSec();
 }

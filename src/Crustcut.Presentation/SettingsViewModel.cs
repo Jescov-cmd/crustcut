@@ -20,6 +20,7 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private bool _ramAutoOptimizeOnThreshold;
     [ObservableProperty] private int _ramThresholdPercent = 90;
     [ObservableProperty] private bool _standbyAutoPurgeEnabled;
+    [ObservableProperty] private bool _ramAdaptiveEnabled = true;
 
     [ObservableProperty] private bool _startAtBoot;
     [ObservableProperty] private bool _startMinimized;
@@ -70,6 +71,7 @@ public partial class SettingsViewModel : ObservableObject
             RamAutoOptimizeOnThreshold = s.RamAutoOptimizeOnThreshold;
             RamThresholdPercent = s.RamThresholdPercent;
             StandbyAutoPurgeEnabled = s.StandbyAutoPurgeEnabled;
+            RamAdaptiveEnabled = s.RamAdaptiveEnabled;
             StartAtBoot = s.StartAtBoot;
             StartMinimized = s.StartMinimized;
             MinimizeToTrayOnClose = s.MinimizeToTrayOnClose;
@@ -102,6 +104,7 @@ public partial class SettingsViewModel : ObservableObject
         s.RamAutoOptimizeOnThreshold = RamAutoOptimizeOnThreshold;
         s.RamThresholdPercent = RamThresholdPercent;
         s.StandbyAutoPurgeEnabled = StandbyAutoPurgeEnabled;
+        s.RamAdaptiveEnabled = RamAdaptiveEnabled;
         s.StartAtBoot = StartAtBoot;
         s.StartMinimized = StartMinimized;
         s.MinimizeToTrayOnClose = MinimizeToTrayOnClose;
@@ -122,6 +125,7 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnRamAutoOptimizeOnThresholdChanged(bool value) => Save();
     partial void OnRamThresholdPercentChanged(int value) => Save();
     partial void OnStandbyAutoPurgeEnabledChanged(bool value) => Save();
+    partial void OnRamAdaptiveEnabledChanged(bool value) => Save();
     partial void OnStartAtBootChanged(bool value)
     {
         // Persist the flag AND make it real: a scheduled task with highest privileges is

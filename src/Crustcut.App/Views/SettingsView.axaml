@@ -32,6 +32,16 @@
         <StackPanel Spacing="12">
           <TextBlock Text="MEMORY CLEANUP" Classes="label"/>
 
+          <StackPanel>
+            <CheckBox IsChecked="{Binding RamAdaptiveEnabled, Mode=TwoWay}"
+                      Content="Adaptive cleanup (recommended)"
+                      Foreground="{DynamicResource Text1}"/>
+            <TextBlock Classes="hint"
+                       Text="Crustcut watches memory pressure every minute and decides when and how hard to clean: nothing while memory is comfortable, stronger cleanup as pressure rises, standby purges when the cache hoards, and it backs off entirely mid paging-storm. The manual schedule below is ignored while this is on."/>
+          </StackPanel>
+
+          <StackPanel IsEnabled="{Binding !RamAdaptiveEnabled}">
+          <StackPanel Spacing="12">
           <CheckBox IsChecked="{Binding RamAutoOptimizeOnInterval, Mode=TwoWay}"
                     Content="Clean up memory on a schedule"
                     Foreground="{DynamicResource Text1}"/>
@@ -77,6 +87,8 @@
                       Foreground="{DynamicResource Text1}"/>
             <TextBlock Classes="hint"
                        Text="The game-stutter fix (what ISLC does): fires only when free memory drops under 1 GB while Windows' file cache holds over 1.5 GB — never on a healthy system, at most every 10 minutes."/>
+          </StackPanel>
+          </StackPanel>
           </StackPanel>
         </StackPanel>
       </Border>
