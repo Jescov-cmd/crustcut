@@ -30,13 +30,34 @@ public partial class MemoryPriorityViewModel : ObservableObject
 
     public MemoryPriorityViewModel(
         PriorityRuleStore store, PriorityRuleEngine engine, GameRegistry games,
-        IPriorityClient? priority = null, ITweak? ramCleaner = null)
+        IPriorityClient? priority = null, ITweak? ramCleaner = null, ITweak? deepRamCleaner = null)
     {
         _store = store;
         _engine = engine;
         _games = games;
         _priority = priority;
         _ramCleaner = ramCleaner;
+        _deepRamCleaner = deepRamCleaner;
+    }
+
+    private readonly ITweak? _deepRamCleaner;
+
+    /// <summary>Deep clean: minimized apps and small background processes included.
+    /// Same result-line contract as <see cref="CleanNowAsync"/>.</summary>
+    public async Task<string> DeepCleanAsync()
+    {
+        if (_deepRamCleaner is null) return "Deep clean isn't available on this platform.";
+        try
+        {
+            var result = await _deepRamCleaner.ApplyAsync();
+            return result.Succeeded
+                ? result.Message ?? "Done."
+                : $"Deep clean failed: {result.Error}";
+        }
+        catch (Exception ex)
+        {
+            return $"Deep clean failed: {ex.Message}";
+        }
     }
 
     /// <summary>"Last cleanup: 4 min ago — freed 210 MB." Empty when none has run yet.

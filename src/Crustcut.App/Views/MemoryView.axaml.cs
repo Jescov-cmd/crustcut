@@ -25,6 +25,15 @@ public partial class MemoryView : UserControl
         finally { CleanNowButton.IsEnabled = true; }
     }
 
+    private async void DeepCleanClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MemoryPriorityViewModel vm) return;
+        DeepCleanButton.IsEnabled = false;
+        StatusText.Text = "Deep cleaning…";
+        try { StatusText.Text = await vm.DeepCleanAsync(); }
+        finally { DeepCleanButton.IsEnabled = true; }
+    }
+
     private async void RecommendedLimitsClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not MemoryPriorityViewModel vm) return;

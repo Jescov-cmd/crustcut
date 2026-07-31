@@ -20,6 +20,9 @@ public sealed class WorkingSetTrimmer : IWorkingSetTrimmer
     [DllImport("user32.dll")]
     private static extern bool IsWindowVisible(IntPtr hWnd);
 
+    [DllImport("user32.dll")]
+    private static extern bool IsIconic(IntPtr hWnd);
+
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern IntPtr CreateToolhelp32Snapshot(uint flags, uint pid);
 
@@ -56,7 +59,7 @@ public sealed class WorkingSetTrimmer : IWorkingSetTrimmer
     public IReadOnlyList<ProcessSnapshot> Snapshot()
     {
         var parents = ReadParentPids();
-        var windowed = ReadWindowedPids();
+        var (windowed, restored) = ReadWindowedPids();
 
         var snaps = new List<ProcessSnapshot>();
         foreach (var p in Process.GetProcesses())
@@ -68,7 +71,8 @@ public sealed class WorkingSetTrimmer : IWorkingSetTrimmer
                     p.ProcessName,
                     p.WorkingSet64,
                     parents.TryGetValue(p.Id, out var parent) ? parent : 0,
-                    windowed.Contains(p.Id)));
+                    windowed.Contains(p.Id),
+                    restored.Contains(p.Id)));
             }
             catch { /* process exited between enumeration and read */ }
             finally { p.Dispose(); }
@@ -116,20 +120,25 @@ public sealed class WorkingSetTrimmer : IWorkingSetTrimmer
         return map;
     }
 
-    /// <summary>Every pid owning at least one visible top-level window.</summary>
-    private static HashSet<int> ReadWindowedPids()
+    /// <summary>Pids owning any visible top-level window, and the subset whose window is
+    /// actually restored on screen (not minimized) — the distinction deep clean runs on.</summary>
+    private static (HashSet<int> Windowed, HashSet<int> Restored) ReadWindowedPids()
     {
-        var pids = new HashSet<int>();
+        var windowed = new HashSet<int>();
+        var restored = new HashSet<int>();
         try
         {
             EnumWindows((hWnd, _) =>
             {
                 if (IsWindowVisible(hWnd) && GetWindowThreadProcessId(hWnd, out var pid) != 0)
-                    pids.Add((int)pid);
+                {
+                    windowed.Add((int)pid);
+                    if (!IsIconic(hWnd)) restored.Add((int)pid);
+                }
                 return true; // keep enumerating
             }, IntPtr.Zero);
         }
         catch { /* best effort */ }
-        return pids;
+        return (windowed, restored);
     }
 }

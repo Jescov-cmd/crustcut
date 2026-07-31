@@ -157,6 +157,60 @@ public class SafeRamCleanerTests
     }
 
     [Fact]
+    public async Task Deep_trims_minimized_apps_that_normal_protects()
+    {
+        // A minimized Discord holding 800 MB: Normal leaves it alone (visible window),
+        // Deep trims it (window exists but is not on screen).
+        var procs = new[]
+        {
+            new ProcessSnapshot(600, "Discord", 800_000_000, ParentPid: 1,
+                HasVisibleWindow: true, HasRestoredWindow: false),
+        };
+
+        var normal = await new SafeRamCleaner(TrimmerWith(procs).Object)
+            .RunAsync(0, Array.Empty<int>());
+        normal.Trimmed.Should().Be(0);
+
+        var deepTrimmer = TrimmerWith(procs);
+        var deep = await new SafeRamCleaner(deepTrimmer.Object)
+            .RunAsync(0, Array.Empty<int>(), RamCleanMode.Deep);
+        deep.Trimmed.Should().Be(1);
+        deepTrimmer.Verify(t => t.TrimWorkingSet(600), Times.Once);
+    }
+
+    [Fact]
+    public async Task Deep_still_protects_on_screen_windows_foreground_and_explicit_list()
+    {
+        var procs = new[]
+        {
+            new ProcessSnapshot(700, "OnScreen",  500_000_000, ParentPid: 1,
+                HasVisibleWindow: true, HasRestoredWindow: true),
+            new ProcessSnapshot(701, "Focused",   500_000_000, ParentPid: 1),
+            new ProcessSnapshot(702, "Protected", 500_000_000, ParentPid: 1,
+                HasVisibleWindow: true, HasRestoredWindow: false),   // minimized BUT protected
+        };
+        var trimmer = TrimmerWith(procs, foregroundPid: 701);
+
+        var deep = await new SafeRamCleaner(trimmer.Object)
+            .RunAsync(0, new[] { 702 }, RamCleanMode.Deep);
+
+        deep.Trimmed.Should().Be(0);
+        trimmer.Verify(t => t.TrimWorkingSet(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Deep_lowers_the_size_floor()
+    {
+        // 40 MB background process: under Normal's 100 MB floor, above Deep's 25 MB floor.
+        var procs = new[] { new ProcessSnapshot(800, "smallish", 40_000_000, ParentPid: 1) };
+
+        (await new SafeRamCleaner(TrimmerWith(procs).Object)
+            .RunAsync(0, Array.Empty<int>())).Trimmed.Should().Be(0);
+        (await new SafeRamCleaner(TrimmerWith(procs).Object)
+            .RunAsync(0, Array.Empty<int>(), RamCleanMode.Deep)).Trimmed.Should().Be(1);
+    }
+
+    [Fact]
     public async Task Reports_measured_freed_bytes_from_working_set_shrinkage()
     {
         var before = new[] { new ProcessSnapshot(300, "indexer", 600_000_000, ParentPid: 1) };
@@ -185,7 +239,7 @@ public class SafeRamCleanerTests
         cts.Cancel();
 
         var cleaner = new SafeRamCleaner(trimmer.Object);
-        var trimmed = await cleaner.RunAsync(9999, Array.Empty<int>(), cts.Token);
+        var trimmed = await cleaner.RunAsync(9999, Array.Empty<int>(), ct: cts.Token);
 
         trimmed.Trimmed.Should().Be(0);
         trimmer.Verify(t => t.TrimWorkingSet(It.IsAny<int>()), Times.Never);

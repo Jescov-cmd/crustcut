@@ -9,13 +9,16 @@ namespace PrimeOSTuner.Core.Memory;
 /// <param name="Name">Process name without extension (e.g. "Code").</param>
 /// <param name="WorkingSetBytes">Current working set size in bytes.</param>
 /// <param name="ParentPid">Creating process id, or 0 when unknown.</param>
-/// <param name="HasVisibleWindow">True when this process owns a visible top-level window.</param>
+/// <param name="HasVisibleWindow">True when this process owns a visible top-level window (minimized counts).</param>
+/// <param name="HasRestoredWindow">True when at least one of its visible windows is NOT minimized —
+/// i.e. the app is actually on screen. Deep clean protects these but not minimized-only apps.</param>
 public sealed record ProcessSnapshot(
     int Pid,
     string Name,
     long WorkingSetBytes,
     int ParentPid = 0,
-    bool HasVisibleWindow = false);
+    bool HasVisibleWindow = false,
+    bool HasRestoredWindow = false);
 
 public interface IWorkingSetTrimmer
 {

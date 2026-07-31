@@ -4,13 +4,22 @@ namespace PrimeOSTuner.Core.Memory;
 public sealed record RamCleanReport(int Trimmed, long FreedBytes);
 
 /// <summary>
+/// Normal: only windowless background processes above 100 MB — invisible to the user's
+/// workflow. Deep: minimized apps are fair game too (they wake a beat slower afterwards)
+/// and the size floor drops, so the dozens of small background processes count. Deep is
+/// strictly user-initiated; schedules and thresholds always run Normal.
+/// </summary>
+public enum RamCleanMode { Normal, Deep }
+
+/// <summary>
 /// Trims working sets of genuinely idle background processes, while never touching an
 /// application the user is working in. Pure logic — all OS access goes through
 /// <see cref="IWorkingSetTrimmer"/> so the protection rules are unit-testable.
 /// </summary>
 public sealed class SafeRamCleaner
 {
-    private const long MinWorkingSetThreshold = 100L * 1024 * 1024; // 100 MB
+    private const long MinWorkingSetThreshold = 100L * 1024 * 1024;     // 100 MB — Normal
+    private const long DeepMinWorkingSetThreshold = 25L * 1024 * 1024;  // 25 MB — Deep
 
     // Shell and critical OS infrastructure. Trimming these is never worth it.
     private static readonly HashSet<string> SystemProcessNames = new(StringComparer.OrdinalIgnoreCase)
@@ -35,12 +44,14 @@ public sealed class SafeRamCleaner
     /// </summary>
     /// <param name="launchingPid">A process to always protect (e.g. the game being started).</param>
     /// <param name="protectedPids">Additional pids the user has explicitly protected.</param>
-    public Task<RamCleanReport> RunAsync(int launchingPid, IEnumerable<int> protectedPids, CancellationToken ct = default)
+    public Task<RamCleanReport> RunAsync(int launchingPid, IEnumerable<int> protectedPids,
+        RamCleanMode mode = RamCleanMode.Normal, CancellationToken ct = default)
     {
         var snapshot = _trimmer.Snapshot();
         var protectedSet = ComputeProtectedPids(
-            snapshot, _trimmer.ForegroundPid(), protectedPids, launchingPid);
+            snapshot, _trimmer.ForegroundPid(), protectedPids, launchingPid, mode);
 
+        var floor = mode == RamCleanMode.Deep ? DeepMinWorkingSetThreshold : MinWorkingSetThreshold;
         var beforeByPid = new Dictionary<int, long>();
         foreach (var s in snapshot)
         {
@@ -50,7 +61,7 @@ public sealed class SafeRamCleaner
             // excluded here instead.
             if (s.Pid == 0) continue;
             if (protectedSet.Contains(s.Pid)) continue;
-            if (s.WorkingSetBytes < MinWorkingSetThreshold) continue;
+            if (s.WorkingSetBytes < floor) continue;
             beforeByPid[s.Pid] = s.WorkingSetBytes;
             _trimmer.TrimWorkingSet(s.Pid);
         }
@@ -77,7 +88,8 @@ public sealed class SafeRamCleaner
         IReadOnlyList<ProcessSnapshot> snapshot,
         int foregroundPid,
         IEnumerable<int> explicitlyProtected,
-        int launchingPid)
+        int launchingPid,
+        RamCleanMode mode)
     {
         // ── Seeds: processes protected in their own right ────────────────────────────────
         var seeds = new HashSet<int>();
@@ -96,7 +108,11 @@ public sealed class SafeRamCleaner
 
         foreach (var s in snapshot)
         {
-            if (s.HasVisibleWindow) Seed(s.Pid);              // an app the user can see
+            // Normal: any visible window protects the app, minimized included.
+            // Deep: only a window actually ON SCREEN protects it — a minimized app is
+            // idle by definition and the user opted into it waking a beat slower.
+            var windowProtects = mode == RamCleanMode.Deep ? s.HasRestoredWindow : s.HasVisibleWindow;
+            if (windowProtects) Seed(s.Pid);
             if (SystemProcessNames.Contains(s.Name)) Seed(s.Pid);
         }
 

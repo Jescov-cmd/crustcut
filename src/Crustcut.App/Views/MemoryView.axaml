@@ -21,6 +21,8 @@
       <StackPanel Orientation="Horizontal" Spacing="9" Margin="0,0,0,16">
         <Button x:Name="CleanNowButton" Content="FREE UP RAM" Classes="primary" Click="CleanNowClick"
                 ToolTip.Tip="Releases memory held by idle background programs. Apps you're using are left alone."/>
+        <Button x:Name="DeepCleanButton" Content="DEEP CLEAN" Classes="secondary" Click="DeepCleanClick"
+                ToolTip.Tip="Bigger cleanup: minimized apps and small background programs included. Minimized apps wake a moment slower afterwards. On-screen, focused and PROTECT-ed apps are never touched."/>
         <Button Content="RECOMMENDED LIMITS" Classes="secondary" Click="RecommendedLimitsClick"
                 ToolTip.Tip="Measures what each running app uses and caps it with ~25% headroom — normal use unaffected, runaway growth stopped. Games are never capped."/>
         <Button Content="SCAN RUNNING APPS" Classes="secondary" Click="RescanClick"/>

@@ -14,6 +14,6 @@ public sealed class GameBooster : IGameBooster
     {
         // Let the game finish its initial allocation phase before we start trimming.
         await Task.Delay(StartupDelay, ct);
-        await _cleaner.RunAsync(launchingPid, protectedPids, ct);
+        await _cleaner.RunAsync(launchingPid, protectedPids, RamCleanMode.Normal, ct);
     }
 }

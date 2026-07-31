@@ -92,6 +92,7 @@ public sealed class Composition
         var protectList = new StorePriorityProtectList(priorityStore);
         var ramCleaner = new SafeRamCleaner(new WorkingSetTrimmer());
         var ramTweak = new RamCleanerTweak(ramCleaner, protectList, priorityClient);
+        var deepRamTweak = new RamCleanerTweak(ramCleaner, protectList, priorityClient, RamCleanMode.Deep);
 
         // ── Tweaks: full set — hand-written + registry-driven catalog ─────────────────
         var registryClient = new RegistryClient();
@@ -129,9 +130,9 @@ public sealed class Composition
             .LoadFromFile(RegistryTweakCatalog.DefaultPath())
             .Select(d => (ITweak)new RegistryTweak(d, registryClient));
 
-        // "Free up RAM now" rides along as a one-shot action: RUN button on Optimize,
+        // The RAM cleaners ride along as one-shot actions: RUN buttons on Optimize,
         // excluded from the boost score and the one-click bundle by IOneShotTweak.
-        Tweaks = handWritten.Concat(catalog).Append(ramTweak).ToList();
+        Tweaks = handWritten.Concat(catalog).Append(ramTweak).Append(deepRamTweak).ToList();
 
         var oneClick = new OneClickOptimizer(Tweaks, history);
         var applier = new ProfileApplier(Tweaks, history);
@@ -196,7 +197,7 @@ public sealed class Composition
         });
         try { engine.Start(); } catch { /* WMI denied when not elevated */ }
 
-        Memory = new MemoryPriorityViewModel(priorityStore, engine, gameRegistry, priorityClient, ramTweak);
+        Memory = new MemoryPriorityViewModel(priorityStore, engine, gameRegistry, priorityClient, ramTweak, deepRamTweak);
 
         // ── Game watcher + lifecycle inputs (lifecycle itself starts in the engine) ───
         var watcher = new GameProcessWatcher(
