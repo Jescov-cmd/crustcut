@@ -93,6 +93,7 @@ public sealed class Composition
         var ramCleaner = new SafeRamCleaner(new WorkingSetTrimmer());
         var ramTweak = new RamCleanerTweak(ramCleaner, protectList, priorityClient);
         var deepRamTweak = new RamCleanerTweak(ramCleaner, protectList, priorityClient, RamCleanMode.Deep);
+        var standbyClient = new StandbyListClient();
 
         // ── Tweaks: full set — hand-written + registry-driven catalog ─────────────────
         var registryClient = new RegistryClient();
@@ -124,6 +125,8 @@ public sealed class Composition
             new VbsHvciTweak(registryClient),
             new DefenderGameExclusionsTweak(() => lazyGamePaths.Value),
             new PerAppGpuPreferenceTweak(registryClient, new DeferredEnumerable<string>(() => lazyGamePaths.Value)),
+            new TcpGamingLatencyTweak(),
+            new StandbyPurgeTweak(standbyClient),
         };
 
         var catalog = RegistryTweakCatalog
@@ -237,7 +240,8 @@ public sealed class Composition
             Tweaks, ramTweak, sampler, ui, applier, suspender,
             new ActiveTweaksStore(ActiveTweaksStore.DefaultPath()),
             new GameProfileStore(GameProfileStore.DefaultPath()),
-            new SessionTweakStore(SessionTweakStore.DefaultPath()));
+            new SessionTweakStore(SessionTweakStore.DefaultPath()),
+            standbyClient);
     }
 #else
     /// <summary>

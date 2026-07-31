@@ -211,6 +211,24 @@ public class SafeRamCleanerTests
     }
 
     [Fact]
+    public async Task StandbyPurgeTweak_reports_cleared_bytes_and_fails_when_refused()
+    {
+        var standby = new Mock<IStandbyListClient>();
+        standby.SetupSequence(s => s.GetStandbyBytes())
+               .Returns(2_000_000_000)
+               .Returns(200_000_000);
+        standby.Setup(s => s.TryPurge()).Returns(true);
+        var ok = await new PrimeOSTuner.Core.Tweaks.StandbyPurgeTweak(standby.Object).ApplyAsync();
+        ok.Succeeded.Should().BeTrue();
+        ok.Message.Should().Contain("1716 MB");   // (2_000_000_000 - 200_000_000) / 1MiB
+
+        var refused = new Mock<IStandbyListClient>();
+        refused.Setup(s => s.TryPurge()).Returns(false);
+        (await new PrimeOSTuner.Core.Tweaks.StandbyPurgeTweak(refused.Object).ApplyAsync())
+            .Succeeded.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Reports_measured_freed_bytes_from_working_set_shrinkage()
     {
         var before = new[] { new ProcessSnapshot(300, "indexer", 600_000_000, ParentPid: 1) };

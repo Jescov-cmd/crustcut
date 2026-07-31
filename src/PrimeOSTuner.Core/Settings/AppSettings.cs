@@ -13,6 +13,10 @@ public sealed class AppSettings
     public bool RamAutoOptimizeOnThreshold { get; set; } = false;
     public int RamThresholdPercent { get; set; } = 70;
 
+    /// <summary>ISLC-style: purge the standby cache automatically, but ONLY when free
+    /// memory is nearly gone while the cache is huge (the game-stutter condition).</summary>
+    public bool StandbyAutoPurgeEnabled { get; set; } = false;
+
     // App behavior
     public bool StartAtBoot { get; set; } = false;
     public bool StartMinimized { get; set; } = false;

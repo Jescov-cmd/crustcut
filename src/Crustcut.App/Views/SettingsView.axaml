@@ -70,6 +70,14 @@
             <TextBlock Text="% used" Foreground="{DynamicResource Text2}"
                        FontSize="12" VerticalAlignment="Center"/>
           </StackPanel>
+
+          <StackPanel>
+            <CheckBox IsChecked="{Binding StandbyAutoPurgeEnabled, Mode=TwoWay}"
+                      Content="Clear standby cache when memory gets critically tight"
+                      Foreground="{DynamicResource Text1}"/>
+            <TextBlock Classes="hint"
+                       Text="The game-stutter fix (what ISLC does): fires only when free memory drops under 1 GB while Windows' file cache holds over 1.5 GB — never on a healthy system, at most every 10 minutes."/>
+          </StackPanel>
         </StackPanel>
       </Border>
 

@@ -42,18 +42,21 @@ public sealed class BackgroundEngine : IDisposable
     private bool _thresholdFired;
     private bool _ramRunning;
 
+    private readonly IStandbyListClient? _standby;
+
     public BackgroundEngine(
         GameProcessWatcher watcher, ISentinelService sentinel,
         FrameRecordingService frames, OverlayService overlay, AppSettingsStore settings,
         IReadOnlyList<ITweak> tweaks, RamCleanerTweak ramTweak, SystemSampler sampler,
         IUiDispatcher ui, ProfileApplier applier, IBackgroundSuspenderService suspender,
         ActiveTweaksStore activeStore, GameProfileStore profileStore,
-        SessionTweakStore sessionTweaks)
+        SessionTweakStore sessionTweaks, IStandbyListClient? standby = null)
     {
         _watcher = watcher; _sentinel = sentinel; _frames = frames;
         _overlay = overlay; _settings = settings; _tweaks = tweaks; _ramTweak = ramTweak;
         _sampler = sampler; _ui = ui; _applier = applier; _suspender = suspender;
         _activeStore = activeStore; _profileStore = profileStore; _sessionTweaks = sessionTweaks;
+        _standby = standby;
     }
 
     public async Task StartAsync()
@@ -132,11 +135,34 @@ public sealed class BackgroundEngine : IDisposable
     private double _lastRamPercent;
     private string _lastSkipReason = "";
 
+    // ── ISLC-style standby purge gate ──────────────────────────────────────────────
+    // Purge only when BOTH are true: free memory nearly exhausted AND the cache is huge.
+    // That's the game-stutter condition; anywhere short of it the cache is helping.
+    private const long StandbyFreeFloorBytes = 1024L * 1024 * 1024;      // free < 1 GB
+    private const long StandbyCacheTriggerBytes = 1536L * 1024 * 1024;   // cache > 1.5 GB
+    private static readonly TimeSpan StandbyPurgeCooldown = TimeSpan.FromMinutes(10);
+    private DateTime _lastStandbyPurgeUtc = DateTime.MinValue;
+
+    private void MaybePurgeStandby(AppSettings s)
+    {
+        if (!s.StandbyAutoPurgeEnabled || _standby is null) return;
+        if (DateTime.UtcNow - _lastStandbyPurgeUtc < StandbyPurgeCooldown) return;
+
+        var free = _standby.GetFreeBytes();
+        var cache = _standby.GetStandbyBytes();
+        if (free >= StandbyFreeFloorBytes || cache <= StandbyCacheTriggerBytes) return;
+
+        _lastStandbyPurgeUtc = DateTime.UtcNow;
+        var ok = _standby.TryPurge();
+        EngineLog.Log($"standby: free {free / (1024 * 1024)} MB, cache {cache / (1024 * 1024)} MB — purge {(ok ? "ok" : "REFUSED")}");
+    }
+
     private async Task AutoRamTickAsync()
     {
         try
         {
             var s = SafeSettings();
+            MaybePurgeStandby(s);
             string? skip = null;
             var minutes = Math.Max(MinIntervalMinutes, s.RamAutoIntervalMinutes);
             if (!s.RamAutoOptimizeOnInterval || s.RamAutoIntervalMinutes <= 0)
