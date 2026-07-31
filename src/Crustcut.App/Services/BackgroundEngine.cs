@@ -100,10 +100,12 @@ public sealed class BackgroundEngine : IDisposable
 
             _watcher.GameStarted += (_, _) =>
             {
+                _gameRunning = true;   // adaptive cleanup fights hardest while gaming
                 if (SafeSettings().OverlayEnabled) _ui.Post(_overlay.Show);
             };
             _watcher.GameStopped += (_, _) =>
             {
+                _gameRunning = false;
                 if (SafeSettings().OverlayOnlyInGame) _ui.Post(_overlay.Hide);
             };
         }
@@ -161,6 +163,10 @@ public sealed class BackgroundEngine : IDisposable
     }
 
     private long _lastCleanFreedBytes = -1;   // -1 = no clean measured yet
+    private volatile bool _gameRunning;
+    private int _consecutiveIneffectiveCleans;
+    private double _percentAtLastTick = -1;   // trend baseline (ticks are ~1 min apart)
+    private bool _criticalKicked;             // latch for the mid-minute fast path
 
     private async Task AutoRamTickAsync()
     {
@@ -199,14 +205,20 @@ public sealed class BackgroundEngine : IDisposable
     /// <summary>One adaptive evaluation: read pressure, let the policy decide, act, log.</summary>
     private async Task AdaptiveTickAsync()
     {
+        var trend = _percentAtLastTick >= 0 ? _lastRamPercent - _percentAtLastTick : 0;
+        _percentAtLastTick = _lastRamPercent;
+
         var snapshot = new RamPressureSnapshot(
             _lastRamPercent,
             _standby!.GetFreeBytes(),
             _standby.GetStandbyBytes(),
-            _standby.GetPageInputPerSec());
+            _standby.GetPageInputPerSec(),
+            GameRunning: _gameRunning,
+            TrendPercentPerMin: trend);
 
         var decision = AdaptiveRamPolicy.Decide(
-            snapshot, DateTime.UtcNow - _lastAutoRamUtc, _lastCleanFreedBytes);
+            snapshot, DateTime.UtcNow - _lastAutoRamUtc, _lastCleanFreedBytes,
+            _consecutiveIneffectiveCleans);
 
         if (decision.PurgeStandby && DateTime.UtcNow - _lastStandbyPurgeUtc >= StandbyPurgeCooldown)
         {
@@ -217,6 +229,8 @@ public sealed class BackgroundEngine : IDisposable
 
         if (!decision.Clean)
         {
+            // Pressure gone comfortable → the futility streak is stale evidence.
+            if (_lastRamPercent < 70) _consecutiveIneffectiveCleans = 0;
             if (decision.Reason != _lastSkipReason)
             {
                 EngineLog.Log($"adaptive: idle — {decision.Reason}");
@@ -231,6 +245,10 @@ public sealed class BackgroundEngine : IDisposable
         EngineLog.Log($"adaptive: {decision.Mode} clean — {decision.Reason}");
         await RunRamCleanupAsync($"adaptive-{decision.Mode}", tweak);
         _lastCleanFreedBytes = (RamCleanLog.TryRead()?.FreedMb ?? -1) * 1024 * 1024;
+        _consecutiveIneffectiveCleans =
+            _lastCleanFreedBytes >= 0 && _lastCleanFreedBytes < 150L * 1024 * 1024
+                ? _consecutiveIneffectiveCleans + 1
+                : 0;
     }
 
     private void OnSampled(object? sender, SystemSample sample)
@@ -240,7 +258,23 @@ public sealed class BackgroundEngine : IDisposable
             _lastRamPercent = sample.RamPercent;
             var s = SafeSettings();
             // Adaptive mode owns all cleanup decisions; the fixed threshold stands down.
-            if (s.RamAdaptiveEnabled) { _thresholdFired = false; return; }
+            // Fast path: a spike into critical shouldn't wait for the minute tick —
+            // evaluate immediately, once per excursion (re-arms 5pp below critical).
+            if (s.RamAdaptiveEnabled)
+            {
+                _thresholdFired = false;
+                if (sample.RamPercent >= 92 && !_criticalKicked && _standby is not null)
+                {
+                    _criticalKicked = true;
+                    EngineLog.Log($"adaptive: fast path — RAM spiked to {sample.RamPercent:F0}%");
+                    _ = AdaptiveTickAsync();
+                }
+                else if (sample.RamPercent < 87)
+                {
+                    _criticalKicked = false;
+                }
+                return;
+            }
             if (!s.RamAutoOptimizeOnThreshold) { _thresholdFired = false; return; }
 
             if (sample.RamPercent >= s.RamThresholdPercent)

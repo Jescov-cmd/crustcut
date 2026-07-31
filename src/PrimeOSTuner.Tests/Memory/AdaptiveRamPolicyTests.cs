@@ -75,6 +75,62 @@ public class AdaptiveRamPolicyTests
     }
 
     [Fact]
+    public void Game_running_halves_cooldown_and_earns_deep_at_high_pressure()
+    {
+        // 3 minutes since last clean: too soon on desktop (6m), fine in game (3m) — and
+        // in-game high pressure goes straight to Deep (minimized apps are fair game).
+        var desktop = AdaptiveRamPolicy.Decide(Snap(88), TimeSpan.FromMinutes(3.5), -1);
+        desktop.Clean.Should().BeFalse();
+
+        var inGame = AdaptiveRamPolicy.Decide(
+            Snap(88) with { GameRunning = true }, TimeSpan.FromMinutes(3.5), -1);
+        inGame.Clean.Should().BeTrue();
+        inGame.Mode.Should().Be(RamCleanMode.Deep);
+    }
+
+    [Fact]
+    public void Fast_rising_trend_bumps_the_pressure_level()
+    {
+        // 78% is normally below the 'high' band; climbing 6pp/min treats it as high.
+        var stable = AdaptiveRamPolicy.Decide(Snap(78), TimeSpan.FromMinutes(7), -1);
+        var rising = AdaptiveRamPolicy.Decide(
+            Snap(78) with { TrendPercentPerMin = 6 }, TimeSpan.FromMinutes(7), -1);
+
+        stable.Clean.Should().BeFalse();   // elevated band wants a 10m cooldown
+        rising.Clean.Should().BeTrue();    // bumped to high: 6m cooldown already met
+        rising.Reason.Should().Contain("rising fast");
+    }
+
+    [Fact]
+    public void Consecutive_ineffective_cleans_stretch_the_cooldown()
+    {
+        // High pressure, 8 minutes since last clean: normally due (6m) — but after two
+        // no-yield cleans the wait stretches to 18m, so it holds off.
+        var fresh = AdaptiveRamPolicy.Decide(Snap(88), TimeSpan.FromMinutes(8), -1);
+        fresh.Clean.Should().BeTrue();
+
+        var futile = AdaptiveRamPolicy.Decide(
+            Snap(88), TimeSpan.FromMinutes(8), 10_000_000, consecutiveIneffectiveCleans: 2);
+        futile.Clean.Should().BeFalse();
+        futile.Reason.Should().Contain("cooling down");
+    }
+
+    [Fact]
+    public void In_game_purge_gate_is_looser()
+    {
+        // 1 GB cache: below the 1.5 GB desktop trigger, above the 768 MB in-game one.
+        // Free must sit between the 800 MB critical floor and the 1 GB purge floor,
+        // or the critical band takes over and loosens the gate for everyone.
+        var desktop = AdaptiveRamPolicy.Decide(
+            Snap(88, freeMb: 900, standbyMb: 1024), LongAgo, -1);
+        desktop.PurgeStandby.Should().BeFalse();
+
+        var inGame = AdaptiveRamPolicy.Decide(
+            Snap(88, freeMb: 900, standbyMb: 1024) with { GameRunning = true }, LongAgo, -1);
+        inGame.PurgeStandby.Should().BeTrue();
+    }
+
+    [Fact]
     public void Purge_can_fire_during_clean_cooldown()
     {
         // Free memory starved + hoarding cache, but a clean ran 2 minutes ago: the purge
