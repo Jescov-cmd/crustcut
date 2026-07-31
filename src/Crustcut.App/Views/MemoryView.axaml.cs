@@ -9,6 +9,13 @@ public partial class MemoryView : UserControl
 {
     public MemoryView() => InitializeComponent();
 
+    protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        // Proof-of-life for the automatic cleanup, refreshed on every visit.
+        LastCleanupText.Text = MemoryPriorityViewModel.LastCleanupText();
+    }
+
     private async void CleanNowClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not MemoryPriorityViewModel vm) return;

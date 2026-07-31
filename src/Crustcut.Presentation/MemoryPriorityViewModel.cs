@@ -39,6 +39,22 @@ public partial class MemoryPriorityViewModel : ObservableObject
         _ramCleaner = ramCleaner;
     }
 
+    /// <summary>"Last cleanup: 4 min ago — freed 210 MB." Empty when none has run yet.
+    /// The proof-of-life line that makes automatic cleanup visibly alive or visibly dead.</summary>
+    public static string LastCleanupText()
+    {
+        var info = RamCleanLog.TryRead();
+        if (info is null) return "";
+        var age = DateTime.UtcNow - info.UtcWhen;
+        var when = age.TotalMinutes < 1 ? "just now"
+                 : age.TotalMinutes < 60 ? $"{(int)age.TotalMinutes} min ago"
+                 : age.TotalHours < 24 ? $"{(int)age.TotalHours} h ago"
+                 : "over a day ago";
+        return info.Trimmed == 0
+            ? $"Last cleanup: {when} — nothing needed cleaning."
+            : $"Last cleanup: {when} — freed {info.FreedMb} MB from {info.Trimmed} app(s).";
+    }
+
     /// <summary>
     /// Runs the safe RAM cleanup on demand and returns a human-readable result line
     /// ("Freed 240 MB from 6 background app(s)."). This is THE missing piece that made

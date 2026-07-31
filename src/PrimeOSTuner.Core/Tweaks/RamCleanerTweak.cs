@@ -46,6 +46,7 @@ public sealed class RamCleanerTweak : IOneShotTweak
 
         // The message is the whole point — a silent cleanup is indistinguishable from a
         // broken one. Freed is a real measurement (working-set delta), not an estimate.
+        RamCleanLog.TryWrite(report);
         var freedMb = report.FreedBytes / (1024 * 1024);
         var message = report.Trimmed == 0
             ? "Nothing to clean — everything running is either in use or already lean."

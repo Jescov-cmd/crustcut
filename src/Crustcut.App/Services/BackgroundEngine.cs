@@ -58,10 +58,12 @@ public sealed class BackgroundEngine : IDisposable
 
     public async Task StartAsync()
     {
+        EngineLog.Log("engine: StartAsync entered");
         var s = SafeSettings();
 
         // ── Sentinel on/off follows the saved setting ────────────────────────────────
-        try { _sentinel.Enabled = s.SentinelEnabled; } catch { }
+        try { _sentinel.Enabled = s.SentinelEnabled; }
+        catch (Exception ex) { EngineLog.Log($"engine: sentinel enable failed: {ex.Message}"); }
 
         // ── Per-game profiles + session recording ────────────────────────────────────
         try
@@ -83,7 +85,7 @@ public sealed class BackgroundEngine : IDisposable
             await _lifecycle.RecoverFromCrashAsync();
             _lifecycle.Start();
         }
-        catch { /* profiles unavailable — plain monitoring still works */ }
+        catch (Exception ex) { EngineLog.Log($"engine: profile lifecycle failed: {ex.Message}"); }
 
         // ── Overlay: honour OverlayOnlyInGame ────────────────────────────────────────
         try
@@ -108,12 +110,13 @@ public sealed class BackgroundEngine : IDisposable
             if (ids.Count > 0)
                 await DriftedTweakReapplier.ReapplyAsync(_tweaks, ids);
         }
-        catch { }
+        catch (Exception ex) { EngineLog.Log($"engine: drift re-enforcement failed: {ex.Message}"); }
 
         // ── Scheduled + threshold RAM cleanup ────────────────────────────────────────
         _ramTimer.Elapsed += async (_, _) => await AutoRamTickAsync();
         _ramTimer.Start();
         _sampler.Sampled += OnSampled;
+        EngineLog.Log($"engine: RAM cleanup armed (interval={s.RamAutoOptimizeOnInterval} every {s.RamAutoIntervalMinutes}m, threshold={s.RamAutoOptimizeOnThreshold} at {s.RamThresholdPercent}%)");
     }
 
     /// <summary>Trimming below this much RAM pressure is pure harm: evicted pages don't
@@ -127,19 +130,33 @@ public sealed class BackgroundEngine : IDisposable
     private const int MinIntervalMinutes = 5;
 
     private double _lastRamPercent;
+    private string _lastSkipReason = "";
 
     private async Task AutoRamTickAsync()
     {
         try
         {
             var s = SafeSettings();
-            if (!s.RamAutoOptimizeOnInterval || s.RamAutoIntervalMinutes <= 0) return;
+            string? skip = null;
             var minutes = Math.Max(MinIntervalMinutes, s.RamAutoIntervalMinutes);
-            if ((DateTime.UtcNow - _lastAutoRamUtc).TotalMinutes < minutes) return;
-            if (_lastRamPercent < RamPressureFloorPercent) return;
-            await RunRamCleanupAsync();
+            if (!s.RamAutoOptimizeOnInterval || s.RamAutoIntervalMinutes <= 0)
+                skip = "schedule off";
+            else if ((DateTime.UtcNow - _lastAutoRamUtc).TotalMinutes < minutes)
+                skip = $"waiting ({minutes}m interval)";
+            else if (_lastRamPercent < RamPressureFloorPercent)
+                skip = $"RAM {_lastRamPercent:F0}% below {RamPressureFloorPercent:F0}% pressure floor";
+
+            if (skip is not null)
+            {
+                // Log skip-reason CHANGES only — a steady state shouldn't spam the log.
+                if (skip != _lastSkipReason) { EngineLog.Log($"tick: skipping — {skip}"); _lastSkipReason = skip; }
+                return;
+            }
+            _lastSkipReason = "";
+            EngineLog.Log($"tick: running scheduled cleanup (RAM {_lastRamPercent:F0}%)");
+            await RunRamCleanupAsync("scheduled");
         }
-        catch { }
+        catch (Exception ex) { EngineLog.Log($"tick: failed: {ex.Message}"); }
     }
 
     private void OnSampled(object? sender, SystemSample sample)
@@ -155,7 +172,8 @@ public sealed class BackgroundEngine : IDisposable
                 if (!_thresholdFired)
                 {
                     _thresholdFired = true;
-                    _ = RunRamCleanupAsync();
+                    EngineLog.Log($"threshold: RAM {sample.RamPercent:F0}% crossed {s.RamThresholdPercent}% — cleaning");
+                    _ = RunRamCleanupAsync("threshold");
                 }
             }
             else if (sample.RamPercent < s.RamThresholdPercent - 5)
@@ -168,23 +186,33 @@ public sealed class BackgroundEngine : IDisposable
         catch { }
     }
 
-    private async Task RunRamCleanupAsync()
+    private async Task RunRamCleanupAsync(string trigger)
     {
         if (_ramRunning) return;
         _ramRunning = true;
         try
         {
             _lastAutoRamUtc = DateTime.UtcNow;
-            await _ramTweak.ApplyAsync();
+            var result = await _ramTweak.ApplyAsync();
+            EngineLog.Log($"cleanup ({trigger}): {(result.Succeeded ? result.Message : "FAILED: " + result.Error)}");
         }
-        catch { }
+        catch (Exception ex) { EngineLog.Log($"cleanup ({trigger}): threw: {ex.Message}"); }
         finally { _ramRunning = false; }
     }
 
+    // Settings are consulted on every sampler tick (~1/s); reading + parsing the JSON
+    // from disk each time was pure waste. A short TTL keeps edits near-instant.
+    private AppSettings? _cachedSettings;
+    private DateTime _cachedSettingsAt;
+
     private AppSettings SafeSettings()
     {
-        try { return _settings.Load(); }
-        catch { return new AppSettings(); }
+        if (_cachedSettings is not null && (DateTime.UtcNow - _cachedSettingsAt).TotalSeconds < 3)
+            return _cachedSettings;
+        try { _cachedSettings = _settings.Load(); }
+        catch { _cachedSettings ??= new AppSettings(); }
+        _cachedSettingsAt = DateTime.UtcNow;
+        return _cachedSettings;
     }
 
     public void Dispose()
