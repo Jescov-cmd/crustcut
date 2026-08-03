@@ -13,6 +13,17 @@ public class AdaptiveRamPolicyTests
     private static readonly TimeSpan LongAgo = TimeSpan.FromHours(1);
 
     [Fact]
+    public void RecommendedLimits_snaps_to_presets_and_knows_the_catalog()
+    {
+        RecommendedLimits.SnapToPreset(400).Should().Be(512);
+        RecommendedLimits.SnapToPreset(512).Should().Be(512);
+        RecommendedLimits.SnapToPreset(1500).Should().Be(2048);
+        RecommendedLimits.SnapToPreset(9000).Should().BeNull();   // beyond every preset
+        RecommendedLimits.KnownAppLimitsMb["steamwebhelper"].Should().Be(512);
+        RecommendedLimits.KnownAppLimitsMb.ContainsKey("Crustcut").Should().BeFalse();
+    }
+
+    [Fact]
     public void Comfortable_memory_does_nothing()
     {
         var d = AdaptiveRamPolicy.Decide(Snap(50), LongAgo, -1);

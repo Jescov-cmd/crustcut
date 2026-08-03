@@ -45,6 +45,9 @@ public sealed class BackgroundEngine : IDisposable
     private readonly IStandbyListClient? _standby;
     private readonly RamCleanerTweak? _deepRamTweak;
     private readonly Action? _selfTrim;
+    private readonly PriorityRuleStore? _ruleStore;
+    private readonly PriorityRuleEngine? _ruleEngine;
+    private readonly IPriorityClient? _priorityClient;
 
     public BackgroundEngine(
         GameProcessWatcher watcher, ISentinelService sentinel,
@@ -53,9 +56,14 @@ public sealed class BackgroundEngine : IDisposable
         IUiDispatcher ui, ProfileApplier applier, IBackgroundSuspenderService suspender,
         ActiveTweaksStore activeStore, GameProfileStore profileStore,
         SessionTweakStore sessionTweaks, IStandbyListClient? standby = null,
-        RamCleanerTweak? deepRamTweak = null, Action? selfTrim = null)
+        RamCleanerTweak? deepRamTweak = null, Action? selfTrim = null,
+        PriorityRuleStore? ruleStore = null, PriorityRuleEngine? ruleEngine = null,
+        IPriorityClient? priorityClient = null)
     {
         _selfTrim = selfTrim;
+        _ruleStore = ruleStore;
+        _ruleEngine = ruleEngine;
+        _priorityClient = priorityClient;
         _watcher = watcher; _sentinel = sentinel; _frames = frames;
         _overlay = overlay; _settings = settings; _tweaks = tweaks; _ramTweak = ramTweak;
         _sampler = sampler; _ui = ui; _applier = applier; _suspender = suspender;
@@ -115,6 +123,12 @@ public sealed class BackgroundEngine : IDisposable
 
         // ── Re-enforce optimizers the user turned on that Windows reverted ───────────
         await EnforceDriftedAsync("startup");
+
+        // ── Memory limits: assign what's missing, then enforce on what's running ─────
+        // Without the startup sweep, an app already running before Crustcut launched
+        // kept its old freedom until it happened to restart.
+        await AutoAssignLimitsAsync();
+        await ApplyRuleLimitsToRunningAsync("startup");
 
         // ── Scheduled + threshold RAM cleanup ────────────────────────────────────────
         _ramTimer.Elapsed += async (_, _) => await AutoRamTickAsync();
@@ -185,11 +199,78 @@ public sealed class BackgroundEngine : IDisposable
         catch (Exception ex) { EngineLog.Log($"enforce ({trigger}): failed: {ex.Message}"); }
     }
 
+    /// <summary>
+    /// Auto-fills a recommended cap on every non-game rule that has none — measured for
+    /// running apps, curated catalog for known hogs that aren't running. Runs at startup
+    /// so limits exist without anyone pressing a button; the Memory tab shows the result.
+    /// </summary>
+    private async Task AutoAssignLimitsAsync()
+    {
+        if (_ruleStore is null || _priorityClient is null) return;
+        try
+        {
+            var rules = (await _ruleStore.LoadAsync()).ToList();
+            var assigned = 0;
+            await Task.Run(() =>
+            {
+                for (var i = 0; i < rules.Count; i++)
+                {
+                    var r = rules[i];
+                    if (r.IsGame || r.MemoryLimitMb is not null) continue;
+                    if (RecommendedLimits.RecommendMb(r.ExePath, _priorityClient) is int mb)
+                    {
+                        rules[i] = r with { MemoryLimitMb = mb };
+                        assigned++;
+                    }
+                }
+            });
+            if (assigned == 0) return;
+            await _ruleStore.SaveAsync(rules);
+            if (_ruleEngine is not null) await _ruleEngine.ReloadAsync(rules);
+            EngineLog.Log($"limits: auto-assigned {assigned} recommended cap(s)");
+        }
+        catch (Exception ex) { EngineLog.Log($"limits: auto-assign failed: {ex.Message}"); }
+    }
+
+    /// <summary>Applies every rule's cap (and priority) to matching processes that are
+    /// ALREADY running — the engine's process-start events only cover future launches.</summary>
+    private async Task ApplyRuleLimitsToRunningAsync(string trigger)
+    {
+        if (_ruleStore is null || _priorityClient is null) return;
+        try
+        {
+            var limited = (await _ruleStore.LoadAsync())
+                .Where(r => r.MemoryLimitMb is not null)
+                .ToList();
+            if (limited.Count == 0) return;
+
+            var applied = 0;
+            await Task.Run(() =>
+            {
+                foreach (var rule in limited)
+                {
+                    foreach (var pid in _priorityClient.FindPidsForExe(rule.ExePath))
+                    {
+                        if (_priorityClient.TrySetMemoryLimit(pid, rule.MemoryLimitMb!.Value)) applied++;
+                        _priorityClient.TrySetPriority(pid, rule.Priority);
+                    }
+                }
+            });
+            if (applied > 0)
+                EngineLog.Log($"limits ({trigger}): enforced on {applied} running process(es)");
+        }
+        catch (Exception ex) { EngineLog.Log($"limits ({trigger}): failed: {ex.Message}"); }
+    }
+
     private async Task AutoRamTickAsync()
     {
         try
         {
-            if (++_tickCount % 30 == 0) _ = EnforceDriftedAsync("periodic");
+            if (++_tickCount % 30 == 0)
+            {
+                _ = EnforceDriftedAsync("periodic");
+                _ = ApplyRuleLimitsToRunningAsync("periodic");
+            }
 
             var s = SafeSettings();
             if (s.RamAdaptiveEnabled && _standby is not null)
