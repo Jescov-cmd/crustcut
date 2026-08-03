@@ -1,7 +1,8 @@
 namespace PrimeOSTuner.Core.Memory;
 
-/// <summary>What one cleanup pass actually did.</summary>
-public sealed record RamCleanReport(int Trimmed, long FreedBytes);
+/// <summary>What one cleanup pass actually did. TrimmedPids lets Deep clean follow up
+/// (e.g. Efficiency Mode) on exactly the processes it touched.</summary>
+public sealed record RamCleanReport(int Trimmed, long FreedBytes, IReadOnlyList<int>? TrimmedPids = null);
 
 /// <summary>
 /// Normal: only windowless background processes above 100 MB — invisible to the user's
@@ -76,7 +77,7 @@ public sealed class SafeRamCleaner
                 freed += Math.Max(0, before - afterByPid.GetValueOrDefault(pid, 0));
         }
 
-        return Task.FromResult(new RamCleanReport(beforeByPid.Count, freed));
+        return Task.FromResult(new RamCleanReport(beforeByPid.Count, freed, beforeByPid.Keys.ToList()));
     }
 
     /// <summary>

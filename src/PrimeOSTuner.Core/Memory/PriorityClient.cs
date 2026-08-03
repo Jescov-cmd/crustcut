@@ -35,6 +35,48 @@ public sealed class PriorityClient : IPriorityClient
         }
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct PROCESS_POWER_THROTTLING_STATE
+    {
+        public uint Version;
+        public uint ControlMask;
+        public uint StateMask;
+    }
+
+    private const int ProcessPowerThrottlingInfo = 4;
+    private const uint PROCESS_POWER_THROTTLING_CURRENT_VERSION = 1;
+    private const uint PROCESS_POWER_THROTTLING_EXECUTION_SPEED = 0x1;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool SetProcessInformation(
+        IntPtr hProcess, int informationClass, ref PROCESS_POWER_THROTTLING_STATE info, int size);
+
+    public bool TrySetEfficiencyMode(int pid, bool on)
+    {
+        if (!OperatingSystem.IsWindows()) return false;
+        try
+        {
+            using var p = Process.GetProcessById(pid);
+            var state = new PROCESS_POWER_THROTTLING_STATE
+            {
+                Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+                ControlMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED,
+                // StateMask bit set = throttle on; control bit set with state 0 = force off.
+                StateMask = on ? PROCESS_POWER_THROTTLING_EXECUTION_SPEED : 0,
+            };
+            var throttled = SetProcessInformation(
+                p.Handle, ProcessPowerThrottlingInfo, ref state, Marshal.SizeOf<PROCESS_POWER_THROTTLING_STATE>());
+            // Task Manager pairs EcoQoS with a lowered priority class; BelowNormal (not
+            // Idle) so eco'd apps still make progress in the background.
+            p.PriorityClass = on ? ProcessPriorityClass.BelowNormal : ProcessPriorityClass.Normal;
+            return throttled;
+        }
+        catch
+        {
+            return false;   // process gone or access denied
+        }
+    }
+
     public bool TryClearMemoryLimit(int pid)
     {
         if (!OperatingSystem.IsWindows()) return false;

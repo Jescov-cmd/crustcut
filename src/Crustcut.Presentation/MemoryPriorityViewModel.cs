@@ -388,6 +388,21 @@ public partial class MemoryPriorityViewModel : ObservableObject
     /// far above any single process would never bite, which is why "just pick 1 GB" felt
     /// dead. Games are never capped.
     /// </summary>
+    /// <summary>Curated caps for well-known memory hogs, used when the app isn't running
+    /// (so there's nothing to measure). Values are per process and deliberately generous.</summary>
+    private static readonly Dictionary<string, int> KnownAppLimitsMb = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["steamwebhelper"] = 512, ["steam"] = 1024,
+        ["Discord"] = 512, ["Spotify"] = 512, ["AppleMusic"] = 512,
+        ["chrome"] = 1024, ["msedge"] = 1024, ["firefox"] = 1024, ["brave"] = 1024, ["opera"] = 1024,
+        ["OneDrive"] = 256, ["Dropbox"] = 512,
+        ["EpicGamesLauncher"] = 512, ["upc"] = 512, ["EADesktop"] = 512, ["GalaxyClient"] = 512,
+        ["Slack"] = 1024, ["Teams"] = 1024, ["ms-teams"] = 1024,
+        ["Telegram"] = 512, ["WhatsApp"] = 512,
+        ["SignalRgb"] = 512, ["wallpaper32"] = 512, ["wallpaper64"] = 512,
+        ["Overwolf"] = 512, ["CurseForge"] = 512,
+    };
+
     public async Task<string> ApplyRecommendedLimitsAsync()
     {
         if (_priority is null) return "Not available on this platform.";
@@ -406,9 +421,21 @@ public partial class MemoryPriorityViewModel : ObservableObject
                     try { using var p = Process.GetProcessById(pid); largest = Math.Max(largest, p.WorkingSet64); }
                     catch { /* exited between scan and read */ }
                 }
-                if (largest == 0) continue;   // not running — no measurement to base a cap on
 
-                var wantMb = Math.Max(512, (long)(largest * 1.25 / (1024 * 1024)));
+                long wantMb;
+                if (largest > 0)
+                {
+                    wantMb = Math.Max(512, (long)(largest * 1.25 / (1024 * 1024)));
+                }
+                else
+                {
+                    // Not running: fall back to the curated catalog so known hogs get a
+                    // sensible cap that's waiting for them the next time they launch.
+                    var exeName = Path.GetFileNameWithoutExtension(vm.ExePath);
+                    if (!KnownAppLimitsMb.TryGetValue(exeName, out var catalogMb)) continue;
+                    wantMb = catalogMb;
+                }
+
                 var option = PriorityRuleVm.MemoryLimitOptions
                     .Where(o => o.Mb is int mb && mb >= wantMb)
                     .OrderBy(o => o.Mb)

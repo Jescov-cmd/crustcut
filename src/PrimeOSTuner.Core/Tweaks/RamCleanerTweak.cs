@@ -50,13 +50,23 @@ public sealed class RamCleanerTweak : IOneShotTweak
             return _cleaner.RunAsync(0, protectedPids, _mode, ct);
         }, ct);
 
+        // Deep goes further than memory: trimmed processes also get Windows 11 Efficiency
+        // Mode (EcoQoS + BelowNormal) so they stay light on CPU, not just RAM. Cleared by
+        // Windows when the process exits; foreground use is unaffected because these are
+        // by definition background/minimized processes.
+        var ecod = 0;
+        if (_mode == RamCleanMode.Deep && report.TrimmedPids is { } pids)
+            foreach (var pid in pids)
+                if (_priority.TrySetEfficiencyMode(pid, true)) ecod++;
+
         // The message is the whole point — a silent cleanup is indistinguishable from a
         // broken one. Freed is a real measurement (working-set delta), not an estimate.
         RamCleanLog.TryWrite(report);
         var freedMb = report.FreedBytes / (1024 * 1024);
         var message = report.Trimmed == 0
             ? "Nothing to clean — everything running is either in use or already lean."
-            : $"Freed {freedMb} MB from {report.Trimmed} background app(s).";
+            : $"Freed {freedMb} MB from {report.Trimmed} background app(s)." +
+              (ecod > 0 ? $" {ecod} put in Efficiency Mode." : "");
         return TweakResult.Success($"{{\"trimmed\":{report.Trimmed}}}", message);
     }
 

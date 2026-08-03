@@ -114,13 +114,7 @@ public sealed class BackgroundEngine : IDisposable
         catch { }
 
         // ── Re-enforce optimizers the user turned on that Windows reverted ───────────
-        try
-        {
-            var ids = await _sessionTweaks.LoadAsync();
-            if (ids.Count > 0)
-                await DriftedTweakReapplier.ReapplyAsync(_tweaks, ids);
-        }
-        catch (Exception ex) { EngineLog.Log($"engine: drift re-enforcement failed: {ex.Message}"); }
+        await EnforceDriftedAsync("startup");
 
         // ── Scheduled + threshold RAM cleanup ────────────────────────────────────────
         _ramTimer.Elapsed += async (_, _) => await AutoRamTickAsync();
@@ -170,10 +164,33 @@ public sealed class BackgroundEngine : IDisposable
     private double _percentAtLastTick = -1;   // trend baseline (ticks are ~1 min apart)
     private bool _criticalKicked;             // latch for the mid-minute fast path
 
+    private int _tickCount;
+
+    /// <summary>
+    /// Windows quietly reverts settings mid-session too (Game Bar resets Game Mode on
+    /// reboots and some game launches). Startup-only enforcement left gaps the user read
+    /// as "the toggle doesn't work" — so drifted settings are now re-applied every 30
+    /// minutes, and every restoration is logged where the user can see it happened.
+    /// </summary>
+    private async Task EnforceDriftedAsync(string trigger)
+    {
+        try
+        {
+            var ids = await _sessionTweaks.LoadAsync();
+            if (ids.Count == 0) return;
+            var r = await DriftedTweakReapplier.ReapplyAsync(_tweaks, ids);
+            if (r.Reapplied > 0 || r.Failed > 0 || trigger == "startup")
+                EngineLog.Log($"enforce ({trigger}): {r.Reapplied} restored after Windows reverted them, {r.AlreadyApplied} intact, {r.Failed} failed");
+        }
+        catch (Exception ex) { EngineLog.Log($"enforce ({trigger}): failed: {ex.Message}"); }
+    }
+
     private async Task AutoRamTickAsync()
     {
         try
         {
+            if (++_tickCount % 30 == 0) _ = EnforceDriftedAsync("periodic");
+
             var s = SafeSettings();
             if (s.RamAdaptiveEnabled && _standby is not null)
             {
