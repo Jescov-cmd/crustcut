@@ -11,7 +11,7 @@
          every view has an x:DataType. -->
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
     <AssemblyName>Crustcut</AssemblyName>
-    <Version>0.9.1</Version>
+    <Version>0.9.2</Version>
     <RootNamespace>Crustcut.App</RootNamespace>
   </PropertyGroup>
 
