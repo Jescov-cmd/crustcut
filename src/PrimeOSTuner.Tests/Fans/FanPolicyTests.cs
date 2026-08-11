@@ -26,8 +26,8 @@ public class FanPolicyTests
     [Fact]
     public void Interpolates_linearly_between_points()
     {
-        // Silent: (60, 32) -> (72, 38). Halfway (66deg) => 35%.
-        FanPolicy.Evaluate(FanMode.Silent, 66).Should().BeApproximately(35, 0.01);
+        // Silent: (60, 32) -> (75, 36). Midpoint (67.5deg) => 34%.
+        FanPolicy.Evaluate(FanMode.Silent, 67.5).Should().BeApproximately(34, 0.01);
     }
 
     [Fact]

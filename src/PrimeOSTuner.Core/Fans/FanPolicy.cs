@@ -23,7 +23,7 @@ public static class FanPolicy
     // ~1000 RPM through that whole normal band and only wakes up past ~72°C sustained.
     public static readonly IReadOnlyList<CurvePoint> Silent = new CurvePoint[]
     {
-        new(45, 26), new(60, 32), new(72, 38), new(80, 55), new(85, 100),
+        new(45, 26), new(60, 32), new(75, 36), new(82, 46), new(85, 100),
     };
 
     public static readonly IReadOnlyList<CurvePoint> Balanced = new CurvePoint[]
