@@ -33,15 +33,12 @@ public sealed class LhmFanController : IFanController
         {
             // RGB/monitoring software (SignalRGB on this machine) polls the same SuperIO
             // chip and briefly holds its hardware mutex; enumerate at the wrong instant
-            // and the chip is silently absent. Retry a few times before giving up.
+            // and the chip is silently absent. Retry a few times before giving up —
+            // and the service keeps calling TryRediscover afterwards, so a bad first
+            // 2 seconds no longer strands the feature until restart.
             for (var attempt = 0; attempt < 3; attempt++)
             {
-                _computer.Open();
-                Discover();
-                if (_fans.Count > 0) break;
-                _computer.Close();
-                _fans.Clear();
-                _cpuTemps.Clear();
+                if (TryRediscover()) break;
                 Thread.Sleep(750);
             }
         }
@@ -49,6 +46,26 @@ public sealed class LhmFanController : IFanController
         {
             // Driver refused (another LHM instance running, or blocked) — IsSupported
             // stays false and the feature reports itself unavailable instead of crashing.
+        }
+    }
+
+    public bool TryRediscover()
+    {
+        if (_disposed) return false;
+        if (_fans.Count > 0) return true;
+        try
+        {
+            try { _computer.Close(); } catch { }
+            _fans.Clear();
+            _cpuTemps.Clear();
+            _computer.Open();
+            Discover();
+            if (_fans.Count == 0) { try { _computer.Close(); } catch { } }
+            return _fans.Count > 0;
+        }
+        catch
+        {
+            return false;
         }
     }
 

@@ -62,7 +62,11 @@ public partial class FansViewModel : ObservableObject
     /// <summary>Pulls the live picture from the service. Called by the view every ~2s.</summary>
     public void Refresh()
     {
-        if (_service is null || !IsSupported) return;
+        if (_service is null) return;
+        // Live, not latched: hardware can appear after startup once a conflicting app
+        // (SignalRGB) releases the chip and the service re-scans.
+        IsSupported = _service.IsSupported;
+        if (!IsSupported) return;
         var s = _service.Status();
 
         TempText = s.TempC is double t ? $"{t:F0} °C" : "—";

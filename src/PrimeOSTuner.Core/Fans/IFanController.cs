@@ -13,6 +13,14 @@ public interface IFanController : IDisposable
     /// <summary>True when the machine exposes at least one controllable, connected fan.</summary>
     bool IsSupported { get; }
 
+    /// <summary>
+    /// Re-attempts hardware discovery. Needed because another app (SignalRGB) can hold
+    /// the fan chip's mutex during startup, making the hardware invisible at that moment
+    /// — giving up forever over a bad first 2 seconds strands the feature until restart.
+    /// Returns true when controllable fans are (now) available.
+    /// </summary>
+    bool TryRediscover();
+
     /// <summary>Current RPM/duty for every managed fan.</summary>
     IReadOnlyList<FanInfo> Snapshot();
 

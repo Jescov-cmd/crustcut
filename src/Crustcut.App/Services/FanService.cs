@@ -84,12 +84,24 @@ public sealed class FanService : IFanControlService, IDisposable
     public FanStatus Status() => new(
         _engaged, _lastTemp, _lastDuty, _fans.Snapshot(), _conflictSuspected);
 
+    private int _rediscoverCountdown;
+
     private void Tick()
     {
         if (!System.Threading.Monitor.TryEnter(_gate)) return;   // ticks never overlap
         try
         {
-            if (!_fans.IsSupported) return;
+            if (!_fans.IsSupported)
+            {
+                // Hardware invisible (SignalRGB likely held the chip at startup) —
+                // re-scan every ~60s instead of giving up for the whole session.
+                if (--_rediscoverCountdown > 0) return;
+                _rediscoverCountdown = 30;
+                if (_fans.TryRediscover())
+                    EngineLog.Log("fans: hardware found on re-scan — control available");
+                else
+                    return;
+            }
             var s = SafeSettings();
             if (!s.FanControlEnabled)
             {
