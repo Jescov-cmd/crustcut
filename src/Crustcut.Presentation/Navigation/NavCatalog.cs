@@ -20,6 +20,7 @@ public static class NavCatalog
         new NavItem("Diagnosis", "DIAGNOSIS",  Performance, WindowsOnly: true),
         new NavItem("Cleanup",   "CLEANUP",    Performance, WindowsOnly: true),   // was "Bloatware"
         new NavItem("Memory",    "MEMORY",     Performance, WindowsOnly: true),
+        new NavItem("Fans",      "FANS",       Performance, WindowsOnly: true),
 
         new NavItem("Games",     "GAMES",      Gaming),        // was "Library"
         new NavItem("Sessions",  "SESSIONS",   Gaming, WindowsOnly: true),        // was "Sentinel"

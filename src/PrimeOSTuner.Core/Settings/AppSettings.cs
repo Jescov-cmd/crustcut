@@ -17,6 +17,10 @@ public sealed class AppSettings
     /// memory is nearly gone while the cache is huge (the game-stutter condition).</summary>
     public bool StandbyAutoPurgeEnabled { get; set; } = false;
 
+    // Fan control
+    public bool FanControlEnabled { get; set; } = false;
+    public string FanMode { get; set; } = "Balanced";
+
     /// <summary>Adaptive mode: the engine reads memory pressure each minute and decides
     /// when/how hard to clean (including standby purges and Deep escalation) instead of
     /// running the fixed schedule/threshold settings. Supersedes them while on.</summary>

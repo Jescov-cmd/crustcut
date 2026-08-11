@@ -87,6 +87,7 @@ public partial class App : Application
 
             desktop.ShutdownRequested += (_, _) =>
             {
+                _composition?.FanService?.Dispose();   // hands fans back to the BIOS
                 _composition?.Engine?.Dispose();
                 _composition?.Overlay?.Dispose();
                 _composition?.Overview.Dispose();

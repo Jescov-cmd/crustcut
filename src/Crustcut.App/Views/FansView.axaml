@@ -1,0 +1,98 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Crustcut.App.Views.FansView">
+
+  <UserControl.Styles>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
+      <Setter Property="CornerRadius" Value="4"/>
+      <Setter Property="Padding" Value="18,16"/>
+      <Setter Property="Margin" Value="0,0,0,12"/>
+      <Setter Property="Width" Value="620"/>
+      <Setter Property="HorizontalAlignment" Value="Left"/>
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,0,20,20">
+    <StackPanel>
+      <TextBlock Text="Fans" Classes="pageTitle" Margin="0,16,0,10"/>
+      <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,16"
+                 TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left"
+                 Text="Curve-based fan control. Silent keeps fans slow until things actually get warm; Performance ramps early. Safety is built in: fans never stop, anything over 85 °C forces full speed, and your motherboard takes back control the moment this is off or Crustcut closes. Your graphics card's fans manage themselves."/>
+
+      <Border Classes="card" IsVisible="{Binding !IsSupported}">
+        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource Text1}" FontSize="12"
+                   Text="No controllable fans were found. If another monitoring app (LibreHardwareMonitor, HWiNFO) is open, close it and restart Crustcut."/>
+      </Border>
+
+      <Border Classes="card" IsVisible="{Binding IsSupported}">
+        <StackPanel Spacing="14">
+          <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Grid.Column="0" Spacing="3">
+              <TextBlock Text="FAN CONTROL" Classes="label"/>
+              <TextBlock Text="{Binding StatusText}" FontSize="12"
+                         Foreground="{DynamicResource Text1}" TextWrapping="Wrap"/>
+            </StackPanel>
+            <ToggleSwitch Grid.Column="1" OnContent="" OffContent=""
+                          VerticalAlignment="Top"
+                          IsChecked="{Binding Enabled, Mode=OneWay}"
+                          Click="ToggleClick"/>
+          </Grid>
+
+          <Border Background="#22FFB84D" CornerRadius="8" Padding="11,8"
+                  IsVisible="{Binding ConflictSuspected}">
+            <TextBlock FontSize="11" Foreground="{DynamicResource Warn}" TextWrapping="Wrap"
+                       Text="Conflict detected: something else keeps overriding the fans. SignalRGB users — disable fan control inside SignalRGB (its lighting keeps working)."/>
+          </Border>
+
+          <StackPanel Orientation="Horizontal" Spacing="9" IsEnabled="{Binding Enabled}">
+            <ToggleButton Classes="protect" Content="SILENT"
+                          IsChecked="{Binding IsSilent, Mode=OneWay}" Click="SilentClick"/>
+            <ToggleButton Classes="protect" Content="BALANCED"
+                          IsChecked="{Binding IsBalanced, Mode=OneWay}" Click="BalancedClick"/>
+            <ToggleButton Classes="protect" Content="PERFORMANCE"
+                          IsChecked="{Binding IsPerformance, Mode=OneWay}" Click="PerformanceClick"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card" IsVisible="{Binding IsSupported}">
+        <StackPanel Spacing="10">
+          <TextBlock Text="LIVE" Classes="label"/>
+          <Grid ColumnDefinitions="*,*">
+            <StackPanel Grid.Column="0" Spacing="2">
+              <TextBlock Text="CPU temperature" FontSize="11" Foreground="{DynamicResource Text3}"/>
+              <TextBlock Text="{Binding TempText}" FontSize="20" FontWeight="Bold"
+                         Foreground="{DynamicResource Text0}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="2">
+              <TextBlock Text="Fan duty" FontSize="11" Foreground="{DynamicResource Text3}"/>
+              <TextBlock Text="{Binding DutyText}" FontSize="20" FontWeight="Bold"
+                         Foreground="{DynamicResource Text0}"/>
+            </StackPanel>
+          </Grid>
+          <ItemsControl ItemsSource="{Binding Fans}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="*,110,70" Margin="0,4,0,0">
+                  <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="12.5"
+                             Foreground="{DynamicResource Text1}"/>
+                  <TextBlock Grid.Column="1" Text="{Binding Rpm}" FontSize="12.5"
+                             FontFamily="Consolas, Cascadia Mono, monospace"
+                             Foreground="{DynamicResource Text0}" HorizontalAlignment="Right"/>
+                  <TextBlock Grid.Column="2" Text="{Binding Duty}" FontSize="12.5"
+                             FontFamily="Consolas, Cascadia Mono, monospace"
+                             Foreground="{DynamicResource Text2}" HorizontalAlignment="Right"/>
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

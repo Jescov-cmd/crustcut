@@ -49,6 +49,8 @@ public sealed class Composition
     public GuidesViewModel Guides { get; }
     public OverlayService? Overlay { get; }
     public BackgroundEngine? Engine { get; }
+    public FansViewModel Fans { get; }
+    public FanService? FanService { get; }
     public AppRegistrationService Registration { get; }
 
 #if WINDOWS
@@ -252,6 +254,10 @@ public sealed class Composition
             new SessionTweakStore(SessionTweakStore.DefaultPath()),
             standbyClient, deepRamTweak, selfTrim,
             priorityStore, engine, priorityClient);
+
+        // ── Fans: curve control loop (owns the hardware handle and all safety) ────────
+        FanService = new FanService(new PrimeOSTuner.Win.Fans.LhmFanController(), settingsStore);
+        Fans = new FansViewModel(FanService);
     }
 #else
     /// <summary>
@@ -295,6 +301,7 @@ public sealed class Composition
             ui);
 
         Guides = new GuidesViewModel();
+        Fans = new FansViewModel();   // reports unsupported; tab is hidden on mac anyway
     }
 #endif
 }

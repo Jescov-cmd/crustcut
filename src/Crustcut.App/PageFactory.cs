@@ -47,6 +47,8 @@ public sealed class PageFactory
         "Memory" => Once(tabId, new MemoryView { DataContext = _app?.Memory },
                          () => _app?.Memory?.LoadAsync()),
 
+        "Fans" => new FansView { DataContext = _app?.Fans },
+
         "History" => Once(tabId, new HistoryView { DataContext = _app?.History },
                           () => _app?.History?.LoadAsync()),
 
