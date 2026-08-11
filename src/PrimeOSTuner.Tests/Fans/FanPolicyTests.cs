@@ -26,8 +26,16 @@ public class FanPolicyTests
     [Fact]
     public void Interpolates_linearly_between_points()
     {
-        // Silent: (60, 40) -> (75, 55). Halfway (67.5deg) => 47.5%.
-        FanPolicy.Evaluate(FanMode.Silent, 67.5).Should().BeApproximately(47.5, 0.01);
+        // Silent: (60, 32) -> (72, 38). Halfway (66deg) => 35%.
+        FanPolicy.Evaluate(FanMode.Silent, 66).Should().BeApproximately(35, 0.01);
+    }
+
+    [Fact]
+    public void Silent_stays_near_idle_duty_through_ryzens_normal_warm_band()
+    {
+        // A Ryzen 7700 lives at 65-77degC; Silent must not ramp inside that band.
+        FanPolicy.Evaluate(FanMode.Silent, 70).Should().BeLessThan(40);
+        FanPolicy.Evaluate(FanMode.Silent, 76).Should().BeLessThan(48);
     }
 
     [Fact]

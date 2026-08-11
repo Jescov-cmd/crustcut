@@ -19,14 +19,16 @@ public static class FanPolicy
     /// Ryzen throttles at ~95°C; 85 leaves margin for the fans to actually catch it.</summary>
     public const double FailsafeTempC = 85;
 
+    // Tuned on the user's Ryzen 7 7700, which idles 65-77°C by design: Silent stays near
+    // ~1000 RPM through that whole normal band and only wakes up past ~72°C sustained.
     public static readonly IReadOnlyList<CurvePoint> Silent = new CurvePoint[]
     {
-        new(40, 28), new(60, 40), new(75, 55), new(85, 100),
+        new(45, 26), new(60, 32), new(72, 38), new(80, 55), new(85, 100),
     };
 
     public static readonly IReadOnlyList<CurvePoint> Balanced = new CurvePoint[]
     {
-        new(40, 35), new(60, 55), new(75, 75), new(85, 100),
+        new(40, 30), new(60, 45), new(75, 62), new(85, 100),
     };
 
     public static readonly IReadOnlyList<CurvePoint> Performance = new CurvePoint[]
