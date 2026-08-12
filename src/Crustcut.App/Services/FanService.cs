@@ -59,8 +59,20 @@ public sealed class FanService : IFanControlService, IDisposable
 
     public bool IsSupported => _fans.IsSupported;
 
-    /// <summary>Fed by the game watcher (via Composition) — drives Auto mode.</summary>
-    public volatile bool GameRunning;
+    // Auto follows SUSTAINED load, not momentary spikes: an exponential moving average
+    // over roughly half a minute, so opening a folder doesn't spin the fans up and a real
+    // workload still registers within seconds.
+    private const double LoadSmoothing = 0.08;
+    private double _smoothedLoad;
+    private FanMode _resolvedMode = FanMode.Silent;
+
+    /// <summary>Fed by the system sampler (via Composition). Load is the higher of CPU and
+    /// GPU utilisation — a GPU-bound game barely touches the CPU but still makes heat.</summary>
+    public void ReportLoad(double cpuPercent, double gpuPercent)
+    {
+        var load = Math.Clamp(Math.Max(cpuPercent, gpuPercent), 0, 100);
+        _smoothedLoad = _smoothedLoad == 0 ? load : _smoothedLoad + LoadSmoothing * (load - _smoothedLoad);
+    }
 
     public bool Enabled
     {
@@ -95,7 +107,8 @@ public sealed class FanService : IFanControlService, IDisposable
                 ? f with { Rpm = r * _tuning.RpmScaleFor(f.Name) }
                 : f)
             .ToList();
-        return new FanStatus(_engaged, _lastTemp, _lastDuty, fans, _conflictSuspected);
+        return new FanStatus(_engaged, _lastTemp, _lastDuty, fans, _conflictSuspected,
+            _resolvedMode, Math.Round(_smoothedLoad));
     }
 
     public bool IsCalibrated => _tuning.HasCalibration;
@@ -212,7 +225,10 @@ public sealed class FanService : IFanControlService, IDisposable
             }
 
             var selected = Enum.TryParse<FanMode>(s.FanMode, out var m) ? m : FanMode.Balanced;
-            var mode = FanPolicy.ResolveMode(selected, GameRunning);
+            var mode = FanPolicy.ResolveMode(selected, _smoothedLoad, _resolvedMode);
+            if (selected == FanMode.Auto && mode != _resolvedMode)
+                EngineLog.Log($"fans: auto → {mode} (load {_smoothedLoad:F0}%)");
+            _resolvedMode = mode;
             var curveDuty = FanPolicy.Evaluate(mode, t);
 
             // Per-fan floors: a fan that calibrated at 22% idles at 22%, one that stalls

@@ -1,12 +1,17 @@
 namespace PrimeOSTuner.Core.Fans;
 
 /// <summary>Live picture of the fan-control loop for the UI.</summary>
+/// <param name="ResolvedMode">What Auto currently resolves to (equals the selected mode
+/// when the user picked one explicitly), so the UI can explain itself.</param>
+/// <param name="LoadPercent">Smoothed system load Auto is reacting to.</param>
 public sealed record FanStatus(
     bool Engaged,
     double? TempC,
     double? DutyPercent,
     IReadOnlyList<FanInfo> Fans,
-    bool ConflictSuspected);
+    bool ConflictSuspected,
+    FanMode ResolvedMode = FanMode.Balanced,
+    double LoadPercent = 0);
 
 /// <summary>
 /// The running fan-control loop. Enabled/Mode persist to settings; the implementation

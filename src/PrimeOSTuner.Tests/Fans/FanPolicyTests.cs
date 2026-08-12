@@ -30,20 +30,37 @@ public class FanPolicyTests
         FanPolicy.Evaluate(FanMode.Silent, 66).Should().BeApproximately(26, 0.01);
     }
 
-    [Fact]
-    public void Auto_is_quiet_at_the_desk_and_cools_hard_in_game()
+    [Theory]
+    [InlineData(3, FanMode.Silent)]        // idle desktop
+    [InlineData(15, FanMode.Silent)]       // a light 2D game: stays quiet
+    [InlineData(40, FanMode.Balanced)]     // real work
+    [InlineData(85, FanMode.Performance)]  // pinned
+    public void Auto_follows_load_not_whether_something_is_called_a_game(double load, FanMode expected)
     {
-        FanPolicy.ResolveMode(FanMode.Auto, gameRunning: false).Should().Be(FanMode.Silent);
-        FanPolicy.ResolveMode(FanMode.Auto, gameRunning: true).Should().Be(FanMode.Performance);
+        // Starting from Silent each time, so these are upward transitions (hysteresis only
+        // resists stepping DOWN).
+        FanPolicy.ResolveMode(FanMode.Auto, load, FanMode.Silent).Should().Be(expected);
     }
 
     [Fact]
-    public void Explicitly_chosen_modes_ignore_whether_a_game_is_running()
+    public void Auto_holds_its_band_until_load_clears_the_hysteresis_margin()
+    {
+        // Sitting just under the Performance edge must NOT drop back immediately.
+        FanPolicy.ResolveMode(FanMode.Auto, 60, FanMode.Performance).Should().Be(FanMode.Performance);
+        // Well clear of it, it steps down.
+        FanPolicy.ResolveMode(FanMode.Auto, 40, FanMode.Performance).Should().Be(FanMode.Balanced);
+
+        FanPolicy.ResolveMode(FanMode.Auto, 20, FanMode.Balanced).Should().Be(FanMode.Balanced);
+        FanPolicy.ResolveMode(FanMode.Auto, 10, FanMode.Balanced).Should().Be(FanMode.Silent);
+    }
+
+    [Fact]
+    public void Explicitly_chosen_modes_ignore_load_entirely()
     {
         foreach (var mode in new[] { FanMode.Silent, FanMode.Balanced, FanMode.Performance })
         {
-            FanPolicy.ResolveMode(mode, gameRunning: true).Should().Be(mode);
-            FanPolicy.ResolveMode(mode, gameRunning: false).Should().Be(mode);
+            FanPolicy.ResolveMode(mode, 95, FanMode.Silent).Should().Be(mode);
+            FanPolicy.ResolveMode(mode, 0, FanMode.Performance).Should().Be(mode);
         }
     }
 

@@ -100,9 +100,11 @@ public partial class FansViewModel : ObservableObject
             ? "Fans are under your motherboard's automatic control."
             : s.ConflictSuspected
                 ? "Another program is overriding fan speeds — if you use SignalRGB, turn OFF its fan control (keep the RGB)."
-                : s.Engaged
-                    ? "Crustcut is controlling your fans."
-                    : "Starting…";
+                : !s.Engaged
+                    ? "Starting…"
+                    : IsAuto
+                        ? $"Auto: system load {s.LoadPercent:F0}% → {s.ResolvedMode} curve."
+                        : "Crustcut is controlling your fans.";
 
         Fans.Clear();
         foreach (var f in s.Fans)

@@ -58,14 +58,44 @@ public static class FanPolicy
         _ => Balanced,
     };
 
+    // Auto bands, measured against sustained system load (the higher of CPU and GPU).
+    // "A game is running" is a bad proxy for heat — a 2D indie game and a AAA title are
+    // not the same thermal event — so Auto follows what the machine is actually doing.
+    private const double BalancedLoadPercent = 25;
+    private const double PerformanceLoadPercent = 65;
+
+    /// <summary>Load must fall this far below a band edge before Auto steps back down, so
+    /// a workload hovering at a threshold doesn't oscillate the fans.</summary>
+    private const double LoadHysteresisPercent = 10;
+
     /// <summary>
-    /// Auto resolves by context: quiet while you work, full cooling the moment a game is
-    /// running. Everything else resolves to itself.
+    /// Auto resolves by how hard the machine is working: quiet when idle or running
+    /// something light, firmer under real load, full cooling only when genuinely pinned.
+    /// <paramref name="currentlyResolved"/> supplies hysteresis — pass the mode Auto chose
+    /// last time. Everything except Auto resolves to itself.
     /// </summary>
-    public static FanMode ResolveMode(FanMode selected, bool gameRunning) =>
-        selected == FanMode.Auto
-            ? (gameRunning ? FanMode.Performance : FanMode.Silent)
-            : selected;
+    public static FanMode ResolveMode(FanMode selected, double loadPercent, FanMode currentlyResolved)
+    {
+        if (selected != FanMode.Auto) return selected;
+
+        // Step UP as soon as the band is reached; step DOWN only after clearing the edge
+        // by the hysteresis margin.
+        return currentlyResolved switch
+        {
+            FanMode.Performance => loadPercent < PerformanceLoadPercent - LoadHysteresisPercent
+                ? Band(loadPercent)
+                : FanMode.Performance,
+            FanMode.Balanced => loadPercent >= PerformanceLoadPercent ? FanMode.Performance
+                : loadPercent < BalancedLoadPercent - LoadHysteresisPercent ? FanMode.Silent
+                : FanMode.Balanced,
+            _ => Band(loadPercent),
+        };
+    }
+
+    private static FanMode Band(double loadPercent) =>
+        loadPercent >= PerformanceLoadPercent ? FanMode.Performance
+        : loadPercent >= BalancedLoadPercent ? FanMode.Balanced
+        : FanMode.Silent;
 
     /// <summary>Duty percent for the given temperature under the given mode.</summary>
     public static double Evaluate(FanMode mode, double tempC)

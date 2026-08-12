@@ -261,9 +261,9 @@ public sealed class Composition
         FanService = new FanService(new PrimeOSTuner.Win.Fans.LhmFanController(), settingsStore,
             new FanTuningStore(FanTuningStore.DefaultPath()));
         Fans = new FansViewModel(FanService);
-        // Auto mode: quiet at the desk, full cooling in game.
-        watcher.GameStarted += (_, _) => { if (FanService is { } f) f.GameRunning = true; };
-        watcher.GameStopped += (_, _) => { if (FanService is { } f) f.GameRunning = false; };
+        // Auto mode follows real system load, so a light 2D game stays quiet and a heavy
+        // workload ramps — whether or not it is a "game" at all.
+        sampler.Sampled += (_, sample) => FanService?.ReportLoad(sample.CpuPercent, sample.GpuPercent);
     }
 #else
     /// <summary>
