@@ -4,7 +4,7 @@ using PrimeOSTuner.Core.Fans;
 
 namespace Crustcut.Presentation;
 
-public sealed record FanRowVm(string Name, string Rpm, string Duty);
+public sealed record FanRowVm(string Name, string Rpm, string Duty, string Note, bool Managed);
 
 /// <summary>
 /// Fans page. The service owns the control loop and all safety; this is a remote control
@@ -24,6 +24,8 @@ public partial class FansViewModel : ObservableObject
     [ObservableProperty] private string _dutyText = "—";
     [ObservableProperty] private string _statusText = "";
     [ObservableProperty] private bool _conflictSuspected;
+    [ObservableProperty] private bool _isCalibrating;
+    [ObservableProperty] private string _calibrationText = "";
 
     public ObservableCollection<FanRowVm> Fans { get; } = new();
 
@@ -61,6 +63,26 @@ public partial class FansViewModel : ObservableObject
         IsAuto = mode == FanMode.Auto;
     }
 
+    /// <summary>Measures this machine's fans so minimum speeds fit the actual hardware.</summary>
+    public async Task CalibrateAsync()
+    {
+        if (_service is null || IsCalibrating) return;
+        IsCalibrating = true;
+        try
+        {
+            var progress = new Progress<string>(m => CalibrationText = m);
+            CalibrationText = await _service.CalibrateAsync(progress);
+        }
+        finally { IsCalibrating = false; }
+    }
+
+    /// <summary>Tap-to-correct for tachometers that read half or double the true speed.</summary>
+    public void CycleRpmScale(string fanName)
+    {
+        _service?.CycleRpmScale(fanName);
+        Refresh();
+    }
+
     /// <summary>Pulls the live picture from the service. Called by the view every ~2s.</summary>
     public void Refresh()
     {
@@ -87,6 +109,13 @@ public partial class FansViewModel : ObservableObject
             Fans.Add(new FanRowVm(
                 f.Name,
                 f.Rpm is double r ? $"{r:F0} RPM" : "—",
-                f.DutyPercent is double p ? $"{p:F0} %" : "—"));
+                f.DutyPercent is double p ? $"{p:F0} %" : (f.Managed ? "—" : ""),
+                f.Note ?? "",
+                f.Managed));
+
+        if (!IsCalibrating && CalibrationText.Length == 0)
+            CalibrationText = _service.IsCalibrated
+                ? "Fans measured on this machine."
+                : "Not measured yet — calibrate for the quietest safe speeds.";
     }
 }

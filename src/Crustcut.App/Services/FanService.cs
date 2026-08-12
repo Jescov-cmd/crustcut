@@ -19,6 +19,7 @@ public sealed class FanService : IFanControlService, IDisposable
 {
     private readonly IFanController _fans;
     private readonly AppSettingsStore _settings;
+    private readonly FanTuningStore _tuning;
     private readonly System.Timers.Timer _timer = new(2000) { AutoReset = true };
     private readonly object _gate = new();
 
@@ -32,10 +33,11 @@ public sealed class FanService : IFanControlService, IDisposable
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "PrimeOSTuner", "fan-control-active");
 
-    public FanService(IFanController fans, AppSettingsStore settings)
+    public FanService(IFanController fans, AppSettingsStore settings, FanTuningStore tuning)
     {
         _fans = fans;
         _settings = settings;
+        _tuning = tuning;
 
         // Crash recovery FIRST: if the marker survived, the last run died while it owned
         // the fans — hand them back to the BIOS before doing anything else.
@@ -84,8 +86,89 @@ public sealed class FanService : IFanControlService, IDisposable
         }
     }
 
-    public FanStatus Status() => new(
-        _engaged, _lastTemp, _lastDuty, _fans.Snapshot(), _conflictSuspected);
+    public FanStatus Status()
+    {
+        // RPM display correction (tachometer pulses-per-revolution differ by fan).
+        var fans = _fans.Snapshot()
+            .Select(f => f.Rpm is double r
+                ? f with { Rpm = r * _tuning.RpmScaleFor(f.Name) }
+                : f)
+            .ToList();
+        return new FanStatus(_engaged, _lastTemp, _lastDuty, fans, _conflictSuspected);
+    }
+
+    public bool IsCalibrated => _tuning.HasCalibration;
+
+    public void CycleRpmScale(string fanName)
+    {
+        var next = _tuning.RpmScaleFor(fanName) switch
+        {
+            < 0.75 => 1.0,      // 0.5 -> 1
+            < 1.5 => 2.0,       // 1   -> 2
+            _ => 0.5,           // 2   -> 0.5
+        };
+        _tuning.SetRpmScale(fanName, next);
+    }
+
+    /// <summary>
+    /// Steps each managed fan down until its tachometer reads zero, then records the last
+    /// speed that still span (plus a safety step). Runs one fan at a time so a stall is
+    /// unambiguous, and restores control afterwards.
+    /// </summary>
+    public async Task<string> CalibrateAsync(IProgress<string>? progress = null, CancellationToken ct = default)
+    {
+        if (!_fans.IsSupported) return "No controllable fans found.";
+        var wasEnabled = Enabled;
+        var results = new List<string>();
+        try
+        {
+            _timer.Stop();   // the control loop must not fight the calibration
+            foreach (var name in _fans.ManagedFanNames)
+            {
+                ct.ThrowIfCancellationRequested();
+                progress?.Report($"Measuring {name}…");
+                var min = await MeasureMinDutyAsync(name, ct);
+                _tuning.Set(new FanTuning(name, min, _tuning.RpmScaleFor(name)));
+                results.Add($"{name}: {min:F0}%");
+                EngineLog.Log($"fans: calibrated {name} minimum {min:F0}%");
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex) { EngineLog.Log($"fans: calibration failed: {ex.Message}"); }
+        finally
+        {
+            _fans.RestoreAuto();
+            _engaged = false;
+            _timer.Start();
+            if (wasEnabled) Tick();   // resume control immediately
+        }
+        return results.Count == 0
+            ? "Calibration could not measure any fan."
+            : "Lowest safe speed — " + string.Join(", ", results);
+    }
+
+    private async Task<double> MeasureMinDutyAsync(string name, CancellationToken ct)
+    {
+        double lastGood = FanPolicy.UncalibratedMinDutyPercent;
+        for (var duty = 40.0; duty >= FanPolicy.HardMinDutyPercent; duty -= 3)
+        {
+            // Hold long enough for the fan to settle at the new speed before judging it.
+            for (var i = 0; i < 4; i++)
+            {
+                _fans.TrySetDuty(name, duty);
+                await Task.Delay(1000, ct);
+            }
+            var fan = _fans.Snapshot().FirstOrDefault(f =>
+                f.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (fan?.Rpm is not > 0) break;    // stalled — previous step was the limit
+            lastGood = duty;
+
+            var temp = _fans.ReadCpuTempC();
+            if (temp is > 80) break;           // never calibrate a machine into overheating
+        }
+        // One step of margin above the last speed that actually span.
+        return Math.Min(100, lastGood + 3);
+    }
 
     private int _rediscoverCountdown;
 
@@ -133,7 +216,10 @@ public sealed class FanService : IFanControlService, IDisposable
                 EngineLog.Log($"fans: engaged — {mode} mode at {t:F0}°C → {duty:F0}%");
             }
 
-            _fans.TrySetAllDuty(duty);
+            // Per-fan floors: a fan that calibrated at 22% idles at 22%, one that stalls
+            // at 45% never goes below 45% — same curve, hardware-appropriate minimums.
+            foreach (var name in _fans.ManagedFanNames)
+                _fans.TrySetDuty(name, Math.Max(duty, _tuning.MinDutyFor(name)));
             DetectConflict(duty);
         }
         catch { /* never let the loop die; next tick retries */ }

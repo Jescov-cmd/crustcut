@@ -1,5 +1,6 @@
 using Crustcut.App.Services;
 using Crustcut.Presentation;
+using PrimeOSTuner.Core.Fans;
 using PrimeOSTuner.Core.Games;
 using PrimeOSTuner.Core.History;
 using PrimeOSTuner.Core.Memory;
@@ -257,7 +258,8 @@ public sealed class Composition
             priorityStore, engine, priorityClient);
 
         // ── Fans: curve control loop (owns the hardware handle and all safety) ────────
-        FanService = new FanService(new PrimeOSTuner.Win.Fans.LhmFanController(), settingsStore);
+        FanService = new FanService(new PrimeOSTuner.Win.Fans.LhmFanController(), settingsStore,
+            new FanTuningStore(FanTuningStore.DefaultPath()));
         Fans = new FansViewModel(FanService);
         // Auto mode: quiet at the desk, full cooling in game.
         watcher.GameStarted += (_, _) => { if (FanService is { } f) f.GameRunning = true; };

@@ -35,6 +35,17 @@ public partial class FansView : UserControl
             vm.Toggle(sw.IsChecked == true);
     }
 
+    private async void CalibrateClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is FansViewModel vm) await vm.CalibrateAsync();
+    }
+
+    private void RpmScaleClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string name } && DataContext is FansViewModel vm)
+            vm.CycleRpmScale(name);
+    }
+
     private void AutoClick(object? sender, RoutedEventArgs e)
         => (DataContext as FansViewModel)?.SelectMode(FanMode.Auto);
 

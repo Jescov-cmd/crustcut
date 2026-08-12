@@ -15,9 +15,8 @@ public sealed class RamCleanerTweak : IOneShotTweak
     // Deliberately plain about the trade-off. The previous copy called this "safe" while it
     // was purging the machine-wide standby list, which made the whole system slower.
     public string Description => _mode == RamCleanMode.Deep
-        ? "Maximum cleanup: minimized apps and small background programs get trimmed and put " +
-          "in Efficiency Mode, and Windows' caches (standby, dirty pages, system file cache) " +
-          "are cleared. Biggest visible drop; recently-used files reload from disk a beat " +
+        ? "Maximum cleanup: minimized apps and small background programs are trimmed, and " +
+          "Windows' caches (standby, dirty pages, system file cache) are cleared. Biggest visible drop; recently-used files reload from disk a beat " +
           "slower afterwards. Focused, on-screen and PROTECT-ed apps are never touched."
         : "Releases memory held by idle background programs. Apps you're using — anything with " +
           "an open window, whatever's in focus, and their helper processes — are left alone. " +
@@ -55,14 +54,12 @@ public sealed class RamCleanerTweak : IOneShotTweak
             return _cleaner.RunAsync(0, protectedPids, _mode, ct);
         }, ct);
 
-        // Deep goes further than memory: trimmed processes also get Windows 11 Efficiency
-        // Mode (EcoQoS + BelowNormal) so they stay light on CPU, not just RAM. Cleared by
-        // Windows when the process exits; foreground use is unaffected because these are
-        // by definition background/minimized processes.
-        var ecod = 0;
-        if (_mode == RamCleanMode.Deep && report.TrimmedPids is { } pids)
-            foreach (var pid in pids)
-                if (_priority.TrySetEfficiencyMode(pid, true)) ecod++;
+        // NO Efficiency Mode here. Deep clean used to push trimmed processes into EcoQoS
+        // (efficiency cores + reduced clocks); it caught shell and UI helper processes and
+        // wrecked rendering — laggy hover states, black rectangles, fuzzy text — and the
+        // flag PERSISTS until the process restarts, so it never healed on its own.
+        // Memory reclamation must not silently change how the machine feels. The
+        // capability stays on IPriorityClient for explicit, targeted use only.
 
         // Deep also pulls Mem Reduct's system-level levers (user's explicit choice —
         // maximum visible reclaim over cache-warmth purity): flush the dirty page list,
@@ -89,7 +86,6 @@ public sealed class RamCleanerTweak : IOneShotTweak
         var message = report.Trimmed == 0 && cacheClearedMb == 0
             ? "Nothing to clean — everything running is either in use or already lean."
             : $"Freed {freedMb} MB from {report.Trimmed} background app(s)." +
-              (ecod > 0 ? $" {ecod} put in Efficiency Mode." : "") +
               (cacheClearedMb > 0 ? $" Cleared {cacheClearedMb} MB of system cache." : "");
         return TweakResult.Success($"{{\"trimmed\":{report.Trimmed}}}", message);
     }

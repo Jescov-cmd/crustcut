@@ -60,6 +60,14 @@
             <ToggleButton Classes="protect" Content="PERFORMANCE"
                           IsChecked="{Binding IsPerformance, Mode=OneWay}" Click="PerformanceClick"/>
           </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button Content="CALIBRATE FANS" Classes="secondary" Click="CalibrateClick"
+                    IsEnabled="{Binding !IsCalibrating}"
+                    ToolTip.Tip="Measures how slowly each of YOUR fans can spin without stopping, then uses that as the minimum. Takes about a minute; fans move around during it."/>
+            <TextBlock Text="{Binding CalibrationText}" Classes="label"
+                       VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="420"/>
+          </StackPanel>
         </StackPanel>
       </Border>
 
@@ -81,15 +89,29 @@
           <ItemsControl ItemsSource="{Binding Fans}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <Grid ColumnDefinitions="*,110,70" Margin="0,4,0,0">
-                  <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="12.5"
-                             Foreground="{DynamicResource Text1}"/>
+                <Grid ColumnDefinitions="*,96,58,44" Margin="0,5,0,0">
+                  <StackPanel Grid.Column="0" Spacing="1">
+                    <TextBlock Text="{Binding Name}" FontSize="12.5"
+                               Foreground="{DynamicResource Text1}"/>
+                    <TextBlock Text="{Binding Note}" FontSize="10.5"
+                               Foreground="{DynamicResource Text3}"
+                               IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                  </StackPanel>
                   <TextBlock Grid.Column="1" Text="{Binding Rpm}" FontSize="12.5"
                              FontFamily="Consolas, Cascadia Mono, monospace"
-                             Foreground="{DynamicResource Text0}" HorizontalAlignment="Right"/>
+                             Foreground="{DynamicResource Text0}" HorizontalAlignment="Right"
+                             VerticalAlignment="Center"/>
                   <TextBlock Grid.Column="2" Text="{Binding Duty}" FontSize="12.5"
                              FontFamily="Consolas, Cascadia Mono, monospace"
-                             Foreground="{DynamicResource Text2}" HorizontalAlignment="Right"/>
+                             Foreground="{DynamicResource Text2}" HorizontalAlignment="Right"
+                             VerticalAlignment="Center"/>
+                  <!-- Tachometers report pulses, not revolutions, and fans differ in
+                       pulses-per-rev — no software can tell. Tap to match your BIOS. -->
+                  <Button Grid.Column="3" Content="RPM?" FontSize="9.5" MinWidth="40"
+                          Padding="0" MinHeight="20" Height="20"
+                          HorizontalAlignment="Right" VerticalAlignment="Center"
+                          ToolTip.Tip="If this RPM doesn't match your BIOS or MSI Center, tap to halve/double the reading."
+                          Tag="{Binding Name}" Click="RpmScaleClick"/>
                 </Grid>
               </DataTemplate>
             </ItemsControl.ItemTemplate>

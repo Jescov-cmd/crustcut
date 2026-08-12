@@ -13,12 +13,21 @@ public sealed record CurvePoint(double TempC, double DutyPercent);
 public static class FanPolicy
 {
     /// <summary>
-    /// Fans never run below this — a curve can make fans quiet, never stopped. Measured on
-    /// real hardware (MSI B650 / NCT6687D): the case fan stalled at 18% duty and held
-    /// 325 RPM at 20%, so 22% keeps a safety margin above the stall point. Note the CPU
-    /// fan has its own hardware floor around 845 RPM — below ~30% duty it stops getting
-    /// slower, so there is nothing left to win there.
+    /// Absolute floor, whatever a curve or calibration says. No fan anywhere is asked to
+    /// go below this — protection against a bad calibration on exotic hardware.
     /// </summary>
+    public const double HardMinDutyPercent = 15;
+
+    /// <summary>
+    /// Floor for a fan that has NOT been calibrated on this machine. Deliberately
+    /// conservative: 3-pin DC case fans and AIO pumps stall far higher than the PWM fans
+    /// this was originally tuned against, and an unknown machine gets the safe answer
+    /// until calibration measures the truth.
+    /// </summary>
+    public const double UncalibratedMinDutyPercent = 30;
+
+    /// <summary>Curve floor. Per-fan calibrated minimums are applied on top of this by the
+    /// service, so a fan that can idle at 22% does, and one that stalls at 45% doesn't.</summary>
     public const double MinDutyPercent = 22;
 
     /// <summary>At or above this CPU temperature every fan goes to 100%, mode be damned.
