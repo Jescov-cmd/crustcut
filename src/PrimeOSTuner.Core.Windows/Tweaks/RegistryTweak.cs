@@ -4,7 +4,7 @@ using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class RegistryTweak : ITweak, ICategorizedTweak, ISelfRevertingTweak
+public sealed class RegistryTweak : ITweak, ICategorizedTweak, IOptInTweak, ISelfRevertingTweak
 {
     private readonly RegistryTweakDefinition _def;
     private readonly IRegistryClient _registry;
@@ -24,6 +24,7 @@ public sealed class RegistryTweak : ITweak, ICategorizedTweak, ISelfRevertingTwe
 
     public string Category => _def.Category;
     public string? RiskNote => _def.RiskNote;
+    public bool OptIn => _def.OptIn;
 
     public Task<TweakState> ProbeAsync(CancellationToken ct = default)
     {

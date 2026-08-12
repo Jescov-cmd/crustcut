@@ -14,7 +14,8 @@ public sealed record RegistryTweakDefinition(
     string ValueName,
     string ValueKind,                // "DWord" | "String"
     string AppliedData,              // for DWord, parseable as int; for String, used as-is
-    string? RiskNote                 // optional inline warning shown on the tile
+    string? RiskNote,                // optional inline warning shown on the tile
+    bool OptIn = false               // true: user-only, never applied by bundles
 )
 {
     public RegistryHive ParsedHive => Hive switch

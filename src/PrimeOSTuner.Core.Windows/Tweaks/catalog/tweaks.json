@@ -250,7 +250,8 @@
       "valueName": "OverlayTestMode",
       "valueKind": "DWord",
       "appliedData": "5",
-      "riskNote": null
+      "riskNote": "Machine-dependent: fixes flicker on some systems, causes black rectangles around hover effects on others. Turn it off if you see artifacts.",
+      "optIn": true
     },
     {
       "id": "core.background-apps-disable",
@@ -269,7 +270,7 @@
     {
       "id": "core.delivery-optimization-disable",
       "displayName": "Disable Update upload (Delivery Optimization)",
-      "description": "Stops Windows from uploading update files to other PCs over the internet in the background — keeps that bandwidth for your game.",
+      "description": "Stops Windows from uploading update files to other PCs over the internet in the background \u2014 keeps that bandwidth for your game.",
       "category": "network",
       "requiresElevation": true,
       "requiresReboot": false,
