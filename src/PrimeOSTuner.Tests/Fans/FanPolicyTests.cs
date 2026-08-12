@@ -26,8 +26,15 @@ public class FanPolicyTests
     [Fact]
     public void Interpolates_linearly_between_points()
     {
-        // Silent: (60, 32) -> (75, 36). Midpoint (67.5deg) => 34%.
-        FanPolicy.Evaluate(FanMode.Silent, 67.5).Should().BeApproximately(34, 0.01);
+        // Silent: (60, 24) -> (72, 28). Midpoint (66deg) => 26%.
+        FanPolicy.Evaluate(FanMode.Silent, 66).Should().BeApproximately(26, 0.01);
+    }
+
+    [Fact]
+    public void Floor_stays_above_the_measured_stall_point()
+    {
+        // The user's case fan stalled at 18% duty; the floor must keep real margin.
+        FanPolicy.MinDutyPercent.Should().BeGreaterThan(19);
     }
 
     [Fact]
