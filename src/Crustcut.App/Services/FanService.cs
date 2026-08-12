@@ -5,9 +5,10 @@ namespace Crustcut.App.Services;
 
 /// <summary>
 /// The fan-control loop: every 2 seconds, read the hottest CPU temperature, evaluate the
-/// active mode's curve, write the duty to every managed fan. Safety story:
+/// active mode's curve, write the resulting duty to each managed fan. Safety story:
 /// - temperature unreadable → restore BIOS control immediately (never fly blind)
-/// - FanPolicy's failsafe (≥85°C → 100%) and floor (never under 25%) apply to every write
+/// - FanPolicy's failsafe (≥85°C → 100%) applies to every write, and each fan is held at
+///   or above its own calibrated minimum (or a conservative default when unmeasured)
 /// - disable/exit/dispose → restore BIOS control
 /// - crash: a marker file exists while control is engaged; if it's present at startup the
 ///   previous run died mid-control, so BIOS control is restored before anything else
@@ -147,10 +148,16 @@ public sealed class FanService : IFanControlService, IDisposable
             : "Lowest safe speed — " + string.Join(", ", results);
     }
 
+    private const double CalibrationStartPercent = 60;
+    private const double CalibrationStepPercent = 5;
+
     private async Task<double> MeasureMinDutyAsync(string name, CancellationToken ct)
     {
-        double lastGood = FanPolicy.UncalibratedMinDutyPercent;
-        for (var duty = 40.0; duty >= FanPolicy.HardMinDutyPercent; duty -= 3)
+        // Start HIGH and walk down. Starting low and walking down would record a minimum
+        // below the stall point for any fan that already stalls at the first step (3-pin
+        // DC fans routinely need 40%+), which is the one mistake this must never make.
+        var lastGood = CalibrationStartPercent;
+        for (var duty = CalibrationStartPercent; duty >= FanPolicy.HardMinDutyPercent; duty -= CalibrationStepPercent)
         {
             // Hold long enough for the fan to settle at the new speed before judging it.
             for (var i = 0; i < 4; i++)
@@ -160,14 +167,14 @@ public sealed class FanService : IFanControlService, IDisposable
             }
             var fan = _fans.Snapshot().FirstOrDefault(f =>
                 f.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-            if (fan?.Rpm is not > 0) break;    // stalled — previous step was the limit
+            if (fan?.Rpm is not > 0) break;    // stalled — the previous step was the limit
             lastGood = duty;
 
             var temp = _fans.ReadCpuTempC();
             if (temp is > 80) break;           // never calibrate a machine into overheating
         }
-        // One step of margin above the last speed that actually span.
-        return Math.Min(100, lastGood + 3);
+        // One step of margin above the slowest speed the fan actually sustained.
+        return Math.Min(100, lastGood + CalibrationStepPercent);
     }
 
     private int _rediscoverCountdown;
@@ -206,31 +213,47 @@ public sealed class FanService : IFanControlService, IDisposable
 
             var selected = Enum.TryParse<FanMode>(s.FanMode, out var m) ? m : FanMode.Balanced;
             var mode = FanPolicy.ResolveMode(selected, GameRunning);
-            var duty = FanPolicy.Evaluate(mode, t);
-            _lastDuty = duty;
+            var curveDuty = FanPolicy.Evaluate(mode, t);
+
+            // Per-fan floors: a fan that calibrated at 22% idles at 22%, one that stalls
+            // at 45% never goes below 45% — same curve, hardware-appropriate minimums.
+            var applied = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+            foreach (var name in _fans.ManagedFanNames)
+                applied[name] = Math.Max(curveDuty, _tuning.MinDutyFor(name));
+
+            // Headline number reflects what the machine will actually do — the loudest fan
+            // — not the curve's ideal, which a floor may be overriding.
+            _lastDuty = applied.Count > 0 ? applied.Values.Max() : curveDuty;
 
             if (!_engaged)
             {
                 try { File.WriteAllText(MarkerPath(), DateTime.UtcNow.ToString("O")); } catch { }
                 _engaged = true;
-                EngineLog.Log($"fans: engaged — {mode} mode at {t:F0}°C → {duty:F0}%");
+                EngineLog.Log($"fans: engaged — {mode} mode at {t:F0}°C → {_lastDuty:F0}%");
             }
 
-            // Per-fan floors: a fan that calibrated at 22% idles at 22%, one that stalls
-            // at 45% never goes below 45% — same curve, hardware-appropriate minimums.
-            foreach (var name in _fans.ManagedFanNames)
-                _fans.TrySetDuty(name, Math.Max(duty, _tuning.MinDutyFor(name)));
-            DetectConflict(duty);
+            foreach (var (name, duty) in applied) _fans.TrySetDuty(name, duty);
+            DetectConflict(applied);
         }
         catch { /* never let the loop die; next tick retries */ }
         finally { System.Threading.Monitor.Exit(_gate); }
     }
 
-    private void DetectConflict(double wantedDuty)
+    /// <summary>
+    /// Flags another app fighting us for the fans. Compares each fan against the duty WE
+    /// asked that fan for — comparing everything against one number would cry conflict at
+    /// any fan legitimately held above the curve by its own calibrated floor.
+    /// </summary>
+    private void DetectConflict(IReadOnlyDictionary<string, double> applied)
     {
-        var readback = _fans.Snapshot();
-        var fighting = readback.Count > 0 && readback.All(f =>
-            f.DutyPercent is double d && Math.Abs(d - wantedDuty) > 12);
+        var readback = _fans.Snapshot().Where(f => f.Managed).ToList();
+        var comparable = readback
+            .Where(f => f.DutyPercent is not null && applied.ContainsKey(f.Name))
+            .ToList();
+
+        var fighting = comparable.Count > 0 && comparable.All(f =>
+            Math.Abs(f.DutyPercent!.Value - applied[f.Name]) > 12);
+
         _conflictStrikes = fighting ? _conflictStrikes + 1 : 0;
         var suspected = _conflictStrikes >= 3;
         if (suspected && !_conflictSuspected)

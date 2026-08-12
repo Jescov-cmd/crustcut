@@ -22,11 +22,11 @@
       <TextBlock Text="Fans" Classes="pageTitle" Margin="0,16,0,10"/>
       <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,16"
                  TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left"
-                 Text="Curve-based fan control. Silent keeps fans slow until things actually get warm; Performance ramps early. Safety is built in: fans never stop, anything over 85 °C forces full speed, and your motherboard takes back control the moment this is off or Crustcut closes. Your graphics card's fans manage themselves."/>
+                 Text="Curve-based fan control. Auto stays quiet at the desk and switches to full cooling while a game runs; Silent, Balanced and Performance pin it manually. Calibrate once so the minimum speeds match your actual fans. Safety is built in: fans never stop, anything over 85 °C forces full speed, pumps are never slowed, and your motherboard takes back control the moment this is off or Crustcut closes. Your graphics card runs its own fans."/>
 
       <Border Classes="card" IsVisible="{Binding !IsSupported}">
         <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource Text1}" FontSize="12"
-                   Text="No controllable fans found right now — usually another app (SignalRGB, LibreHardwareMonitor, HWiNFO) is holding the fan chip. Crustcut keeps looking: close that app and control appears here within a minute, no restart needed."/>
+                   Text="No controllable fans found right now — usually another app (SignalRGB, MSI Center, LibreHardwareMonitor, HWiNFO, or a second copy of Crustcut) is holding the fan chip. Crustcut keeps looking: close that app and control appears here within a minute, no restart needed."/>
       </Border>
 
       <Border Classes="card" IsVisible="{Binding IsSupported}">

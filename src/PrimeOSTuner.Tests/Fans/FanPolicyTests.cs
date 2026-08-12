@@ -31,6 +31,31 @@ public class FanPolicyTests
     }
 
     [Fact]
+    public void Auto_is_quiet_at_the_desk_and_cools_hard_in_game()
+    {
+        FanPolicy.ResolveMode(FanMode.Auto, gameRunning: false).Should().Be(FanMode.Silent);
+        FanPolicy.ResolveMode(FanMode.Auto, gameRunning: true).Should().Be(FanMode.Performance);
+    }
+
+    [Fact]
+    public void Explicitly_chosen_modes_ignore_whether_a_game_is_running()
+    {
+        foreach (var mode in new[] { FanMode.Silent, FanMode.Balanced, FanMode.Performance })
+        {
+            FanPolicy.ResolveMode(mode, gameRunning: true).Should().Be(mode);
+            FanPolicy.ResolveMode(mode, gameRunning: false).Should().Be(mode);
+        }
+    }
+
+    [Fact]
+    public void Uncalibrated_default_is_safer_than_the_tuned_curve_floor()
+    {
+        // A machine we have never measured must not inherit one PC's fan minimum.
+        FanPolicy.UncalibratedMinDutyPercent.Should().BeGreaterThan(FanPolicy.MinDutyPercent);
+        FanPolicy.HardMinDutyPercent.Should().BeLessThan(FanPolicy.MinDutyPercent);
+    }
+
+    [Fact]
     public void Floor_stays_above_the_measured_stall_point()
     {
         // The user's case fan stalled at 18% duty; the floor must keep real margin.

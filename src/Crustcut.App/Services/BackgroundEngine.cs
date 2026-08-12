@@ -124,6 +124,9 @@ public sealed class BackgroundEngine : IDisposable
         // ── Re-enforce optimizers the user turned on that Windows reverted ───────────
         await EnforceDriftedAsync("startup");
 
+        // ── One-time repair for machines that ran v0.9.2 ─────────────────────────────
+        HealEfficiencyModeOnce();
+
         // ── Memory limits: assign what's missing, then enforce on what's running ─────
         // Without the startup sweep, an app already running before Crustcut launched
         // kept its old freedom until it happened to restart.
@@ -197,6 +200,37 @@ public sealed class BackgroundEngine : IDisposable
                 EngineLog.Log($"enforce ({trigger}): {r.Reapplied} restored after Windows reverted them, {r.AlreadyApplied} intact, {r.Failed} failed");
         }
         catch (Exception ex) { EngineLog.Log($"enforce ({trigger}): failed: {ex.Message}"); }
+    }
+
+    /// <summary>
+    /// v0.9.2's deep clean pushed trimmed processes into Windows Efficiency Mode. That
+    /// flag PERSISTS for the life of the process, and on shell/UI helpers it visibly
+    /// breaks rendering (laggy hover states, black boxes, blurry text). The feature is
+    /// gone, but machines that ran that build still carry throttled long-lived processes,
+    /// so clear it once — marker-guarded, because forcing throttling off everywhere on
+    /// every launch would fight Windows' own power management.
+    /// </summary>
+    private void HealEfficiencyModeOnce()
+    {
+        if (_priorityClient is null) return;
+        var marker = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "PrimeOSTuner", "ecoqos-healed-v093");
+        try
+        {
+            if (File.Exists(marker)) return;
+            var cleared = 0;
+            foreach (var p in System.Diagnostics.Process.GetProcesses())
+            {
+                try { if (_priorityClient.TrySetEfficiencyMode(p.Id, false)) cleared++; }
+                catch { /* system process — skip */ }
+                finally { p.Dispose(); }
+            }
+            Directory.CreateDirectory(Path.GetDirectoryName(marker)!);
+            File.WriteAllText(marker, DateTime.UtcNow.ToString("O"));
+            EngineLog.Log($"heal: cleared leftover Efficiency Mode on {cleared} process(es) from an older build");
+        }
+        catch (Exception ex) { EngineLog.Log($"heal: efficiency-mode cleanup failed: {ex.Message}"); }
     }
 
     /// <summary>
