@@ -124,8 +124,9 @@ public sealed class BackgroundEngine : IDisposable
         // ── Re-enforce optimizers the user turned on that Windows reverted ───────────
         await EnforceDriftedAsync("startup");
 
-        // ── One-time repair for machines that ran v0.9.2 ─────────────────────────────
+        // ── One-time repairs for machines that ran v0.9.2 ────────────────────────────
         HealEfficiencyModeOnce();
+        await HealMpoOverlayOnceAsync();
 
         // ── Memory limits: assign what's missing, then enforce on what's running ─────
         // Without the startup sweep, an app already running before Crustcut launched
@@ -231,6 +232,47 @@ public sealed class BackgroundEngine : IDisposable
             EngineLog.Log($"heal: cleared leftover Efficiency Mode on {cleared} process(es) from an older build");
         }
         catch (Exception ex) { EngineLog.Log($"heal: efficiency-mode cleanup failed: {ex.Message}"); }
+    }
+
+    /// <summary>
+    /// v0.9.2's one-click bundle applied "Disable Multi-Plane Overlay" (DWM
+    /// OverlayTestMode=5). It genuinely fixes flicker on some machines, but on others it
+    /// makes the compositor paint black rectangles around hover effects — and drift
+    /// enforcement re-applied it every 30 minutes, so the user could never escape it.
+    /// It is opt-in only now; this undoes the automatic application.
+    ///
+    /// ONLY undone when our own enforcement list proves Crustcut applied it. Someone who
+    /// set this deliberately (it is a widely shared flicker fix) keeps their setting.
+    /// </summary>
+    private async Task HealMpoOverlayOnceAsync()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var marker = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "PrimeOSTuner", "mpo-healed-v093");
+        try
+        {
+            if (File.Exists(marker)) return;
+
+            const string mpoId = "game.mpo-disable";
+            var enforced = await _sessionTweaks.LoadAsync();
+            var weAppliedIt = enforced.Contains(mpoId, StringComparer.OrdinalIgnoreCase);
+
+            if (weAppliedIt)
+            {
+                using (var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(
+                           @"SOFTWARE\Microsoft\Windows\Dwm", writable: true))
+                {
+                    key?.DeleteValue("OverlayTestMode", throwOnMissingValue: false);
+                }
+                await _sessionTweaks.RemoveAsync(mpoId);
+                EngineLog.Log("heal: undid automatic Multi-Plane Overlay disable (caused black rectangles on some systems; now opt-in only)");
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(marker)!);
+            File.WriteAllText(marker, DateTime.UtcNow.ToString("O"));
+        }
+        catch (Exception ex) { EngineLog.Log($"heal: MPO cleanup failed: {ex.Message}"); }
     }
 
     /// <summary>
