@@ -70,11 +70,16 @@ public sealed class RamCleanerTweak : IOneShotTweak
         long cacheClearedMb = 0;
         if (_mode == RamCleanMode.Deep && _standby is not null)
         {
+            // Order matters: trimming working sets and the system cache pushes pages ONTO
+            // the standby list, so the purge has to run last or it purges a stale, small
+            // list and leaves the freshly-evicted pages sitting there (measured: standby
+            // grew 155 -> 1859 MB when the purge ran first).
             var cacheBefore = _standby.GetStandbyBytes();
             _standby.TryFlushModified();
-            _standby.TryPurge();
             _standby.TryTrimSystemCache();
-            cacheClearedMb = Math.Max(0, cacheBefore - _standby.GetStandbyBytes()) / (1024 * 1024);
+            _standby.TryPurge();
+            var cacheAfter = _standby.GetStandbyBytes();
+            cacheClearedMb = Math.Max(0, cacheBefore - cacheAfter) / (1024 * 1024);
         }
 
         // The message is the whole point — a silent cleanup is indistinguishable from a
