@@ -1,6 +1,6 @@
 namespace PrimeOSTuner.Core.Fans;
 
-public enum FanMode { Silent, Balanced, Performance }
+public enum FanMode { Silent, Balanced, Performance, Auto }
 
 /// <summary>One point on a fan curve: at <paramref name="TempC"/>, run at <paramref name="DutyPercent"/>.</summary>
 public sealed record CurvePoint(double TempC, double DutyPercent);
@@ -42,6 +42,15 @@ public static class FanPolicy
         FanMode.Performance => Performance,
         _ => Balanced,
     };
+
+    /// <summary>
+    /// Auto resolves by context: quiet while you work, full cooling the moment a game is
+    /// running. Everything else resolves to itself.
+    /// </summary>
+    public static FanMode ResolveMode(FanMode selected, bool gameRunning) =>
+        selected == FanMode.Auto
+            ? (gameRunning ? FanMode.Performance : FanMode.Silent)
+            : selected;
 
     /// <summary>Duty percent for the given temperature under the given mode.</summary>
     public static double Evaluate(FanMode mode, double tempC)

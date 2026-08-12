@@ -19,6 +19,7 @@ public partial class FansViewModel : ObservableObject
     [ObservableProperty] private bool _isSilent;
     [ObservableProperty] private bool _isBalanced;
     [ObservableProperty] private bool _isPerformance;
+    [ObservableProperty] private bool _isAuto;
     [ObservableProperty] private string _tempText = "—";
     [ObservableProperty] private string _dutyText = "—";
     [ObservableProperty] private string _statusText = "";
@@ -57,6 +58,7 @@ public partial class FansViewModel : ObservableObject
         IsSilent = mode == FanMode.Silent;
         IsBalanced = mode == FanMode.Balanced;
         IsPerformance = mode == FanMode.Performance;
+        IsAuto = mode == FanMode.Auto;
     }
 
     /// <summary>Pulls the live picture from the service. Called by the view every ~2s.</summary>

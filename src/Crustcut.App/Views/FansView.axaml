@@ -50,6 +50,9 @@
           </Border>
 
           <StackPanel Orientation="Horizontal" Spacing="9" IsEnabled="{Binding Enabled}">
+            <ToggleButton Classes="protect" Content="AUTO"
+                          ToolTip.Tip="Silent while you work; switches itself to Performance whenever a game is running."
+                          IsChecked="{Binding IsAuto, Mode=OneWay}" Click="AutoClick"/>
             <ToggleButton Classes="protect" Content="SILENT"
                           IsChecked="{Binding IsSilent, Mode=OneWay}" Click="SilentClick"/>
             <ToggleButton Classes="protect" Content="BALANCED"

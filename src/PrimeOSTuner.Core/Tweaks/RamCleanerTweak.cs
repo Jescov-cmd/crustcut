@@ -15,9 +15,10 @@ public sealed class RamCleanerTweak : IOneShotTweak
     // Deliberately plain about the trade-off. The previous copy called this "safe" while it
     // was purging the machine-wide standby list, which made the whole system slower.
     public string Description => _mode == RamCleanMode.Deep
-        ? "Bigger cleanup: also releases memory from MINIMIZED apps and smaller background " +
-          "programs. Minimized apps take a moment to wake when you return to them. The app " +
-          "in focus, anything visible on screen, and PROTECT-ed apps are never touched."
+        ? "Maximum cleanup: minimized apps and small background programs get trimmed and put " +
+          "in Efficiency Mode, and Windows' caches (standby, dirty pages, system file cache) " +
+          "are cleared. Biggest visible drop; recently-used files reload from disk a beat " +
+          "slower afterwards. Focused, on-screen and PROTECT-ed apps are never touched."
         : "Releases memory held by idle background programs. Apps you're using — anything with " +
           "an open window, whatever's in focus, and their helper processes — are left alone. " +
           "Trimmed programs may pause briefly the next time you switch to them while Windows " +
@@ -27,13 +28,17 @@ public sealed class RamCleanerTweak : IOneShotTweak
     public bool IsDestructive => false;
     public bool RequiresReboot => false;
 
+    private readonly IStandbyListClient? _standby;
+
     public RamCleanerTweak(SafeRamCleaner cleaner, IRamCleanerProtectList protectList,
-        IPriorityClient priority, RamCleanMode mode = RamCleanMode.Normal)
+        IPriorityClient priority, RamCleanMode mode = RamCleanMode.Normal,
+        IStandbyListClient? standby = null)
     {
         _cleaner = cleaner;
         _protectList = protectList;
         _priority = priority;
         _mode = mode;
+        _standby = standby;
     }
 
     public Task<TweakState> ProbeAsync(CancellationToken ct = default)
@@ -59,14 +64,28 @@ public sealed class RamCleanerTweak : IOneShotTweak
             foreach (var pid in pids)
                 if (_priority.TrySetEfficiencyMode(pid, true)) ecod++;
 
+        // Deep also pulls Mem Reduct's system-level levers (user's explicit choice —
+        // maximum visible reclaim over cache-warmth purity): flush the dirty page list,
+        // purge the standby cache, trim the OS's own file-cache working set.
+        long cacheClearedMb = 0;
+        if (_mode == RamCleanMode.Deep && _standby is not null)
+        {
+            var cacheBefore = _standby.GetStandbyBytes();
+            _standby.TryFlushModified();
+            _standby.TryPurge();
+            _standby.TryTrimSystemCache();
+            cacheClearedMb = Math.Max(0, cacheBefore - _standby.GetStandbyBytes()) / (1024 * 1024);
+        }
+
         // The message is the whole point — a silent cleanup is indistinguishable from a
         // broken one. Freed is a real measurement (working-set delta), not an estimate.
         RamCleanLog.TryWrite(report);
         var freedMb = report.FreedBytes / (1024 * 1024);
-        var message = report.Trimmed == 0
+        var message = report.Trimmed == 0 && cacheClearedMb == 0
             ? "Nothing to clean — everything running is either in use or already lean."
             : $"Freed {freedMb} MB from {report.Trimmed} background app(s)." +
-              (ecod > 0 ? $" {ecod} put in Efficiency Mode." : "");
+              (ecod > 0 ? $" {ecod} put in Efficiency Mode." : "") +
+              (cacheClearedMb > 0 ? $" Cleared {cacheClearedMb} MB of system cache." : "");
         return TweakResult.Success($"{{\"trimmed\":{report.Trimmed}}}", message);
     }
 

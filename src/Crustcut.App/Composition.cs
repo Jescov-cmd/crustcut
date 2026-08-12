@@ -103,8 +103,8 @@ public sealed class Composition
             trimmer.TrimWorkingSet(Environment.ProcessId);
         };
         var ramTweak = new RamCleanerTweak(ramCleaner, protectList, priorityClient);
-        var deepRamTweak = new RamCleanerTweak(ramCleaner, protectList, priorityClient, RamCleanMode.Deep);
         var standbyClient = new StandbyListClient();
+        var deepRamTweak = new RamCleanerTweak(ramCleaner, protectList, priorityClient, RamCleanMode.Deep, standbyClient);
 
         // ── Tweaks: full set — hand-written + registry-driven catalog ─────────────────
         var registryClient = new RegistryClient();
@@ -259,6 +259,9 @@ public sealed class Composition
         // ── Fans: curve control loop (owns the hardware handle and all safety) ────────
         FanService = new FanService(new PrimeOSTuner.Win.Fans.LhmFanController(), settingsStore);
         Fans = new FansViewModel(FanService);
+        // Auto mode: quiet at the desk, full cooling in game.
+        watcher.GameStarted += (_, _) => { if (FanService is { } f) f.GameRunning = true; };
+        watcher.GameStopped += (_, _) => { if (FanService is { } f) f.GameRunning = false; };
     }
 #else
     /// <summary>

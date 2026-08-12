@@ -20,4 +20,12 @@ public interface IStandbyListClient
     /// <summary>Hard-fault page-in rate (pages read from disk per second). The adaptive
     /// policy's thrash guard: high values mean the system is already paying for evictions.</summary>
     double GetPageInputPerSec();
+
+    /// <summary>Writes the modified (dirty) page list out to the pagefile so those pages
+    /// can become reclaimable. The Mem Reduct "modified page list" lever.</summary>
+    bool TryFlushModified();
+
+    /// <summary>Empties the system file-cache working set (the OS's own cached file data
+    /// held in kernel space). The Mem Reduct "system working set" lever.</summary>
+    bool TryTrimSystemCache();
 }

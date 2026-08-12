@@ -12,8 +12,13 @@ namespace PrimeOSTuner.Core.Memory;
 public sealed class StandbyListClient : IStandbyListClient
 {
     private const int SystemMemoryListInformation = 80;
+    private const int MemoryFlushModifiedList = 3;
     private const int MemoryPurgeStandbyList = 4;
     private const string PrivilegeName = "SeProfileSingleProcessPrivilege";
+    private const string QuotaPrivilegeName = "SeIncreaseQuotaPrivilege";
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool SetSystemFileCacheSize(IntPtr minimum, IntPtr maximum, int flags);
 
     [DllImport("ntdll.dll")]
     private static extern uint NtSetSystemInformation(int infoClass, ref int info, int length);
@@ -70,9 +75,37 @@ public sealed class StandbyListClient : IStandbyListClient
     {
         try
         {
-            if (!EnablePrivilege()) return false;
+            if (!EnablePrivilege(PrivilegeName)) return false;
             var command = MemoryPurgeStandbyList;
             return NtSetSystemInformation(SystemMemoryListInformation, ref command, sizeof(int)) == 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public bool TryFlushModified()
+    {
+        try
+        {
+            if (!EnablePrivilege(PrivilegeName)) return false;
+            var command = MemoryFlushModifiedList;
+            return NtSetSystemInformation(SystemMemoryListInformation, ref command, sizeof(int)) == 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public bool TryTrimSystemCache()
+    {
+        try
+        {
+            if (!EnablePrivilege(QuotaPrivilegeName)) return false;
+            // (-1, -1) with flags 0 = "empty the system file cache working set".
+            return SetSystemFileCacheSize(new IntPtr(-1), new IntPtr(-1), 0);
         }
         catch
         {
@@ -93,14 +126,14 @@ public sealed class StandbyListClient : IStandbyListClient
         }
     }
 
-    private static bool EnablePrivilege()
+    private static bool EnablePrivilege(string privilege)
     {
         if (!OpenProcessToken(Process.GetCurrentProcess().Handle,
                 TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, out var token))
             return false;
         try
         {
-            if (!LookupPrivilegeValue(null, PrivilegeName, out var luid)) return false;
+            if (!LookupPrivilegeValue(null, privilege, out var luid)) return false;
             var tp = new TOKEN_PRIVILEGES { Count = 1, Luid = luid, Attributes = SE_PRIVILEGE_ENABLED };
             if (!AdjustTokenPrivileges(token, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero)) return false;
             // AdjustTokenPrivileges succeeds even when the privilege wasn't assigned;

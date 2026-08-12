@@ -56,6 +56,9 @@ public sealed class FanService : IFanControlService, IDisposable
 
     public bool IsSupported => _fans.IsSupported;
 
+    /// <summary>Fed by the game watcher (via Composition) — drives Auto mode.</summary>
+    public volatile bool GameRunning;
+
     public bool Enabled
     {
         get => SafeSettings().FanControlEnabled;
@@ -118,7 +121,8 @@ public sealed class FanService : IFanControlService, IDisposable
                 return;
             }
 
-            var mode = Enum.TryParse<FanMode>(s.FanMode, out var m) ? m : FanMode.Balanced;
+            var selected = Enum.TryParse<FanMode>(s.FanMode, out var m) ? m : FanMode.Balanced;
+            var mode = FanPolicy.ResolveMode(selected, GameRunning);
             var duty = FanPolicy.Evaluate(mode, t);
             _lastDuty = duty;
 

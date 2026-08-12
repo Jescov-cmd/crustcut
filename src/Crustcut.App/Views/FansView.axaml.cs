@@ -35,6 +35,9 @@ public partial class FansView : UserControl
             vm.Toggle(sw.IsChecked == true);
     }
 
+    private void AutoClick(object? sender, RoutedEventArgs e)
+        => (DataContext as FansViewModel)?.SelectMode(FanMode.Auto);
+
     private void SilentClick(object? sender, RoutedEventArgs e)
         => (DataContext as FansViewModel)?.SelectMode(FanMode.Silent);
 
