@@ -124,6 +124,7 @@ public sealed class Composition
             new GameModeTweak(registryClient),
             new HwGpuSchedulingTweak(registryClient),
             new CpuCoreParkingTweak(powerClient),
+            new CpuBoostLimitTweak(powerClient),
             new TelemetryDisableTweak(registryClient, serviceClient),
             new CortanaDisableTweak(registryClient),
             new UltimatePerformanceTweak(powerClient),
