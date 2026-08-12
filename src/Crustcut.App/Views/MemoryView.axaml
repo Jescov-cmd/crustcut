@@ -24,7 +24,7 @@
         <Button x:Name="DeepCleanButton" Content="DEEP CLEAN" Classes="secondary" Click="DeepCleanClick"
                 ToolTip.Tip="Bigger cleanup: minimized apps and small background programs included. Minimized apps wake a moment slower afterwards. On-screen, focused and PROTECT-ed apps are never touched."/>
         <Button Content="RECOMMENDED LIMITS" Classes="secondary" Click="RecommendedLimitsClick"
-                ToolTip.Tip="Measures what each running app uses and caps it with ~25% headroom — normal use unaffected, runaway growth stopped. Games are never capped."/>
+                ToolTip.Tip="Measures what each running BACKGROUND app uses and caps it with 50% headroom. Apps with a window are skipped — capping one can make it render badly. Games are never capped."/>
         <Button Content="SCAN RUNNING APPS" Classes="secondary" Click="RescanClick"/>
         <Button Content="RECOMMENDED FOR MY GAMES" Classes="secondary" Click="RecommendedClick"/>
       </StackPanel>
@@ -63,7 +63,7 @@
                           VerticalAlignment="Center" FontSize="12"
                           ItemsSource="{Binding $parent[UserControl].DataContext.MemoryLimitOptions}"
                           SelectedItem="{Binding MemoryLimit, Mode=TwoWay}"
-                          ToolTip.Tip="Most memory this app may keep in RAM, per process. Anything above spills to disk — too low a cap can slow the app. Multi-process apps (browsers) get the cap per process, not in total."
+                          ToolTip.Tip="Most memory this app may keep in RAM, per process. Anything above spills to disk. Careful with apps you actually look at: capping a window's memory can make it render badly (black boxes, blurry text). Crustcut only auto-caps background apps for that reason."
                           Tag="{Binding}"
                           SelectionChanged="MemoryLimitChanged"/>
 

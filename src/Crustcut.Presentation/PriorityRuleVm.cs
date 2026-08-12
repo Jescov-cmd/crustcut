@@ -60,11 +60,16 @@ public partial class PriorityRuleVm : ObservableObject
         // the odd value on next save) — presets are the whole contract of the dropdown.
         _memoryLimit = MemoryLimitOptions.FirstOrDefault(o => o.Mb == rule.MemoryLimitMb)
             ?? MemoryLimitOptions[0];
+        LimitAutoAssigned = rule.LimitAutoAssigned;
         LastSaved = rule;
     }
 
     public PriorityRule ToRule() => new(
         ExePath, DisplayName, Priority, ProtectFromRamCleanup, GameBooster, IsGame,
-        MemoryLimit?.Mb);
+        MemoryLimit?.Mb, LimitAutoAssigned);
+
+    /// <summary>Carried through edits so the engine can tell a cap it chose from one the
+    /// user picked; only its own are revised automatically.</summary>
+    public bool LimitAutoAssigned { get; set; }
 }
 

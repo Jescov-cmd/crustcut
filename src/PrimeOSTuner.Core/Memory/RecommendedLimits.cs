@@ -36,12 +36,40 @@ public static class RecommendedLimits
         return null;
     }
 
+    /// <summary>Headroom over measured usage. Generous on purpose: a cap that sits close
+    /// to real usage makes Windows evict pages constantly, which is felt, not just measured.</summary>
+    private const double HeadroomFactor = 1.5;
+
+    /// <summary>
+    /// True when any instance owns a visible window. Hard working-set caps force eviction
+    /// the moment a process reaches the ceiling, and for a windowed (GPU-accelerated) app
+    /// the evicted pages include render surfaces — the user sees black rectangles and
+    /// blurry text. Automatic capping therefore applies to background processes only.
+    /// </summary>
+    public static bool HasVisibleWindow(string exePath, IPriorityClient priority)
+    {
+        if (!OperatingSystem.IsWindows()) return false;
+        foreach (var pid in priority.FindPidsForExe(exePath))
+        {
+            try
+            {
+                using var p = Process.GetProcessById(pid);
+                if (p.MainWindowHandle != IntPtr.Zero) return true;
+            }
+            catch { /* exited between scan and read */ }
+        }
+        return false;
+    }
+
     /// <summary>
     /// Recommended cap for one rule, or null when there's no honest basis for one
-    /// (not running AND not in the catalog, or needs more than the largest preset).
+    /// (not running AND not in the catalog, needs more than the largest preset, or the app
+    /// has a window and must not be capped automatically).
     /// </summary>
     public static int? RecommendMb(string exePath, IPriorityClient priority)
     {
+        if (HasVisibleWindow(exePath, priority)) return null;
+
         long largest = 0;
         foreach (var pid in priority.FindPidsForExe(exePath))
         {
@@ -50,7 +78,7 @@ public static class RecommendedLimits
         }
 
         if (largest > 0)
-            return SnapToPreset(Math.Max(512, (long)(largest * 1.25 / (1024 * 1024))));
+            return SnapToPreset(Math.Max(512, (long)(largest * HeadroomFactor / (1024 * 1024))));
 
         var exeName = Path.GetFileNameWithoutExtension(exePath);
         return KnownAppLimitsMb.TryGetValue(exeName, out var mb) ? SnapToPreset(mb) : null;

@@ -24,6 +24,15 @@ public class AdaptiveRamPolicyTests
     }
 
     [Fact]
+    public void Recommended_limits_keep_generous_headroom()
+    {
+        // A cap sitting just above real usage makes Windows evict constantly. Anything
+        // measured must land on a preset comfortably above it.
+        RecommendedLimits.SnapToPreset((long)(400 * 1.5)).Should().Be(1024);
+        RecommendedLimits.SnapToPreset((long)(300 * 1.5)).Should().Be(512);
+    }
+
+    [Fact]
     public void Comfortable_memory_does_nothing()
     {
         var d = AdaptiveRamPolicy.Decide(Snap(50), LongAgo, -1);

@@ -245,23 +245,43 @@ public sealed class BackgroundEngine : IDisposable
         {
             var rules = (await _ruleStore.LoadAsync()).ToList();
             var assigned = 0;
+            var withdrawn = 0;
             await Task.Run(() =>
             {
                 for (var i = 0; i < rules.Count; i++)
                 {
                     var r = rules[i];
-                    if (r.IsGame || r.MemoryLimitMb is not null) continue;
+                    if (r.IsGame) continue;
+
+                    // Withdraw automatic caps from apps that have a window. A hard cap
+                    // forces eviction at the ceiling, and on a windowed (GPU-accelerated)
+                    // app that means render surfaces get paged out — black rectangles and
+                    // blurry text. User-chosen caps are left alone; that's their call.
+                    if (r.MemoryLimitMb is not null)
+                    {
+                        if (r.LimitAutoAssigned &&
+                            RecommendedLimits.HasVisibleWindow(r.ExePath, _priorityClient))
+                        {
+                            foreach (var pid in _priorityClient.FindPidsForExe(r.ExePath))
+                                _priorityClient.TryClearMemoryLimit(pid);
+                            rules[i] = r with { MemoryLimitMb = null, LimitAutoAssigned = false };
+                            withdrawn++;
+                        }
+                        continue;
+                    }
+
                     if (RecommendedLimits.RecommendMb(r.ExePath, _priorityClient) is int mb)
                     {
-                        rules[i] = r with { MemoryLimitMb = mb };
+                        rules[i] = r with { MemoryLimitMb = mb, LimitAutoAssigned = true };
                         assigned++;
                     }
                 }
             });
-            if (assigned == 0) return;
+            if (assigned == 0 && withdrawn == 0) return;
             await _ruleStore.SaveAsync(rules);
             if (_ruleEngine is not null) await _ruleEngine.ReloadAsync(rules);
-            EngineLog.Log($"limits: auto-assigned {assigned} recommended cap(s)");
+            if (assigned > 0) EngineLog.Log($"limits: auto-assigned {assigned} recommended cap(s)");
+            if (withdrawn > 0) EngineLog.Log($"limits: withdrew {withdrawn} automatic cap(s) from apps with windows");
         }
         catch (Exception ex) { EngineLog.Log($"limits: auto-assign failed: {ex.Message}"); }
     }

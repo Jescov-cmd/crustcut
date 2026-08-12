@@ -353,6 +353,12 @@ public partial class MemoryPriorityViewModel : ObservableObject
         var dirty = Rules.Where(r => r.ToRule() != r.LastSaved).ToList();
         if (dirty.Count == 0) return;
 
+        // A cap the user changed by hand stops being ours to revise — the engine's
+        // window-safety migration only withdraws caps Crustcut chose itself.
+        foreach (var r in dirty)
+            if (r.MemoryLimit?.Mb != r.LastSaved.MemoryLimitMb)
+                r.LimitAutoAssigned = false;
+
         // The engine only acts on process START, so without this a priority change would
         // do nothing until the app was next relaunched. Scanning pids walks every running
         // process — worker thread, never the UI's.
@@ -381,12 +387,12 @@ public partial class MemoryPriorityViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Sets a measured, meaningful cap on every running non-game app: the smallest preset
-    /// that still gives the app's LARGEST process ~25% headroom over what it uses right
-    /// now (floor 512 MB). That lets the app run normally today but stops it ballooning
-    /// tomorrow. Caps are per process — for multi-process apps (browsers, editors) a cap
-    /// far above any single process would never bite, which is why "just pick 1 GB" felt
-    /// dead. Games are never capped.
+    /// Caps every running BACKGROUND app at the smallest preset that still leaves its
+    /// largest process 50% headroom (floor 512 MB). Apps with a window are skipped: a hard
+    /// cap forces eviction at the ceiling, and on a GPU-accelerated windowed app that
+    /// paged-out memory is render surfaces — visible as black rectangles and blurry text.
+    /// Games are never capped. Caps are per process, so multi-process apps get the cap
+    /// applied to each process rather than to their combined total.
     /// </summary>
     public async Task<string> ApplyRecommendedLimitsAsync()
     {
@@ -414,6 +420,7 @@ public partial class MemoryPriorityViewModel : ObservableObject
         {
             if (vm.MemoryLimit?.Mb == option.Mb) continue;
             vm.MemoryLimit = option;
+            vm.LimitAutoAssigned = true;   // Crustcut's choice, so Crustcut may revise it
             set++;
         }
 
