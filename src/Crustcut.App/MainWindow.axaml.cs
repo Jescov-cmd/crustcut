@@ -35,4 +35,37 @@ public partial class MainWindow : Window
 
     /// <summary>Switches tab programmatically. Used by the --screenshot debug flag.</summary>
     public void NavigateTo(string tabId) => _shell.NavigateCommand.Execute(tabId);
+
+    private Crustcut.Presentation.UpdateViewModel? _updates;
+
+    /// <summary>
+    /// Wires the update banner. Kept out of XAML bindings on purpose: the banner lives in
+    /// the shell chrome, which has the ShellViewModel as its DataContext.
+    /// </summary>
+    public void AttachUpdates(Crustcut.Presentation.UpdateViewModel updates)
+    {
+        _updates = updates;
+        updates.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(updates.UpdateAvailable) or nameof(updates.Headline))
+            {
+                UpdateBanner.IsVisible = updates.UpdateAvailable;
+                UpdateHeadline.Text = updates.Headline;
+            }
+            if (e.PropertyName is nameof(updates.Status) or nameof(updates.IsBusy))
+            {
+                UpdateStatus.Text = updates.Status;
+                UpdateStatus.IsVisible = !string.IsNullOrEmpty(updates.Status);
+                UpdateNowButton.IsEnabled = !updates.IsBusy;
+            }
+        };
+    }
+
+    private async void UpdateNowClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (_updates is not null) await _updates.UpdateNowAsync();
+    }
+
+    private void UpdateLaterClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        => UpdateBanner.IsVisible = false;
 }

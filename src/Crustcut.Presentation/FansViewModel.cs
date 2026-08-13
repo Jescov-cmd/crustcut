@@ -99,7 +99,7 @@ public partial class FansViewModel : ObservableObject
         StatusText = !Enabled
             ? "Fans are under your motherboard's automatic control."
             : s.ConflictSuspected
-                ? "Another program is overriding fan speeds — if you use SignalRGB, turn OFF its fan control (keep the RGB)."
+                ? "Another program is overriding fan speeds — turn off fan control in your lighting or vendor software."
                 : !s.Engaged
                     ? "Starting…"
                     : IsAuto

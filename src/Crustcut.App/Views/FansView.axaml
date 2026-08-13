@@ -26,7 +26,7 @@
 
       <Border Classes="card" IsVisible="{Binding !IsSupported}">
         <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource Text1}" FontSize="12"
-                   Text="No controllable fans found right now — usually another app (SignalRGB, MSI Center, LibreHardwareMonitor, HWiNFO, or a second copy of Crustcut) is holding the fan chip. Crustcut keeps looking: close that app and control appears here within a minute, no restart needed."/>
+                   Text="No controllable fans found right now — usually another program that monitors or controls hardware (lighting software, a vendor control panel, a hardware monitor) is holding the fan chip. Crustcut keeps looking: close that program and control appears here within a minute, no restart needed."/>
       </Border>
 
       <Border Classes="card" IsVisible="{Binding IsSupported}">
@@ -46,7 +46,7 @@
           <Border Background="#22FFB84D" CornerRadius="8" Padding="11,8"
                   IsVisible="{Binding ConflictSuspected}">
             <TextBlock FontSize="11" Foreground="{DynamicResource Warn}" TextWrapping="Wrap"
-                       Text="Conflict detected: something else keeps overriding the fans. SignalRGB users — disable fan control inside SignalRGB (its lighting keeps working)."/>
+                       Text="Conflict detected: another program keeps overriding the fans. If you use lighting or vendor control software, turn off ITS fan control — the rest of it keeps working."/>
           </Border>
 
           <StackPanel Orientation="Horizontal" Spacing="9" IsEnabled="{Binding Enabled}">
@@ -110,7 +110,7 @@
                   <Button Grid.Column="3" Content="RPM?" FontSize="9.5" MinWidth="40"
                           Padding="0" MinHeight="20" Height="20"
                           HorizontalAlignment="Right" VerticalAlignment="Center"
-                          ToolTip.Tip="If this RPM doesn't match your BIOS or MSI Center, tap to halve/double the reading."
+                          ToolTip.Tip="If this RPM doesn't match what your BIOS reports, tap to halve or double the reading."
                           Tag="{Binding Name}" Click="RpmScaleClick"/>
                 </Grid>
               </DataTemplate>

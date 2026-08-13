@@ -10,6 +10,7 @@ using PrimeOSTuner.Core.Pipeline;
 using PrimeOSTuner.Core.Profiles;
 using PrimeOSTuner.Core.Settings;
 using PrimeOSTuner.Core.Tweaks;
+using PrimeOSTuner.Core.Updates;
 using PrimeOSTuner.Win;
 using PrimeOSTuner.Win.Launchers;
 using PrimeOSTuner.Win.Steam;
@@ -51,6 +52,7 @@ public sealed class Composition
     public OverlayService? Overlay { get; }
     public BackgroundEngine? Engine { get; }
     public FansViewModel Fans { get; }
+    public UpdateViewModel? Updates { get; }
     public FanService? FanService { get; }
     public AppRegistrationService Registration { get; }
 
@@ -256,6 +258,14 @@ public sealed class Composition
             new SessionTweakStore(SessionTweakStore.DefaultPath()),
             standbyClient, deepRamTweak, selfTrim,
             priorityStore, engine, priorityClient);
+
+        // ── Updates: quiet check against the published releases ───────────────────────
+        var updateHttp = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+        Updates = new UpdateViewModel(
+            new PrimeOSTuner.Core.Updates.UpdateChecker(updateHttp),
+            System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(0, 0, 0),
+            ui,
+            new AppUpdateInstaller(new UpdateInstaller(updateHttp)));
 
         // ── Fans: curve control loop (owns the hardware handle and all safety) ────────
         FanService = new FanService(new PrimeOSTuner.Win.Fans.LhmFanController(), settingsStore,

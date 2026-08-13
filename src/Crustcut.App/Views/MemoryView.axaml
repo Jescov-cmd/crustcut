@@ -22,7 +22,7 @@
         <Button x:Name="CleanNowButton" Content="FREE UP RAM" Classes="primary" Click="CleanNowClick"
                 ToolTip.Tip="Releases memory held by idle background programs. Apps you're using are left alone."/>
         <Button x:Name="DeepCleanButton" Content="DEEP CLEAN" Classes="secondary" Click="DeepCleanClick"
-                ToolTip.Tip="Bigger cleanup: minimized apps and small background programs included. Minimized apps wake a moment slower afterwards. On-screen, focused and PROTECT-ed apps are never touched."/>
+                ToolTip.Tip="Bigger cleanup: minimised apps and small background programs included, plus Windows' own caches. Minimised apps wake a moment slower afterwards. On-screen, focused and PROTECT-ed apps are never touched."/>
         <Button Content="RECOMMENDED LIMITS" Classes="secondary" Click="RecommendedLimitsClick"
                 ToolTip.Tip="Measures what each running BACKGROUND app uses and caps it with 50% headroom. Apps with a window are skipped — capping one can make it render badly. Games are never capped."/>
         <Button Content="SCAN RUNNING APPS" Classes="secondary" Click="RescanClick"/>

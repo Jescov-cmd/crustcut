@@ -67,10 +67,17 @@ public partial class App : Application
 
             // Closing the last window must not kill the process while we live in the tray.
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-            desktop.MainWindow = _window;
+
+            // NOTE: assigning desktop.MainWindow makes Avalonia SHOW that window when the
+            // lifetime starts. Setting it here and calling Hide() afterwards is why
+            // "start minimised to the tray" still flashed the window open on every boot —
+            // Hide() ran before the lifetime had shown it, and the show won. When starting
+            // minimised we leave MainWindow unset and adopt the window on first display.
+            if (!settings.StartMinimized) desktop.MainWindow = _window;
 
             if (shotPath is not null)
             {
+                desktop.MainWindow = _window;
                 if (shotTab is not null) _window.NavigateTo(shotTab);
                 if (shotW > 0 && shotH > 0) { _window.Width = shotW; _window.Height = shotH; }
                 _window.Show();
@@ -78,15 +85,15 @@ public partial class App : Application
             }
             else if (navStressPath is not null)
             {
+                desktop.MainWindow = _window;
                 _window.Show();
                 _ = NavStress.RunThenExitAsync(_window, navStressPath, () => Shutdown());
             }
             else if (settings.StartMinimized)
             {
-                // Deliberately do not Show(). The tray icon is the only affordance — this is
-                // exactly the behaviour that made users think the app had failed to open, so
-                // the Settings page now explains it.
-                _window.Hide();
+                // Nothing to do: the window was never shown and MainWindow was left unset,
+                // so the app lives in the tray until the user asks for it. The Settings
+                // page explains that the tray icon is the only affordance.
             }
             // Watching, profiles, recording, overlay, enforcement, auto-RAM. On a
             // background thread: started from here, its continuations would otherwise run
@@ -96,6 +103,18 @@ public partial class App : Application
             // Engine is null on macOS — no Windows subsystems to run.
             if (_composition.Engine is { } engine)
                 _ = Task.Run(() => engine.StartAsync());
+
+            // Update check: quiet, once per launch, never blocking startup.
+            if (_composition.Updates is { } updates)
+            {
+                _window.AttachUpdates(updates);
+                updates.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName == nameof(updates.UpdateAvailable) && updates.UpdateAvailable)
+                        Dispatcher.UIThread.Post(() => NotifyUpdate(updates.Headline));
+                };
+                _ = Task.Run(updates.CheckAsync);
+            }
             // Start Menu shortcut + heal the autostart task if the exe moved (Windows-only
             // concepts: schtasks + .lnk shortcuts).
             if (OperatingSystem.IsWindows())
@@ -135,6 +154,8 @@ public partial class App : Application
     private void ShowWindow()
     {
         if (_window is null) return;
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: null } d)
+            d.MainWindow = _window;   // adopted on first display (start-minimised path)
         _window.Show();
         _window.WindowState = WindowState.Normal;
         _window.Activate();
@@ -145,6 +166,26 @@ public partial class App : Application
         _exiting = true;
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             desktop.Shutdown();
+    }
+
+    /// <summary>
+    /// Surfaces a new version even when the window is hidden in the tray: the tooltip
+    /// carries the news, and the tray menu gains a direct way to act on it.
+    /// </summary>
+    private void NotifyUpdate(string headline)
+    {
+        try
+        {
+            var icons = TrayIcon.GetIcons(this);
+            if (icons is null || icons.Count == 0) return;
+            icons[0].ToolTipText = $"Crustcut — {headline}";
+        }
+        catch { /* the banner still carries the message */ }
+    }
+
+    private void TrayUpdateClick(object? sender, EventArgs e)
+    {
+        ShowWindow();   // the banner in the shell is where the UPDATE button lives
     }
 
     private void TrayClicked(object? sender, EventArgs e) => ShowWindow();

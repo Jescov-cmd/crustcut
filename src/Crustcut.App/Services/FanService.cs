@@ -292,7 +292,7 @@ public sealed class FanService : IFanControlService, IDisposable
         _conflictStrikes = fighting ? _conflictStrikes + 1 : 0;
         var suspected = _conflictStrikes >= 3;
         if (suspected && !_conflictSuspected)
-            EngineLog.Log("fans: hardware keeps overriding our duty — another app (SignalRGB fan control?) is fighting for the fans");
+            EngineLog.Log("fans: hardware keeps overriding our duty — another program is fighting for the fans");
         _conflictSuspected = suspected;
     }
 

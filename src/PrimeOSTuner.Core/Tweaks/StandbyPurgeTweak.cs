@@ -14,7 +14,7 @@ public sealed class StandbyPurgeTweak : IOneShotTweak
     public string Id => "core.standby-purge";
     public string DisplayName => "Clear standby cache";
     public string Description =>
-        "Empties Windows' cached-file list (the ISLC trick). Useful when games stutter " +
+        "Empties Windows' cached-file list. Useful when games stutter " +
         "with RAM nearly full — Windows reclaiming cache mid-game causes hitches. Don't run " +
         "it habitually: the cache normally speeds things up. Settings has an automatic mode " +
         "that fires only when memory is genuinely tight.";

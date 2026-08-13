@@ -116,7 +116,30 @@
       <Border Grid.Column="1" Background="{DynamicResource Hairline}"/>
 
       <!-- ===== CONTENT ===== -->
-      <ContentControl Grid.Column="2" x:Name="PageHost"/>
+      <DockPanel Grid.Column="2">
+        <!-- Update banner: only present when there is genuinely a newer release. -->
+        <Border DockPanel.Dock="Top" x:Name="UpdateBanner"
+                Background="#1E1E1E" BorderBrush="{DynamicResource AccentWheat}"
+                BorderThickness="0,0,0,1" Padding="20,10" IsVisible="False">
+          <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+            <Border Grid.Column="0" Width="3" Background="{DynamicResource AccentWheat}"
+                    Margin="0,0,12,0"/>
+            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+              <TextBlock x:Name="UpdateHeadline" FontSize="12.5" FontWeight="SemiBold"
+                         Foreground="{DynamicResource Text0}"/>
+              <TextBlock x:Name="UpdateStatus" FontSize="11"
+                         Foreground="{DynamicResource Text3}"
+                         IsVisible="False"/>
+            </StackPanel>
+            <Button Grid.Column="2" x:Name="UpdateLaterButton" Content="LATER"
+                    Classes="secondary" Margin="0,0,8,0" Click="UpdateLaterClick"/>
+            <Button Grid.Column="3" x:Name="UpdateNowButton" Content="UPDATE"
+                    Classes="primary" Click="UpdateNowClick"/>
+          </Grid>
+        </Border>
+
+        <ContentControl x:Name="PageHost"/>
+      </DockPanel>
     </Grid>
   </Grid>
 </Window>
