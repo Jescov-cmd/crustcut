@@ -23,18 +23,41 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var (shotPath, shotTab, shotW, shotH) = SelfScreenshot.Parse(Program.Args);
+            var overlayShotPath = SelfScreenshot.ParseOverlayShot(Program.Args);
             var navStressPath = NavStress.Parse(Program.Args);
 
             // The screenshot run is a throwaway process: skip the single-instance guard so
             // it can run while the real app is open.
             _guard = new SingleInstanceGuard();
-            if (shotPath is null && navStressPath is null && !_guard.TryAcquire())
+            var isDebugCapture = shotPath is not null || navStressPath is not null
+                              || overlayShotPath is not null;
+            if (!isDebugCapture && !_guard.TryAcquire())
             {
-                // Another copy is already running and has been asked to surface.
-                desktop.Shutdown();
+                // Another copy is already running and has been asked to surface. Exit
+                // directly: calling desktop.Shutdown() here tears the dispatcher down
+                // BEFORE the main loop starts, and the loop then throws
+                // "Cannot perform requested operation because the Dispatcher shut down".
+                // Nothing has been opened or written at this point, so leaving now is clean.
+                _guard.Dispose();
+                Environment.Exit(0);
                 return;
             }
             _guard.ShowRequested += (_, _) => Dispatcher.UIThread.Post(ShowWindow);
+
+            if (overlayShotPath is not null)
+            {
+                // Design-review path: the OSD alone, no engine, no main window — captured
+                // through the same proven screenshot routine the main window uses.
+                // OnExplicitShutdown, exactly as the main path does: with the default
+                // (OnLastWindowClose) the lifetime can tear down before the loop starts.
+                desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                var osd = new Views.OverlayWindow { DataContext = SelfScreenshot.OverlayPreviewData() };
+                desktop.MainWindow = osd;
+                osd.Show();
+                _ = SelfScreenshot.CaptureThenExitAsync(osd, overlayShotPath, settleMs: 1200);
+                base.OnFrameworkInitializationCompleted();
+                return;
+            }
 
             _composition = new Composition();
             var settings = new AppSettingsStore(AppSettingsStore.DefaultPath()).Load();

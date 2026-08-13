@@ -15,12 +15,14 @@ public partial class OverlayViewModel : ObservableObject, IDisposable
     private readonly SystemSampler _sampler;
     private readonly FrameRecordingService _frames;
 
-    [ObservableProperty] private string _fpsText = "FPS --";
-    [ObservableProperty] private string _cpuText = "CPU --%";
-    [ObservableProperty] private string _gpuText = "GPU --%";
-    [ObservableProperty] private string _ramText = "RAM --";
-    [ObservableProperty] private string _vramText = "VRAM --";
-    [ObservableProperty] private string _netText = "NET --";
+    // Values only — the row LABELS live in the view, the same way every other panel in
+    // the app pairs a static caption with a monospace value.
+    [ObservableProperty] private string _fpsText = "--";
+    [ObservableProperty] private string _cpuText = "--%";
+    [ObservableProperty] private string _gpuText = "--%";
+    [ObservableProperty] private string _ramText = "--";
+    [ObservableProperty] private string _vramText = "--";
+    [ObservableProperty] private string _netText = "--";
 
     [ObservableProperty] private bool _showFps = true;
     [ObservableProperty] private bool _showCpu = true;
@@ -32,6 +34,17 @@ public partial class OverlayViewModel : ObservableObject, IDisposable
 
     [ObservableProperty] private double _fontSize = 16;
     [ObservableProperty] private bool _editMode;
+
+    /// <summary>Captions sit a little under the values, and FPS a little over them, so the
+    /// readout has the same hierarchy as the app's panels at every overlay scale.</summary>
+    public double LabelFontSize => Math.Round(FontSize * 0.72, 1);
+    public double FpsFontSize => Math.Round(FontSize * 1.25, 1);
+
+    partial void OnFontSizeChanged(double value)
+    {
+        OnPropertyChanged(nameof(LabelFontSize));
+        OnPropertyChanged(nameof(FpsFontSize));
+    }
 
     private readonly IUiDispatcher _ui;
 
@@ -58,7 +71,7 @@ public partial class OverlayViewModel : ObservableObject, IDisposable
     private void OnFpsChanged(object? sender, EventArgs e)
     {
         var fps = _frames.CurrentFps;
-        var text = fps >= 1 ? $"FPS {fps:F0}" : "FPS --";
+        var text = fps >= 1 ? $"{fps:F0}" : "--";
         _ui.Post(() => FpsText = text);
     }
 
@@ -78,16 +91,19 @@ public partial class OverlayViewModel : ObservableObject, IDisposable
 
     public readonly record struct Formatted(string Cpu, string Gpu, string Ram, string Vram, string Net, bool HasVram);
 
-    /// <summary>Pure, testable formatting of a live sample into the OSD rows.</summary>
+    /// <summary>
+    /// Pure, testable formatting of a live sample into OSD values. Labels are the view's
+    /// job; these are the numbers only, kept short so the readout stays narrow over a game.
+    /// </summary>
     public static Formatted Format(SystemSample s)
     {
         var hasVram = s.VramTotalBytes > 0;
         return new Formatted(
-            Cpu: $"CPU {Clamp(s.CpuPercent):F0}%",
-            Gpu: $"GPU {Clamp(s.GpuPercent):F0}%",
-            Ram: $"RAM {Gb(s.RamUsedBytes):F1}/{Gb(s.RamTotalBytes):F0} GB",
-            Vram: hasVram ? $"VRAM {Gb(s.VramUsedBytes):F1}/{Gb(s.VramTotalBytes):F0} GB" : "VRAM n/a",
-            Net: $"NET ↓{Mbps(s.NetworkDownBps):F1} ↑{Mbps(s.NetworkUpBps):F1} Mb/s",
+            Cpu: $"{Clamp(s.CpuPercent):F0}%",
+            Gpu: $"{Clamp(s.GpuPercent):F0}%",
+            Ram: $"{Gb(s.RamUsedBytes):F1}/{Gb(s.RamTotalBytes):F0} GB",
+            Vram: hasVram ? $"{Gb(s.VramUsedBytes):F1}/{Gb(s.VramTotalBytes):F0} GB" : "n/a",
+            Net: $"↓{Mbps(s.NetworkDownBps):F1} ↑{Mbps(s.NetworkUpBps):F1}",
             HasVram: hasVram);
     }
 

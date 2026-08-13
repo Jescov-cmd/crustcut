@@ -15,6 +15,38 @@ namespace Crustcut.App.Services;
 /// </summary>
 public static class SelfScreenshot
 {
+    /// <summary>`--overlay-shot &lt;path&gt;` renders the in-game OSD on its own with
+    /// representative values — the only way to review its design without a game running.</summary>
+    public static string? ParseOverlayShot(string[] args)
+    {
+        var i = Array.IndexOf(args, "--overlay-shot");
+        return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
+    }
+
+    /// <summary>Sample bindings for the overlay preview; see <see cref="OverlayShotData"/>.</summary>
+    public static object OverlayPreviewData() => new OverlayShotData();
+
+    /// <summary>Stand-in for OverlayViewModel: same property names, no live hardware.</summary>
+    private sealed class OverlayShotData
+    {
+        public string FpsText => "144";
+        public string CpuText => "23%";
+        public string GpuText => "46%";
+        public string RamText => "9.4/16 GB";
+        public string VramText => "3.2/12 GB";
+        public string NetText => "↓1.2 ↑0.3";
+        public bool ShowFps => true;
+        public bool ShowCpu => true;
+        public bool ShowGpu => true;
+        public bool ShowRam => true;
+        public bool ShowVram => true;
+        public bool ShowNet => true;
+        public bool HasVram => true;
+        public double FontSize => 16;
+        public double LabelFontSize => 11.5;
+        public double FpsFontSize => 20;
+    }
+
     /// <summary>
     /// Parses --screenshot &lt;path&gt; [--screenshot-tab &lt;NavId&gt;] [--screenshot-size WxH].
     /// The size flag exists so layout can be checked at more than one window size —

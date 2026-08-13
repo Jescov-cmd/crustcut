@@ -10,32 +10,77 @@
         ShowInTaskbar="False"
         CanResize="False">
 
-  <Border x:Name="Root" CornerRadius="8" Padding="11,8" Background="#00000000">
-    <StackPanel Spacing="2">
-      <TextBlock Text="{Binding FpsText}" IsVisible="{Binding ShowFps}"
-                 FontFamily="Consolas, monospace" FontWeight="Bold"
-                 FontSize="{Binding FontSize}" Foreground="#3ECF8E"/>
-      <TextBlock Text="{Binding CpuText}" IsVisible="{Binding ShowCpu}"
-                 FontFamily="Consolas, monospace"
-                 FontSize="{Binding FontSize}" Foreground="#F2E4CC"/>
-      <TextBlock Text="{Binding GpuText}" IsVisible="{Binding ShowGpu}"
-                 FontFamily="Consolas, monospace"
-                 FontSize="{Binding FontSize}" Foreground="#F2E4CC"/>
-      <TextBlock Text="{Binding RamText}" IsVisible="{Binding ShowRam}"
-                 FontFamily="Consolas, monospace"
-                 FontSize="{Binding FontSize}" Foreground="#F2E4CC"/>
-      <TextBlock Text="{Binding VramText}" FontFamily="Consolas, monospace"
-                 FontSize="{Binding FontSize}" Foreground="#F2E4CC">
-        <TextBlock.IsVisible>
-          <MultiBinding Converter="{x:Static BoolConverters.And}">
-            <Binding Path="ShowVram"/>
-            <Binding Path="HasVram"/>
-          </MultiBinding>
-        </TextBlock.IsVisible>
-      </TextBlock>
-      <TextBlock Text="{Binding NetText}" IsVisible="{Binding ShowNet}"
-                 FontFamily="Consolas, monospace"
-                 FontSize="{Binding FontSize}" Foreground="#F2E4CC"/>
-    </StackPanel>
+  <!-- Same language as the app's panels: flat dark surface, 1px hairline, a 3px accent
+       bar on the left edge (the nav rail's selection cue), uppercase captions against
+       monospace values. Deliberately opaque-ish rather than floating text: over bright
+       game content, bare glyphs are unreadable no matter how big the drop shadow. -->
+  <Window.Styles>
+    <Style Selector="TextBlock.osdLabel">
+      <Setter Property="FontSize" Value="{Binding LabelFontSize}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text2}"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="TextBlock.osdValue">
+      <Setter Property="FontFamily" Value="Consolas, Cascadia Mono, monospace"/>
+      <Setter Property="FontSize" Value="{Binding FontSize}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
+      <Setter Property="HorizontalAlignment" Value="Right"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+  </Window.Styles>
+
+  <Border x:Name="Root"
+          Background="#E6161616"
+          BorderBrush="{DynamicResource Hairline}"
+          BorderThickness="1"
+          CornerRadius="3"
+          Padding="0">
+    <Grid ColumnDefinitions="3,*">
+      <Border Grid.Column="0" Background="{DynamicResource AccentWheat}"/>
+
+      <StackPanel Grid.Column="1" Margin="10,7,11,8" Spacing="1">
+        <!-- FPS is the hero row: accent-coloured and a size up, the way the Overview
+             page treats its headline numbers. -->
+        <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding ShowFps}" Margin="0,0,0,1">
+          <TextBlock Grid.Column="0" Text="FPS" Classes="osdLabel" Margin="0,0,14,0"/>
+          <TextBlock Grid.Column="1" Text="{Binding FpsText}" Classes="osdValue"
+                     FontSize="{Binding FpsFontSize}" FontWeight="Bold"
+                     Foreground="{DynamicResource AccentWheat}"/>
+        </Grid>
+
+        <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding ShowCpu}">
+          <TextBlock Grid.Column="0" Text="CPU" Classes="osdLabel" Margin="0,0,14,0"/>
+          <TextBlock Grid.Column="1" Text="{Binding CpuText}" Classes="osdValue"/>
+        </Grid>
+
+        <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding ShowGpu}">
+          <TextBlock Grid.Column="0" Text="GPU" Classes="osdLabel" Margin="0,0,14,0"/>
+          <TextBlock Grid.Column="1" Text="{Binding GpuText}" Classes="osdValue"/>
+        </Grid>
+
+        <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding ShowRam}">
+          <TextBlock Grid.Column="0" Text="RAM" Classes="osdLabel" Margin="0,0,14,0"/>
+          <TextBlock Grid.Column="1" Text="{Binding RamText}" Classes="osdValue"/>
+        </Grid>
+
+        <Grid ColumnDefinitions="Auto,*">
+          <Grid.IsVisible>
+            <MultiBinding Converter="{x:Static BoolConverters.And}">
+              <Binding Path="ShowVram"/>
+              <Binding Path="HasVram"/>
+            </MultiBinding>
+          </Grid.IsVisible>
+          <TextBlock Grid.Column="0" Text="VRAM" Classes="osdLabel" Margin="0,0,14,0"/>
+          <TextBlock Grid.Column="1" Text="{Binding VramText}" Classes="osdValue"/>
+        </Grid>
+
+        <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding ShowNet}">
+          <TextBlock Grid.Column="0" Text="NET" Classes="osdLabel" Margin="0,0,14,0"/>
+          <TextBlock Grid.Column="1" Text="{Binding NetText}" Classes="osdValue"/>
+        </Grid>
+      </StackPanel>
+    </Grid>
   </Border>
 </Window>

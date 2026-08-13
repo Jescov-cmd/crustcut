@@ -45,9 +45,10 @@ public partial class OverlayWindow : Window
         {
             _editMode = value;
             ApplyClickThrough(!value);
-            Root.Background = value ? new SolidColorBrush(Color.Parse("#66000000")) : Brushes.Transparent;
-            Root.BorderBrush = new SolidColorBrush(Color.Parse("#E8C088"));
-            Root.BorderThickness = new Thickness(value ? 1.5 : 0);
+            // The panel is always visible now, so edit mode is signalled by lighting the
+            // border with the accent instead of conjuring a background.
+            Root.BorderBrush = new SolidColorBrush(Color.Parse(value ? "#E0A860" : "#2E2E2E"));
+            Root.BorderThickness = new Thickness(value ? 2 : 1);
         }
     }
 
