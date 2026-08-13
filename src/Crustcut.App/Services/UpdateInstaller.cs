@@ -33,6 +33,12 @@ public sealed class UpdateInstaller
             var exePath = Environment.ProcessPath;
             if (exePath is null) return "Cannot locate the running program.";
 
+            // Check up front that we can actually write where we live. Without this the
+            // download succeeds, the swap script runs, robocopy is denied, and the old
+            // version relaunches looking like nothing happened at all.
+            if (!CanWriteTo(installDir))
+                return "Crustcut can't write to its own folder — download the update manually.";
+
             Directory.CreateDirectory(staging);
             var zipPath = Path.Combine(staging, "update.zip");
 
@@ -79,7 +85,10 @@ public sealed class UpdateInstaller
     /// </summary>
     private static void LaunchSwapScript(string staging, string payload, string installDir, string exePath)
     {
-        var script = Path.Combine(staging, "apply-update.cmd");
+        // The script lives OUTSIDE staging: cmd holds the running batch file open, so a
+        // script inside the folder it is trying to delete can never finish the cleanup —
+        // it would strand the 45 MB zip in the user's temp folder after every update.
+        var script = Path.Combine(Path.GetTempPath(), $"crustcut-apply-{Guid.NewGuid():N}.cmd");
         var pid = Environment.ProcessId;
 
         File.WriteAllText(script, $"""
@@ -94,9 +103,10 @@ if not errorlevel 1 (
 rem /IS overwrites same-size files too; retries cover a straggling file lock.
 robocopy "{payload}" "{installDir}" /E /IS /R:3 /W:1 >nul
 start "" "{exePath}"
-rem Clean up the staging folder, script included.
+rem Clean up the staged download, then this script deletes itself.
 timeout /t 2 /nobreak >nul
 rmdir /s /q "{staging}"
+del /q "%~f0"
 """);
 
         Process.Start(new ProcessStartInfo("cmd.exe", $"/c \"{script}\"")
@@ -105,5 +115,21 @@ rmdir /s /q "{staging}"
             UseShellExecute = false,
             WorkingDirectory = Path.GetTempPath(),
         });
+    }
+
+    /// <summary>Can we replace our own files, or is this a read-only install location?</summary>
+    private static bool CanWriteTo(string directory)
+    {
+        var probe = Path.Combine(directory, $".crustcut-write-test-{Guid.NewGuid():N}");
+        try
+        {
+            File.WriteAllText(probe, "");
+            File.Delete(probe);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

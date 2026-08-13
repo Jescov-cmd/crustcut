@@ -169,6 +169,15 @@ public partial class App : Application
     }
 
     /// <summary>
+    /// The only correct way for anything outside this class to end the process. Calling
+    /// desktop.Shutdown() directly does NOT work: shutdown closes the window, our Closing
+    /// handler sees "minimise to tray on close" and cancels it, and the cancel aborts the
+    /// whole shutdown — the app just hides and keeps running. The update swapper hit exactly
+    /// that, and sat waiting forever for a process that was never going to exit.
+    /// </summary>
+    public void RequestExit() => Shutdown();
+
+    /// <summary>
     /// Surfaces a new version even when the window is hidden in the tray: the tooltip
     /// carries the news, and the tray menu gains a direct way to act on it.
     /// </summary>

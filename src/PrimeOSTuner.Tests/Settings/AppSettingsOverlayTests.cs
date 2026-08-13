@@ -45,4 +45,22 @@ public class AppSettingsOverlayTests
         s.OverlayShowCpu.Should().BeTrue();
         s.OverlayScale.Should().Be(1.0);
     }
+
+    /// <summary>
+    /// Everything that changes the machine on its own must be opt-in. Automatic memory
+    /// caps shipped as opt-OUT once and put hard limits on windowed apps, which paged out
+    /// their render surfaces — black rectangles and blurry text on a fresh install. A
+    /// default flipped back to true would ship that experience to every new download.
+    /// </summary>
+    [Fact]
+    public void Automatic_machine_changing_behaviour_is_opt_in()
+    {
+        var s = new AppSettings();
+        s.AutoMemoryLimitsEnabled.Should().BeFalse();
+        s.RamAutoOptimizeOnInterval.Should().BeFalse();
+        s.RamAutoOptimizeOnThreshold.Should().BeFalse();
+        s.StandbyAutoPurgeEnabled.Should().BeFalse();
+        s.FanControlEnabled.Should().BeFalse();
+        s.StartAtBoot.Should().BeFalse();
+    }
 }

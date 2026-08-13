@@ -1,4 +1,3 @@
-using Avalonia.Controls.ApplicationLifetimes;
 using Crustcut.Presentation;
 using PrimeOSTuner.Core.Updates;
 
@@ -19,9 +18,11 @@ public sealed class AppUpdateInstaller : IUpdateInstaller
     {
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            if (Avalonia.Application.Current?.ApplicationLifetime
-                is IClassicDesktopStyleApplicationLifetime desktop)
-                desktop.Shutdown();
+            // Must go through App.RequestExit: a bare desktop.Shutdown() is cancelled by the
+            // minimise-to-tray Closing handler, which would leave the swap script waiting on
+            // a process that never exits.
+            if (Avalonia.Application.Current is App app)
+                app.RequestExit();
             else
                 Environment.Exit(0);
         });

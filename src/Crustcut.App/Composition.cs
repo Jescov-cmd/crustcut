@@ -260,12 +260,16 @@ public sealed class Composition
             priorityStore, engine, priorityClient);
 
         // ── Updates: quiet check against the published releases ───────────────────────
+        // Two clients on purpose. The check must give up quickly so a flaky network never
+        // costs anything, but the download is a ~45 MB zip: sharing the 20-second client
+        // would cancel the transfer mid-update on any connection slower than ~18 Mbit/s.
         var updateHttp = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+        var downloadHttp = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
         Updates = new UpdateViewModel(
             new PrimeOSTuner.Core.Updates.UpdateChecker(updateHttp),
             System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(0, 0, 0),
             ui,
-            new AppUpdateInstaller(new UpdateInstaller(updateHttp)));
+            new AppUpdateInstaller(new UpdateInstaller(downloadHttp)));
 
         // ── Fans: curve control loop (owns the hardware handle and all safety) ────────
         FanService = new FanService(new PrimeOSTuner.Win.Fans.LhmFanController(), settingsStore,

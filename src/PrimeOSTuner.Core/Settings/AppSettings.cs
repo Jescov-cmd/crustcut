@@ -18,8 +18,11 @@ public sealed class AppSettings
     public bool StandbyAutoPurgeEnabled { get; set; } = false;
 
     /// <summary>When off, Crustcut never assigns memory caps by itself. Caps the user
-    /// set by hand are still enforced — this governs the automatic behaviour only.</summary>
-    public bool AutoMemoryLimitsEnabled { get; set; } = true;
+    /// set by hand are still enforced — this governs the automatic behaviour only.
+    /// Off by default: a hard cap on the wrong process is how the black-rectangle
+    /// rendering bug happened, and every other automatic behaviour here is opt-in too.
+    /// Someone who wants it can switch it on in Memory; nobody gets it unasked.</summary>
+    public bool AutoMemoryLimitsEnabled { get; set; } = false;
 
     // Fan control
     public bool FanControlEnabled { get; set; } = false;
