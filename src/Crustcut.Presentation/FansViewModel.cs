@@ -103,7 +103,7 @@ public partial class FansViewModel : ObservableObject
                 : !s.Engaged
                     ? "Starting…"
                     : IsAuto
-                        ? $"Auto: system load {s.LoadPercent:F0}% → {s.ResolvedMode} curve."
+                        ? $"Auto: {s.LoadPercent:F0}% load, {s.TempC:F0} °C → {s.ResolvedMode} curve."
                         : "Crustcut is controlling your fans.";
 
         Fans.Clear();

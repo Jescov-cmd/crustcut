@@ -58,44 +58,57 @@ public static class FanPolicy
         _ => Balanced,
     };
 
-    // Auto bands, measured against sustained system load (the higher of CPU and GPU).
-    // "A game is running" is a bad proxy for heat — a 2D indie game and a AAA title are
-    // not the same thermal event — so Auto follows what the machine is actually doing.
+    // Auto reads TWO signals and obeys whichever demands more cooling:
+    //   load — what the machine is doing ("a game is running" is a bad proxy for heat; a
+    //          2D indie game and a AAA title are not the same thermal event)
+    //   temp — what the machine is suffering. Load can be low while heat is high (warm
+    //          room, dusty filters, a background thermal event), and in that case the
+    //          quiet curve alone is not enough.
     private const double BalancedLoadPercent = 25;
     private const double PerformanceLoadPercent = 65;
+    private const double BalancedTempC = 70;
+    private const double PerformanceTempC = 78;
 
-    /// <summary>Load must fall this far below a band edge before Auto steps back down, so
-    /// a workload hovering at a threshold doesn't oscillate the fans.</summary>
+    /// <summary>Each signal must fall this far below a band edge before Auto steps back
+    /// down, so a workload sitting at a threshold doesn't oscillate the fans.</summary>
     private const double LoadHysteresisPercent = 10;
+    private const double TempHysteresisC = 5;
 
     /// <summary>
-    /// Auto resolves by how hard the machine is working: quiet when idle or running
-    /// something light, firmer under real load, full cooling only when genuinely pinned.
+    /// Auto resolves by how hard the machine is working AND how hot it is running,
+    /// escalating on whichever is worse and stepping down only when both have eased.
     /// <paramref name="currentlyResolved"/> supplies hysteresis — pass the mode Auto chose
     /// last time. Everything except Auto resolves to itself.
     /// </summary>
-    public static FanMode ResolveMode(FanMode selected, double loadPercent, FanMode currentlyResolved)
+    public static FanMode ResolveMode(
+        FanMode selected, double loadPercent, double tempC, FanMode currentlyResolved)
     {
         if (selected != FanMode.Auto) return selected;
 
-        // Step UP as soon as the band is reached; step DOWN only after clearing the edge
-        // by the hysteresis margin.
+        var wantsPerformance = loadPercent >= PerformanceLoadPercent || tempC >= PerformanceTempC;
+        var wantsBalanced = loadPercent >= BalancedLoadPercent || tempC >= BalancedTempC;
+
+        // Step UP the moment either signal reaches a band; step DOWN only once BOTH have
+        // cleared the edge by their margin — a cool-but-busy or idle-but-hot machine keeps
+        // its cooling.
+        var mayLeavePerformance = loadPercent < PerformanceLoadPercent - LoadHysteresisPercent
+                               && tempC < PerformanceTempC - TempHysteresisC;
+        var mayLeaveBalanced = loadPercent < BalancedLoadPercent - LoadHysteresisPercent
+                            && tempC < BalancedTempC - TempHysteresisC;
+
         return currentlyResolved switch
         {
-            FanMode.Performance => loadPercent < PerformanceLoadPercent - LoadHysteresisPercent
-                ? Band(loadPercent)
+            FanMode.Performance => mayLeavePerformance
+                ? (wantsBalanced ? FanMode.Balanced : FanMode.Silent)
                 : FanMode.Performance,
-            FanMode.Balanced => loadPercent >= PerformanceLoadPercent ? FanMode.Performance
-                : loadPercent < BalancedLoadPercent - LoadHysteresisPercent ? FanMode.Silent
+            FanMode.Balanced => wantsPerformance ? FanMode.Performance
+                : mayLeaveBalanced ? FanMode.Silent
                 : FanMode.Balanced,
-            _ => Band(loadPercent),
+            _ => wantsPerformance ? FanMode.Performance
+                : wantsBalanced ? FanMode.Balanced
+                : FanMode.Silent,
         };
     }
-
-    private static FanMode Band(double loadPercent) =>
-        loadPercent >= PerformanceLoadPercent ? FanMode.Performance
-        : loadPercent >= BalancedLoadPercent ? FanMode.Balanced
-        : FanMode.Silent;
 
     /// <summary>Duty percent for the given temperature under the given mode.</summary>
     public static double Evaluate(FanMode mode, double tempC)

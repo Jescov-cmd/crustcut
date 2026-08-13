@@ -225,9 +225,9 @@ public sealed class FanService : IFanControlService, IDisposable
             }
 
             var selected = Enum.TryParse<FanMode>(s.FanMode, out var m) ? m : FanMode.Balanced;
-            var mode = FanPolicy.ResolveMode(selected, _smoothedLoad, _resolvedMode);
+            var mode = FanPolicy.ResolveMode(selected, _smoothedLoad, t, _resolvedMode);
             if (selected == FanMode.Auto && mode != _resolvedMode)
-                EngineLog.Log($"fans: auto → {mode} (load {_smoothedLoad:F0}%)");
+                EngineLog.Log($"fans: auto → {mode} (load {_smoothedLoad:F0}%, {t:F0}°C)");
             _resolvedMode = mode;
             var curveDuty = FanPolicy.Evaluate(mode, t);
 

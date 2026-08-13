@@ -22,7 +22,7 @@
       <TextBlock Text="Fans" Classes="pageTitle" Margin="0,16,0,10"/>
       <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,16"
                  TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left"
-                 Text="Curve-based fan control. Auto follows real system load — light work stays quiet, heavy work ramps — while Silent, Balanced and Performance pin it manually. Calibrate once so the minimum speeds match your actual fans. Safety is built in: fans never stop, anything over 85 °C forces full speed, pumps are never slowed, and your motherboard takes back control the moment this is off or Crustcut closes. Your graphics card runs its own fans."/>
+                 Text="Curve-based fan control. Auto watches load AND temperature and cools for whichever needs it more — light work stays quiet, heavy work or a hot machine ramps — while Silent, Balanced and Performance pin it manually. Calibrate once so the minimum speeds match your actual fans. Safety is built in: fans never stop, anything over 85 °C forces full speed, pumps are never slowed, and your motherboard takes back control the moment this is off or Crustcut closes. Your graphics card runs its own fans."/>
 
       <Border Classes="card" IsVisible="{Binding !IsSupported}">
         <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource Text1}" FontSize="12"
@@ -51,7 +51,7 @@
 
           <StackPanel Orientation="Horizontal" Spacing="9" IsEnabled="{Binding Enabled}">
             <ToggleButton Classes="protect" Content="AUTO"
-                          ToolTip.Tip="Follows how hard the machine is actually working: quiet when idle or running something light, firmer under real load, full cooling only when genuinely pinned. A light 2D game stays quiet."
+                          ToolTip.Tip="Follows both how hard the machine is working AND how hot it is, using whichever demands more cooling. A light 2D game stays quiet; a hot machine ramps even when idle."
                           IsChecked="{Binding IsAuto, Mode=OneWay}" Click="AutoClick"/>
             <ToggleButton Classes="protect" Content="SILENT"
                           IsChecked="{Binding IsSilent, Mode=OneWay}" Click="SilentClick"/>
