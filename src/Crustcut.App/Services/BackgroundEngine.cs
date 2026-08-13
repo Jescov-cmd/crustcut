@@ -280,9 +280,23 @@ public sealed class BackgroundEngine : IDisposable
     /// running apps, curated catalog for known hogs that aren't running. Runs at startup
     /// so limits exist without anyone pressing a button; the Memory tab shows the result.
     /// </summary>
+    private bool _autoLimitsOffLogged;
+
     private async Task AutoAssignLimitsAsync()
     {
         if (_ruleStore is null || _priorityClient is null) return;
+        if (!SafeSettings().AutoMemoryLimitsEnabled)
+        {
+            // Caps the user set by hand are still enforced elsewhere; only the automatic
+            // assignment stands down.
+            if (!_autoLimitsOffLogged)
+            {
+                EngineLog.Log("limits: automatic assignment is switched off");
+                _autoLimitsOffLogged = true;
+            }
+            return;
+        }
+        _autoLimitsOffLogged = false;
         try
         {
             var rules = (await _ruleStore.LoadAsync()).ToList();

@@ -213,7 +213,7 @@ public sealed class Composition
         });
         try { engine.Start(); } catch { /* WMI denied when not elevated */ }
 
-        Memory = new MemoryPriorityViewModel(priorityStore, engine, gameRegistry, priorityClient, ramTweak, deepRamTweak);
+        Memory = new MemoryPriorityViewModel(priorityStore, engine, gameRegistry, priorityClient, ramTweak, deepRamTweak, settingsStore);
 
         // ── Game watcher + lifecycle inputs (lifecycle itself starts in the engine) ───
         var watcher = new GameProcessWatcher(

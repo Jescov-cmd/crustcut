@@ -4,6 +4,7 @@ using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PrimeOSTuner.Core.Games;
 using PrimeOSTuner.Core.Memory;
+using PrimeOSTuner.Core.Settings;
 using PrimeOSTuner.Core.Tweaks;
 
 namespace Crustcut.Presentation;
@@ -15,6 +16,7 @@ public partial class MemoryPriorityViewModel : ObservableObject
     private readonly GameRegistry _games;
     private readonly IPriorityClient? _priority;
     private readonly ITweak? _ramCleaner;
+    private readonly AppSettingsStore? _settings;
 
     public ObservableCollection<PriorityRuleVm> Rules { get; } = new();
 
@@ -30,8 +32,10 @@ public partial class MemoryPriorityViewModel : ObservableObject
 
     public MemoryPriorityViewModel(
         PriorityRuleStore store, PriorityRuleEngine engine, GameRegistry games,
-        IPriorityClient? priority = null, ITweak? ramCleaner = null, ITweak? deepRamCleaner = null)
+        IPriorityClient? priority = null, ITweak? ramCleaner = null, ITweak? deepRamCleaner = null,
+        AppSettingsStore? settings = null)
     {
+        _settings = settings;
         _store = store;
         _engine = engine;
         _games = games;
@@ -41,6 +45,27 @@ public partial class MemoryPriorityViewModel : ObservableObject
     }
 
     private readonly ITweak? _deepRamCleaner;
+
+    /// <summary>
+    /// Governs AUTOMATIC cap assignment only. Off means Crustcut never picks a limit for
+    /// you; limits you set by hand keep working either way.
+    /// </summary>
+    public bool AutoLimitsEnabled
+    {
+        get { try { return _settings?.Load().AutoMemoryLimitsEnabled ?? false; } catch { return false; } }
+        set
+        {
+            if (_settings is null) return;
+            try
+            {
+                var s = _settings.Load();
+                s.AutoMemoryLimitsEnabled = value;
+                _settings.Save(s);
+            }
+            catch { }
+            OnPropertyChanged(nameof(AutoLimitsEnabled));
+        }
+    }
 
     /// <summary>Deep clean: minimized apps and small background processes included.
     /// Same result-line contract as <see cref="CleanNowAsync"/>.</summary>

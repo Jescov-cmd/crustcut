@@ -164,6 +164,12 @@ public sealed class FanService : IFanControlService, IDisposable
     private const double CalibrationStartPercent = 60;
     private const double CalibrationStepPercent = 5;
 
+    // Auto-calibration guards: never sweep a machine that is already hot or busy, since
+    // the sweep briefly runs fans slower than normal.
+    private const double AutoCalibrationMaxTempC = 70;
+    private const double AutoCalibrationMaxLoadPercent = 40;
+    private bool _autoCalibrationStarted;
+
     private async Task<double> MeasureMinDutyAsync(string name, CancellationToken ct)
     {
         // Start HIGH and walk down. Starting low and walking down would record a minimum
@@ -221,6 +227,19 @@ public sealed class FanService : IFanControlService, IDisposable
             {
                 // Blind = dangerous. Give the fans back and try again next tick.
                 if (_engaged) Disengage("temperature unreadable — failing safe");
+                return;
+            }
+
+            // First run on this machine: measure the fans instead of assuming. Kept to a
+            // cool, idle moment so the sweep can't compound an existing thermal problem,
+            // and only once — the result persists.
+            if (!_tuning.HasCalibration && !_autoCalibrationStarted
+                && t < AutoCalibrationMaxTempC && _smoothedLoad < AutoCalibrationMaxLoadPercent)
+            {
+                _autoCalibrationStarted = true;
+                EngineLog.Log("fans: first run — measuring this machine's fans automatically");
+                _ = Task.Run(() => CalibrateAsync(
+                    new Progress<string>(m => EngineLog.Log($"fans: {m}"))));
                 return;
             }
 

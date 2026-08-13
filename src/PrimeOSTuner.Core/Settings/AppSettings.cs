@@ -17,6 +17,10 @@ public sealed class AppSettings
     /// memory is nearly gone while the cache is huge (the game-stutter condition).</summary>
     public bool StandbyAutoPurgeEnabled { get; set; } = false;
 
+    /// <summary>When off, Crustcut never assigns memory caps by itself. Caps the user
+    /// set by hand are still enforced — this governs the automatic behaviour only.</summary>
+    public bool AutoMemoryLimitsEnabled { get; set; } = true;
+
     // Fan control
     public bool FanControlEnabled { get; set; } = false;
     public string FanMode { get; set; } = "Balanced";

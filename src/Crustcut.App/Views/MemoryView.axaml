@@ -29,6 +29,14 @@
         <Button Content="RECOMMENDED FOR MY GAMES" Classes="secondary" Click="RecommendedClick"/>
       </StackPanel>
 
+      <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,12">
+        <ToggleSwitch OnContent="" OffContent="" MinWidth="0"
+                      IsChecked="{Binding AutoLimitsEnabled, Mode=TwoWay}"
+                      ToolTip.Tip="When off, Crustcut never picks memory limits for you. Limits you set yourself in the list below keep working either way."/>
+        <TextBlock Text="Set memory limits automatically (background apps only)"
+                   FontSize="12" Foreground="{DynamicResource Text2}" VerticalAlignment="Center"/>
+      </StackPanel>
+
       <TextBlock x:Name="LastCleanupText" FontSize="11.5"
                  Foreground="{DynamicResource Text3}" Margin="0,0,0,4"/>
       <TextBlock x:Name="StatusText" FontSize="11.5"
