@@ -4,8 +4,16 @@ using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class VisualEffectsTweak : ITweak
+/// <summary>
+/// OPT-IN, never bundled. Turning transparency off is a visible change to how the whole
+/// desktop looks, and on Windows 11 the acrylic/mica fallback can render hover states on
+/// some apps as flat dark rectangles. A bundle that silently restyles someone's desktop
+/// reads as breakage, not optimisation — so this one waits to be asked.
+/// </summary>
+public sealed class VisualEffectsTweak : ITweak, IOptInTweak
 {
+    public bool OptIn => true;
+
     private const string PersonalizeKey = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
     private const string WindowMetricsKey = @"Control Panel\Desktop\WindowMetrics";
     private const string ExplorerAdvancedKey = @"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced";

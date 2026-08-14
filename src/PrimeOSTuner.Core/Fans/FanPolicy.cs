@@ -30,25 +30,39 @@ public static class FanPolicy
     /// service, so a fan that can idle at 22% does, and one that stalls at 45% doesn't.</summary>
     public const double MinDutyPercent = 22;
 
-    /// <summary>At or above this CPU temperature every fan goes to 100%, mode be damned.
-    /// Ryzen throttles at ~95°C; 85 leaves margin for the fans to actually catch it.</summary>
-    public const double FailsafeTempC = 85;
+    /// <summary>
+    /// At or above this CPU temperature every fan goes to 100%, mode be damned.
+    ///
+    /// 90, not 85. A modern boosting CPU (Ryzen 7000/9000, recent Intel) *targets* the
+    /// low-to-mid 80s under any real load — that is the chip working correctly, not the
+    /// chip in trouble. A failsafe at 85 fired during ordinary desktop work and pinned the
+    /// fans at 100% permanently, which is noise for nothing: the chip simply boosts harder
+    /// and settles at the same temperature. Ryzen throttles at ~95 and Intel at ~100, so
+    /// 90 still leaves real margin for the fans to catch a genuine runaway.
+    /// </summary>
+    public const double FailsafeTempC = 90;
 
-    // Tuned on the user's Ryzen 7 7700, which idles 65-77°C by design: Silent stays near
-    // ~1000 RPM through that whole normal band and only wakes up past ~72°C sustained.
+    // These curves assume the CPU is allowed to BOOST — because that is the default now,
+    // and a boosting chip deliberately runs into the high 70s doing very little. The
+    // earlier curves were tuned against a machine with boost disabled, so they idled near
+    // ~1000 RPM and barely woke up before 80°C. That is the wrong trade: cooling should
+    // follow the heat, and silence should never be bought with CPU speed.
+    //
+    // Below ~60°C they stay genuinely quiet. Through the 70s — where a boosting CPU
+    // actually lives — they now move real air instead of coasting.
     public static readonly IReadOnlyList<CurvePoint> Silent = new CurvePoint[]
     {
-        new(45, 22), new(60, 24), new(72, 28), new(80, 40), new(85, 100),
+        new(45, 22), new(60, 26), new(70, 34), new(80, 52), new(90, 100),
     };
 
     public static readonly IReadOnlyList<CurvePoint> Balanced = new CurvePoint[]
     {
-        new(40, 30), new(60, 45), new(75, 62), new(85, 100),
+        new(40, 30), new(55, 42), new(70, 56), new(82, 78), new(90, 100),
     };
 
     public static readonly IReadOnlyList<CurvePoint> Performance = new CurvePoint[]
     {
-        new(40, 50), new(60, 75), new(70, 90), new(80, 100),
+        new(40, 50), new(60, 72), new(75, 88), new(85, 100),
     };
 
     public static IReadOnlyList<CurvePoint> CurveFor(FanMode mode) => mode switch
@@ -66,8 +80,13 @@ public static class FanPolicy
     //          quiet curve alone is not enough.
     private const double BalancedLoadPercent = 25;
     private const double PerformanceLoadPercent = 65;
-    private const double BalancedTempC = 70;
-    private const double PerformanceTempC = 78;
+    // Temperature is the SAFETY signal here, not the primary one — deliberately set high.
+    // A boosting CPU parks itself in the high 70s / low 80s whenever it has work to do, so
+    // escalating there meant a 30%-load desktop ran the fans flat out and never stepped
+    // back down. Load decides how hard to cool in normal use; temperature only overrides
+    // when the machine is genuinely getting away from us.
+    private const double BalancedTempC = 82;
+    private const double PerformanceTempC = 88;
 
     /// <summary>Each signal must fall this far below a band edge before Auto steps back
     /// down, so a workload sitting at a threshold doesn't oscillate the fans.</summary>

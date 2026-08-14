@@ -6,11 +6,19 @@ public interface IPriorityClient
     bool TrySetPriority(int pid, PriorityLevel level);
 
     /// <summary>
-    /// Hard-cap how much physical RAM a process may keep resident. The process keeps
-    /// running; anything over the cap is paged out instead of held. Returns false if the
-    /// process is gone, access is denied, or the platform has no such mechanism.
+    /// Cap how much physical RAM a process may keep resident. The process keeps running;
+    /// anything over the cap is paged out instead of held. Returns false if the process is
+    /// gone, access is denied, or the platform has no such mechanism.
+    ///
+    /// <paramref name="hard"/> decides how the ceiling behaves, and the difference matters
+    /// more than it looks. A HARD cap makes Windows evict the moment the process reaches
+    /// it — on anything that draws, the evicted pages include render surfaces, which the
+    /// user sees as black rectangles and blurry text. A SOFT cap is a hint: Windows trims
+    /// towards it under memory pressure and otherwise leaves the process alone. Anything
+    /// Crustcut decides by itself must be soft; only a cap the user chose per-app earns a
+    /// hard ceiling.
     /// </summary>
-    bool TrySetMemoryLimit(int pid, int limitMb);
+    bool TrySetMemoryLimit(int pid, int limitMb, bool hard = true);
 
     /// <summary>Remove a previously applied memory cap. Best-effort; false on failure.</summary>
     bool TryClearMemoryLimit(int pid);

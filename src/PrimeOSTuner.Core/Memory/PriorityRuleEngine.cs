@@ -53,7 +53,7 @@ public sealed class PriorityRuleEngine : IDisposable
         _priority.TrySetPriority(e.Pid, rule.Priority);
         // Working-set caps die with the process, so every fresh launch gets re-capped here.
         if (rule.MemoryLimitMb is int limitMb)
-            _priority.TrySetMemoryLimit(e.Pid, limitMb);
+            _priority.TrySetMemoryLimit(e.Pid, limitMb, hard: !rule.LimitAutoAssigned);
 
         if (rule.GameBooster)
         {

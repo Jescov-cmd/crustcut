@@ -28,6 +28,23 @@ public static class RecommendedLimits
             ["Overwolf"] = 512, ["CurseForge"] = 512,
         };
 
+    /// <summary>
+    /// Crustcut must never cap Crustcut. It starts minimised to the tray, so the old
+    /// window check classified it as a background service and it capped its own render
+    /// surfaces — which is one way the app itself ended up drawing black rectangles.
+    /// </summary>
+    public static bool IsOurselves(string exePath)
+    {
+        try
+        {
+            var self = Environment.ProcessPath;
+            return self is not null &&
+                   string.Equals(Path.GetFullPath(exePath), Path.GetFullPath(self),
+                       StringComparison.OrdinalIgnoreCase);
+        }
+        catch { return false; }
+    }
+
     /// <summary>Smallest preset that fits, or null when the ask exceeds every preset.</summary>
     public static int? SnapToPreset(long wantMb)
     {
@@ -40,25 +57,47 @@ public static class RecommendedLimits
     /// to real usage makes Windows evict pages constantly, which is felt, not just measured.</summary>
     private const double HeadroomFactor = 1.5;
 
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool EnumWindows(EnumWindowsProc callback, IntPtr lParam);
+    private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint pid);
+
     /// <summary>
-    /// True when any instance owns a visible window. Hard working-set caps force eviction
-    /// the moment a process reaches the ceiling, and for a windowed (GPU-accelerated) app
-    /// the evicted pages include render surfaces — the user sees black rectangles and
-    /// blurry text. Automatic capping therefore applies to background processes only.
+    /// True when any instance owns a top-level window — <b>including a hidden one</b>.
+    ///
+    /// This deliberately does NOT use Process.MainWindowHandle. That returns zero for a
+    /// window that is merely hidden, so every app sitting in the notification tray looked
+    /// like a background service and got capped: a music player, a game launcher, a remote
+    /// desktop tool — and Crustcut itself, which starts minimised to the tray. They then
+    /// rendered with black rectangles the next time they were opened. What matters is
+    /// whether the process draws at all, not whether it happens to be on screen right now.
     /// </summary>
     public static bool HasVisibleWindow(string exePath, IPriorityClient priority)
     {
         if (!OperatingSystem.IsWindows()) return false;
-        foreach (var pid in priority.FindPidsForExe(exePath))
+
+        var pids = new HashSet<uint>();
+        foreach (var pid in priority.FindPidsForExe(exePath)) pids.Add((uint)pid);
+        if (pids.Count == 0) return false;
+
+        var found = false;
+        try
         {
-            try
+            EnumWindows((hWnd, _) =>
             {
-                using var p = Process.GetProcessById(pid);
-                if (p.MainWindowHandle != IntPtr.Zero) return true;
-            }
-            catch { /* exited between scan and read */ }
+                GetWindowThreadProcessId(hWnd, out var owner);
+                if (pids.Contains(owner)) { found = true; return false; }
+                return true;
+            }, IntPtr.Zero);
         }
-        return false;
+        catch
+        {
+            // If we can't tell, assume it draws — capping something that renders is the
+            // expensive mistake here, not skipping something that doesn't.
+            return true;
+        }
+        return found;
     }
 
     /// <summary>
@@ -68,6 +107,7 @@ public static class RecommendedLimits
     /// </summary>
     public static int? RecommendMb(string exePath, IPriorityClient priority)
     {
+        if (IsOurselves(exePath)) return null;
         if (HasVisibleWindow(exePath, priority)) return null;
 
         long largest = 0;

@@ -4,7 +4,16 @@ using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class HwGpuSchedulingTweak : ITweak
+/// <summary>
+/// Hardware-Accelerated GPU Scheduling. OPT-IN, never bundled: whether it helps is a
+/// property of the specific GPU + driver combination, and when it goes wrong it goes
+/// wrong *visibly* — black rectangles behind hover effects, flicker, and soft/blurry
+/// compositing. Machines with two GPUs (an integrated one plus a discrete card, which is
+/// most gaming desktops and every gaming laptop) are the common failure case, because the
+/// desktop is composited on one adapter while apps render on the other.
+/// Same rule as Multi-Plane Overlay: no automatic action gets to make this bet.
+/// </summary>
+public sealed class HwGpuSchedulingTweak : ITweak, IOptInTweak
 {
     private const string SubKey = @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers";
     private const string ValueName = "HwSchMode";
@@ -13,7 +22,9 @@ public sealed class HwGpuSchedulingTweak : ITweak
 
     public string Id => "game.hw-gpu-scheduling";
     public string DisplayName => "Hardware GPU scheduling";
-    public string Description => "Moves GPU command scheduling off the CPU and onto the GPU. Helps on most modern NVIDIA / AMD cards; rarely hurts on older drivers — try it, reboot, and check Sentinel's CPU row. Reboot required.";
+    public string Description => "Moves GPU command scheduling off the CPU and onto the GPU. Helps on some GPU/driver combinations and causes visible glitches on others — black boxes behind hover effects, flicker, blurry text — especially on machines with both an integrated and a discrete GPU. Try it, reboot, and change it back if anything looks wrong. Reboot required.";
+    public string? RiskNote => "Can cause black boxes or blurry rendering on some GPUs — reboot and undo if so";
+    public bool OptIn => true;
     public bool RequiresElevation => true;
     public bool IsDestructive => false;
     public bool RequiresReboot => true;

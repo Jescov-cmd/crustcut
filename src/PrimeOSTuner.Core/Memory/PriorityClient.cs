@@ -16,18 +16,19 @@ public sealed class PriorityClient : IPriorityClient
     private const uint QUOTA_LIMITS_HARDWS_MAX_ENABLE  = 0x4;   // max becomes a HARD cap
     private const uint QUOTA_LIMITS_HARDWS_MAX_DISABLE = 0x8;   // max back to advisory
 
-    public bool TrySetMemoryLimit(int pid, int limitMb)
+    public bool TrySetMemoryLimit(int pid, int limitMb, bool hard = true)
     {
         if (!OperatingSystem.IsWindows()) return false;
         if (limitMb < 64) return false;   // below this even a small app thrashes; refuse
         try
         {
             using var p = Process.GetProcessById(pid);
+            var ceiling = hard ? QUOTA_LIMITS_HARDWS_MAX_ENABLE : QUOTA_LIMITS_HARDWS_MAX_DISABLE;
             return SetProcessWorkingSetSizeEx(
                 p.Handle,
                 new IntPtr(4L * 1024 * 1024),
                 new IntPtr((long)limitMb * 1024 * 1024),
-                QUOTA_LIMITS_HARDWS_MIN_DISABLE | QUOTA_LIMITS_HARDWS_MAX_ENABLE);
+                QUOTA_LIMITS_HARDWS_MIN_DISABLE | ceiling);
         }
         catch
         {

@@ -65,10 +65,12 @@ public sealed class PowerPlanClient : IPowerPlanClient
     }
 
     public int? GetActiveSchemeSettingIndexFromRegistry(string subgroupGuid, string settingGuid)
+        => GetSchemeSettingIndexFromRegistry(GetActivePlan().Guid, subgroupGuid, settingGuid);
+
+    public int? GetSchemeSettingIndexFromRegistry(Guid scheme, string subgroupGuid, string settingGuid)
     {
-        var scheme = GetActivePlan().Guid.ToString("D");
         using var key = Registry.LocalMachine.OpenSubKey(
-            $@"SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes\{scheme}\{subgroupGuid}\{settingGuid}");
+            $@"SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes\{scheme:D}\{subgroupGuid}\{settingGuid}");
         var v = key?.GetValue("ACSettingIndex");
         return v switch
         {
@@ -76,6 +78,48 @@ public sealed class PowerPlanClient : IPowerPlanClient
             long l => unchecked((int)l),
             _ => null
         };
+    }
+
+    public IReadOnlyDictionary<Guid, int?> SetValueIndexOnAllSchemes(
+        string subgroup, string setting, int value)
+    {
+        var previous = new Dictionary<Guid, int?>();
+        foreach (var plan in ListPlans())
+        {
+            previous[plan.Guid] = GetSchemeSettingIndexFromRegistry(plan.Guid, subgroup, setting);
+            try
+            {
+                RunPowerCfg($"/setacvalueindex {plan.Guid:D} {subgroup} {setting} {value}");
+                RunPowerCfg($"/setdcvalueindex {plan.Guid:D} {subgroup} {setting} {value}");
+            }
+            catch
+            {
+                // A scheme that refuses one setting must not abort the rest.
+            }
+        }
+        // Re-activating is what makes the running system pick the new value up.
+        RunPowerCfg("/setactive SCHEME_CURRENT");
+        return previous;
+    }
+
+    public void RestoreValueIndexPerScheme(string subgroup, string setting,
+        IReadOnlyDictionary<Guid, int?> previous, int fallback)
+    {
+        foreach (var plan in ListPlans())
+        {
+            // A scheme that never had the value set gets the Windows default put back,
+            // because powercfg has no way to un-set a value index.
+            var target = previous.TryGetValue(plan.Guid, out var old) ? old ?? fallback : fallback;
+            try
+            {
+                RunPowerCfg($"/setacvalueindex {plan.Guid:D} {subgroup} {setting} {target}");
+                RunPowerCfg($"/setdcvalueindex {plan.Guid:D} {subgroup} {setting} {target}");
+            }
+            catch
+            {
+            }
+        }
+        RunPowerCfg("/setactive SCHEME_CURRENT");
     }
 
     public string RunPowercfg(string args)

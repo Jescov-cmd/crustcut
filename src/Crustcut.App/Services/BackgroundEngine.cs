@@ -361,7 +361,11 @@ public sealed class BackgroundEngine : IDisposable
                 {
                     foreach (var pid in _priorityClient.FindPidsForExe(rule.ExePath))
                     {
-                        if (_priorityClient.TrySetMemoryLimit(pid, rule.MemoryLimitMb!.Value)) applied++;
+                        // Caps Crustcut chose are SOFT (a hint Windows honours under
+                        // pressure); only caps the user set per-app get a hard ceiling.
+                        // A hard ceiling on the wrong process evicts its render surfaces.
+                        if (_priorityClient.TrySetMemoryLimit(pid, rule.MemoryLimitMb!.Value,
+                                hard: !rule.LimitAutoAssigned)) applied++;
                         _priorityClient.TrySetPriority(pid, rule.Priority);
                     }
                 }

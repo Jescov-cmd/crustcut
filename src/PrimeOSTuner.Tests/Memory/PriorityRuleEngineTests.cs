@@ -61,7 +61,34 @@ public class PriorityRuleEngineTests
 
         watcher.RaiseStarted(4321, "edge.exe");
 
-        priority.Verify(p => p.TrySetMemoryLimit(4321, 1024), Times.Once);
+        // hard: true — the user chose this cap by hand, so it gets a real ceiling.
+        priority.Verify(p => p.TrySetMemoryLimit(4321, 1024, true), Times.Once);
+    }
+
+    /// <summary>
+    /// A cap Crustcut assigned by itself must be SOFT. A hard ceiling forces Windows to
+    /// evict the instant the process reaches it, and on anything that draws, the evicted
+    /// pages are its render surfaces — black rectangles and blurry text. The app is only
+    /// allowed to make that trade when a human asked for it.
+    /// </summary>
+    [Fact]
+    public async Task Auto_assigned_limits_are_soft_not_hard()
+    {
+        var watcher = new TestWatcher();
+        var priority = new Mock<IPriorityClient>();
+        priority.Setup(p => p.FindPidsForExe(@"C:\Apps\spotify.exe")).Returns(new[] { 777 });
+        var engine = new PriorityRuleEngine(watcher, priority.Object, new Mock<IGameBooster>().Object);
+        await engine.ReloadAsync(new[]
+        {
+            Rule(@"C:\Apps\spotify.exe", PriorityLevel.Normal)
+                with { MemoryLimitMb = 512, LimitAutoAssigned = true }
+        });
+        engine.Start();
+
+        watcher.RaiseStarted(777, "spotify.exe");
+
+        priority.Verify(p => p.TrySetMemoryLimit(777, 512, false), Times.Once);
+        priority.Verify(p => p.TrySetMemoryLimit(777, 512, true), Times.Never);
     }
 
     [Fact]
@@ -76,7 +103,7 @@ public class PriorityRuleEngineTests
 
         watcher.RaiseStarted(1234, "cs2.exe");
 
-        priority.Verify(p => p.TrySetMemoryLimit(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+        priority.Verify(p => p.TrySetMemoryLimit(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<bool>()), Times.Never);
     }
 
     [Fact]

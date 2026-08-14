@@ -11,7 +11,7 @@ public class FanPolicyTests
     {
         foreach (var mode in new[] { FanMode.Silent, FanMode.Balanced, FanMode.Performance })
         {
-            FanPolicy.Evaluate(mode, 85).Should().Be(100);
+            FanPolicy.Evaluate(mode, 90).Should().Be(100);
             FanPolicy.Evaluate(mode, 95).Should().Be(100);
         }
     }
@@ -26,8 +26,8 @@ public class FanPolicyTests
     [Fact]
     public void Interpolates_linearly_between_points()
     {
-        // Silent: (60, 24) -> (72, 28). Midpoint (66deg) => 26%.
-        FanPolicy.Evaluate(FanMode.Silent, 66).Should().BeApproximately(26, 0.01);
+        // Silent: (60, 26) -> (70, 34). Midpoint (65deg) => 30%.
+        FanPolicy.Evaluate(FanMode.Silent, 65).Should().BeApproximately(30, 0.01);
     }
 
     private const double CoolC = 50;   // comfortably below every temperature band
@@ -46,12 +46,18 @@ public class FanPolicyTests
 
     [Theory]
     [InlineData(60, FanMode.Silent)]        // cool: load decides
-    [InlineData(72, FanMode.Balanced)]      // warm while idle: cooling anyway
-    [InlineData(80, FanMode.Performance)]   // hot while idle: full cooling anyway
+    [InlineData(78, FanMode.Silent)]        // a boosting CPU's normal working temperature
+    [InlineData(84, FanMode.Balanced)]      // hotter than design target: start helping
+    [InlineData(89, FanMode.Performance)]   // genuinely getting away: full cooling
     public void Auto_escalates_on_heat_even_when_the_machine_is_idle(double tempC, FanMode expected)
     {
         // The safety half of Auto: a warm room, dusty filters or a background thermal
         // event can cook a machine that is doing almost nothing.
+        //
+        // 78°C deliberately does NOT escalate. Modern CPUs boost until they reach their
+        // thermal target, so the high 70s is the chip working as designed — and cooling it
+        // harder just buys more boost at the same temperature. Escalating there pinned the
+        // fans at full speed on an idle desktop and never let them back down.
         FanPolicy.ResolveMode(FanMode.Auto, loadPercent: 2, tempC, FanMode.Silent)
             .Should().Be(expected);
     }
@@ -61,20 +67,20 @@ public class FanPolicyTests
     {
         // Busy but cool, and idle but hot, both land on Performance.
         FanPolicy.ResolveMode(FanMode.Auto, 90, CoolC, FanMode.Silent).Should().Be(FanMode.Performance);
-        FanPolicy.ResolveMode(FanMode.Auto, 2, 80, FanMode.Silent).Should().Be(FanMode.Performance);
+        FanPolicy.ResolveMode(FanMode.Auto, 2, 89, FanMode.Silent).Should().Be(FanMode.Performance);
     }
 
     [Fact]
     public void Auto_holds_its_band_until_BOTH_signals_clear_the_hysteresis_margin()
     {
         // Load has eased but the machine is still hot: keep cooling.
-        FanPolicy.ResolveMode(FanMode.Auto, 40, 76, FanMode.Performance).Should().Be(FanMode.Performance);
+        FanPolicy.ResolveMode(FanMode.Auto, 40, 85, FanMode.Performance).Should().Be(FanMode.Performance);
         // Cool but still busy: keep cooling.
         FanPolicy.ResolveMode(FanMode.Auto, 60, CoolC, FanMode.Performance).Should().Be(FanMode.Performance);
         // Both eased: step down.
         FanPolicy.ResolveMode(FanMode.Auto, 40, CoolC, FanMode.Performance).Should().Be(FanMode.Balanced);
 
-        FanPolicy.ResolveMode(FanMode.Auto, 10, 68, FanMode.Balanced).Should().Be(FanMode.Balanced);
+        FanPolicy.ResolveMode(FanMode.Auto, 10, 79, FanMode.Balanced).Should().Be(FanMode.Balanced);
         FanPolicy.ResolveMode(FanMode.Auto, 10, CoolC, FanMode.Balanced).Should().Be(FanMode.Silent);
     }
 
@@ -92,10 +98,10 @@ public class FanPolicyTests
     public void Silent_chosen_manually_still_hits_the_failsafe_when_it_matters()
     {
         // Manual Silent is a preference, not a suicide pact: the curve itself still ramps,
-        // and the 85°C failsafe overrides everything.
-        FanPolicy.Evaluate(FanMode.Silent, 84).Should().BeGreaterThan(
+        // and the 90°C failsafe overrides everything.
+        FanPolicy.Evaluate(FanMode.Silent, 89).Should().BeGreaterThan(
             FanPolicy.Evaluate(FanMode.Silent, 70));
-        FanPolicy.Evaluate(FanMode.Silent, 85).Should().Be(100);
+        FanPolicy.Evaluate(FanMode.Silent, 90).Should().Be(100);
     }
 
     [Fact]
@@ -114,11 +120,19 @@ public class FanPolicyTests
     }
 
     [Fact]
-    public void Silent_stays_near_idle_duty_through_ryzens_normal_warm_band()
+    public void Silent_is_quiet_when_actually_cool_but_still_cools_a_boosting_cpu()
     {
-        // A Ryzen 7700 lives at 65-77degC; Silent must not ramp inside that band.
-        FanPolicy.Evaluate(FanMode.Silent, 70).Should().BeLessThan(40);
-        FanPolicy.Evaluate(FanMode.Silent, 76).Should().BeLessThan(48);
+        // Silence is bought with airflow, never with CPU speed. Below 60degC there is
+        // nothing to cool, so Silent stays genuinely quiet.
+        FanPolicy.Evaluate(FanMode.Silent, 50).Should().BeLessThan(26);
+        FanPolicy.Evaluate(FanMode.Silent, 60).Should().BeLessThan(30);
+
+        // But a CPU allowed to boost deliberately sits in the 70s doing very little, and
+        // an earlier version of this curve coasted there (28% at 72degC) because it had
+        // been tuned on a machine with boost switched off. Even the quiet curve has to
+        // move real air once the chip is actually hot.
+        FanPolicy.Evaluate(FanMode.Silent, 70).Should().BeGreaterThan(30);
+        FanPolicy.Evaluate(FanMode.Silent, 80).Should().BeGreaterThan(50);
     }
 
     [Fact]

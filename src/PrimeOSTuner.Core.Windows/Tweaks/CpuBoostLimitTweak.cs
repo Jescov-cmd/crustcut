@@ -12,8 +12,13 @@ namespace PrimeOSTuner.Core.Tweaks;
 /// PERFBOOSTMODE is a HIDDEN power setting: probe reads the registry directly because
 /// powercfg /query refuses to show it (same story as CPU core parking).
 /// </summary>
-public sealed class CpuBoostLimitTweak : ITweak, ICategorizedTweak, ISelfRevertingTweak
+public sealed class CpuBoostLimitTweak : ITweak, ICategorizedTweak, ISelfRevertingTweak, IOptInTweak
 {
+    // OPT-IN: this trades peak CPU speed for quiet. That's a preference, not an
+    // optimisation, and "Optimize now" must not decide it for anyone. A machine that
+    // needs the power should get the power; the fans can deal with the heat.
+    public bool OptIn => true;
+
     private const string SubProcessor = "54533251-82be-4824-96c1-47b60b740d00";
     private const string PerfBoostMode = "be337238-0d82-4146-a960-4f3749d470c7";
     private const int Disabled = 0;
@@ -35,7 +40,7 @@ public sealed class CpuBoostLimitTweak : ITweak, ICategorizedTweak, ISelfReverti
 
     public CpuBoostLimitTweak(IPowerPlanClient power) => _power = power;
 
-    private sealed record Undo(int? Ac, int? Dc);
+    private sealed record Undo(Dictionary<Guid, int?>? PerScheme, int? Ac, int? Dc);
 
     public Task<TweakState> ProbeAsync(CancellationToken ct = default)
     {
@@ -54,14 +59,13 @@ public sealed class CpuBoostLimitTweak : ITweak, ICategorizedTweak, ISelfReverti
     {
         try
         {
-            var undo = new Undo(
-                _power.GetActiveSchemeSettingIndexFromRegistry(SubProcessor, PerfBoostMode),
-                null);
-            _power.RunPowercfg($"/setacvalueindex SCHEME_CURRENT {SubProcessor} {PerfBoostMode} {Disabled}");
-            _power.RunPowercfg($"/setdcvalueindex SCHEME_CURRENT {SubProcessor} {PerfBoostMode} {Disabled}");
-            _power.RunPowercfg("/setactive SCHEME_CURRENT");
+            // Every scheme, not just the active one. Writing only to the active plan meant
+            // switching power plans in Control Panel silently handed boost back — which
+            // presented as "I selected a LOWER power plan and my CPU got 20° hotter".
+            var previous = _power.SetValueIndexOnAllSchemes(SubProcessor, PerfBoostMode, Disabled);
+            var undo = new Undo(new Dictionary<Guid, int?>(previous), null, null);
             return Task.FromResult(TweakResult.Success(JsonSerializer.Serialize(undo),
-                "Turbo boost off — temperatures start dropping within a minute."));
+                "Turbo boost off on every power plan — temperatures start dropping within a minute."));
         }
         catch (Exception ex)
         {
@@ -74,7 +78,12 @@ public sealed class CpuBoostLimitTweak : ITweak, ICategorizedTweak, ISelfReverti
         try
         {
             var undo = JsonSerializer.Deserialize<Undo>(undoData);
-            return Restore(undo?.Ac ?? WindowsDefault);
+            if (undo?.PerScheme is { Count: > 0 } perScheme)
+            {
+                _power.RestoreValueIndexPerScheme(SubProcessor, PerfBoostMode, perScheme, WindowsDefault);
+                return Task.FromResult(TweakResult.Success());
+            }
+            return Restore(undo?.Ac ?? WindowsDefault);   // undo from before the all-schemes fix
         }
         catch (Exception ex)
         {
@@ -84,7 +93,11 @@ public sealed class CpuBoostLimitTweak : ITweak, ICategorizedTweak, ISelfReverti
 
     /// <summary>Applied outside the app or undo lost: back to the Windows default.</summary>
     public Task<TweakResult> RevertToDefaultAsync(CancellationToken ct = default)
-        => Restore(WindowsDefault);
+    {
+        _power.RestoreValueIndexPerScheme(SubProcessor, PerfBoostMode,
+            new Dictionary<Guid, int?>(), WindowsDefault);
+        return Task.FromResult(TweakResult.Success());
+    }
 
     private Task<TweakResult> Restore(int value)
     {
@@ -95,5 +108,5 @@ public sealed class CpuBoostLimitTweak : ITweak, ICategorizedTweak, ISelfReverti
     }
 
     public Task<string> PreviewAsync(CancellationToken ct = default)
-        => Task.FromResult("Will set processor boost mode (PERFBOOSTMODE) to Disabled on the active power plan (undo restores the previous mode).");
+        => Task.FromResult("Will set processor boost mode (PERFBOOSTMODE) to Disabled on every power plan (undo restores each plan's previous mode).");
 }
