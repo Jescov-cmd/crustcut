@@ -81,13 +81,33 @@ public sealed class RamCleanerTweak : IOneShotTweak
 
         // The message is the whole point — a silent cleanup is indistinguishable from a
         // broken one. Freed is a real measurement (working-set delta), not an estimate.
+        // NAMES are included because "3 background app(s)" is undiagnosable: when the
+        // cleaner trimmed a tray GUI app for weeks (the WaveLink blur bug), the log had
+        // no way to show it. Who got trimmed is the single most useful fact in this line.
         RamCleanLog.TryWrite(report);
         var freedMb = report.FreedBytes / (1024 * 1024);
         var message = report.Trimmed == 0 && cacheClearedMb == 0
             ? "Nothing to clean — everything running is either in use or already lean."
-            : $"Freed {freedMb} MB from {report.Trimmed} background app(s)." +
+            : $"Freed {freedMb} MB from {report.Trimmed} background app(s){NamesFor(report)}." +
               (cacheClearedMb > 0 ? $" Cleared {cacheClearedMb} MB of system cache." : "");
         return TweakResult.Success($"{{\"trimmed\":{report.Trimmed}}}", message);
+    }
+
+    /// <summary>" (node ×3, OneDrive)" — the trimmed exes, grouped, best-effort.</summary>
+    private static string NamesFor(RamCleanReport report)
+    {
+        if (report.TrimmedPids is not { Count: > 0 } pids) return "";
+        var names = new List<string>();
+        foreach (var pid in pids)
+        {
+            try { using var p = System.Diagnostics.Process.GetProcessById(pid); names.Add(p.ProcessName); }
+            catch { /* already exited — its name is lost, not worth failing the message */ }
+        }
+        if (names.Count == 0) return "";
+        var grouped = names.GroupBy(n => n, StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.Count() > 1 ? $"{g.Key} ×{g.Count()}" : g.Key);
+        return $" ({string.Join(", ", grouped)})";
     }
 
     public Task<TweakResult> RevertAsync(string undoData, CancellationToken ct = default)

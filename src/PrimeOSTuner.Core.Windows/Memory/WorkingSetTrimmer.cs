@@ -23,6 +23,12 @@ public sealed class WorkingSetTrimmer : IWorkingSetTrimmer
     [DllImport("user32.dll")]
     private static extern bool IsIconic(IntPtr hWnd);
 
+    [DllImport("user32.dll")]
+    private static extern int GetWindowLong(IntPtr hWnd, int index);
+
+    private const int GWL_STYLE = -16;
+    private const int WS_CAPTION = 0x00C00000;   // titlebar — the mark of a real app window
+
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern IntPtr CreateToolhelp32Snapshot(uint flags, uint pid);
 
@@ -120,8 +126,20 @@ public sealed class WorkingSetTrimmer : IWorkingSetTrimmer
         return map;
     }
 
-    /// <summary>Pids owning any visible top-level window, and the subset whose window is
-    /// actually restored on screen (not minimized) — the distinction deep clean runs on.</summary>
+    /// <summary>
+    /// Pids owning a GUI window, and the subset whose window is actually restored on
+    /// screen (not minimized) — the distinction deep clean runs on.
+    ///
+    /// "GUI window" means visible, OR hidden-but-captioned. The second half is the fix
+    /// for the tray-app blur bug: an app minimised to the notification tray HIDES its
+    /// window, and IsWindowVisible alone then classified it as a windowless background
+    /// process — so the cleaner emptied the working set of software that draws (found
+    /// live: Elgato WaveLink, hidden to the tray, trimmed every few minutes; its UI came
+    /// back blurry). A hidden window that carries WS_CAPTION is a real app window that
+    /// happens to be off screen right now. Hidden captionless windows stay unprotected —
+    /// every message pump owns a few of those, and protecting them would protect
+    /// virtually every process on the machine.
+    /// </summary>
     private static (HashSet<int> Windowed, HashSet<int> Restored) ReadWindowedPids()
     {
         var windowed = new HashSet<int>();
@@ -130,10 +148,15 @@ public sealed class WorkingSetTrimmer : IWorkingSetTrimmer
         {
             EnumWindows((hWnd, _) =>
             {
-                if (IsWindowVisible(hWnd) && GetWindowThreadProcessId(hWnd, out var pid) != 0)
+                if (GetWindowThreadProcessId(hWnd, out var pid) == 0) return true;
+                if (IsWindowVisible(hWnd))
                 {
                     windowed.Add((int)pid);
                     if (!IsIconic(hWnd)) restored.Add((int)pid);
+                }
+                else if ((GetWindowLong(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
+                {
+                    windowed.Add((int)pid);   // tray app: hidden now, draws later
                 }
                 return true; // keep enumerating
             }, IntPtr.Zero);
