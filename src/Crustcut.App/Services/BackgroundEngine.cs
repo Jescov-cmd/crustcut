@@ -490,11 +490,49 @@ public sealed class BackgroundEngine : IDisposable
         catch (Exception ex) { EngineLog.Log($"tick: failed: {ex.Message}"); }
     }
 
+    // Refault stand-down. A clean can "free" a gigabyte and still accomplish nothing —
+    // the pages belong to running apps, which fault them straight back. The freed-bytes
+    // futility counter can't see that (the clean LOOKS like a triumph every time), so on
+    // a machine whose RAM is genuinely all active, the engine fought an endless
+    // evict/refault war: constant paging storms, CPU heat at an idle desktop, blurred
+    // apps. Judge instead by what a clean changed a minute later; three no-shows in a
+    // row and cleaning stands down for half an hour.
+    private double _ramPercentBeforeClean = -1;
+    private int _refaultCleans;
+    private DateTime _standDownUntilUtc = DateTime.MinValue;
+    private const double RefaultJudgeMarginPp = 2;
+    private static readonly TimeSpan StandDownDuration = TimeSpan.FromMinutes(30);
+
     /// <summary>One adaptive evaluation: read pressure, let the policy decide, act, log.</summary>
     private async Task AdaptiveTickAsync()
     {
         var trend = _percentAtLastTick >= 0 ? _lastRamPercent - _percentAtLastTick : 0;
         _percentAtLastTick = _lastRamPercent;
+
+        if (DateTime.UtcNow < _standDownUntilUtc)
+        {
+            if (_lastSkipReason != "standing down")
+            {
+                EngineLog.Log("adaptive: standing down — recent cleans came straight back; this RAM is genuinely in use and cleaning it again would just burn CPU");
+                _lastSkipReason = "standing down";
+            }
+            return;
+        }
+
+        // Judge the previous clean once its dust has settled (the next tick, ~1 min on).
+        if (_ramPercentBeforeClean >= 0 && DateTime.UtcNow - _lastAutoRamUtc >= TimeSpan.FromSeconds(55))
+        {
+            var cameBack = _lastRamPercent >= _ramPercentBeforeClean - RefaultJudgeMarginPp;
+            _ramPercentBeforeClean = -1;
+            _refaultCleans = cameBack ? _refaultCleans + 1 : 0;
+            if (_refaultCleans >= 3)
+            {
+                _standDownUntilUtc = DateTime.UtcNow + StandDownDuration;
+                _refaultCleans = 0;
+                EngineLog.Log($"adaptive: 3 cleans in a row changed nothing a minute later — standing down for {StandDownDuration.TotalMinutes:F0} minutes");
+                return;
+            }
+        }
 
         var snapshot = new RamPressureSnapshot(
             _lastRamPercent,
@@ -528,10 +566,32 @@ public sealed class BackgroundEngine : IDisposable
         }
 
         _lastSkipReason = "";
-        var tweak = decision.Mode == RamCleanMode.Deep && _deepRamTweak is not null
-            ? _deepRamTweak : _ramTweak;
+        _ramPercentBeforeClean = _lastRamPercent;
         EngineLog.Log($"adaptive: {decision.Mode} clean — {decision.Reason}");
-        await RunRamCleanupAsync($"adaptive-{decision.Mode}", tweak);
+
+        // AUTOMATIC cleans always use Normal's process protection, whatever the mode.
+        // The escalated path used to run the real Deep tweak, whose rules allow trimming
+        // minimized and tray apps — reasonable when a human presses the DEEP CLEAN button,
+        // ruinous on a schedule: it silently gutted Medal (mid-recording), SignalRGB and
+        // Lossless Scaling, they refaulted everything within seconds, and the machine sat
+        // in a permanent evict/refault war that read as idle CPU heat and app blur.
+        // Deep-the-decision now means Normal trimming PLUS the system-cache levers, which
+        // touch no process at all.
+        await RunRamCleanupAsync($"adaptive-{decision.Mode}", _ramTweak);
+        if (decision.Mode == RamCleanMode.Deep && _standby is not null)
+        {
+            try
+            {
+                // Proven order: trims push pages onto the standby list, purge goes last.
+                var cacheBefore = _standby.GetStandbyBytes();
+                _standby.TryFlushModified();
+                _standby.TryTrimSystemCache();
+                _standby.TryPurge();
+                var clearedMb = Math.Max(0, cacheBefore - _standby.GetStandbyBytes()) / (1024 * 1024);
+                if (clearedMb > 0) EngineLog.Log($"adaptive: cleared {clearedMb} MB of system cache");
+            }
+            catch (Exception ex) { EngineLog.Log($"adaptive: cache levers failed: {ex.Message}"); }
+        }
         _lastCleanFreedBytes = (RamCleanLog.TryRead()?.FreedMb ?? -1) * 1024 * 1024;
         _consecutiveIneffectiveCleans =
             _lastCleanFreedBytes >= 0 && _lastCleanFreedBytes < 150L * 1024 * 1024
