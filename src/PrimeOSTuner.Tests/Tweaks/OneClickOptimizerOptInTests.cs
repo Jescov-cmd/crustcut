@@ -51,4 +51,26 @@ public class OneClickOptimizerOptInTests
         }
         finally { try { File.Delete(historyPath); } catch { } }
     }
+
+    /// <summary>
+    /// The specific tweaks that have already burned users must STAY opt-in. Each earned
+    /// its place here by shipping in a bundle and visibly breaking machines: MPO disable
+    /// and hardware GPU scheduling paint black boxes on some GPU combinations, the
+    /// visual-effects tweak restyles the desktop, and Quiet CPU trades speed for silence.
+    /// If someone removes IOptInTweak from one of these during a refactor, this test is
+    /// what stops the regression from shipping.
+    /// </summary>
+    [Fact]
+    public void Tweaks_that_burned_users_stay_opt_in()
+    {
+        var registry = new Moq.Mock<PrimeOSTuner.Win.IRegistryClient>().Object;
+        var power = new Moq.Mock<PrimeOSTuner.Win.IPowerPlanClient>().Object;
+
+        new HwGpuSchedulingTweak(registry).Should().BeAssignableTo<IOptInTweak>()
+            .Which.OptIn.Should().BeTrue();
+        new VisualEffectsTweak(registry).Should().BeAssignableTo<IOptInTweak>()
+            .Which.OptIn.Should().BeTrue();
+        new CpuBoostLimitTweak(power).Should().BeAssignableTo<IOptInTweak>()
+            .Which.OptIn.Should().BeTrue();
+    }
 }

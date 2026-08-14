@@ -127,6 +127,7 @@ public sealed class BackgroundEngine : IDisposable
         // ── One-time repairs for machines that ran v0.9.2 ────────────────────────────
         HealEfficiencyModeOnce();
         await HealMpoOverlayOnceAsync();
+        await HealBundledOptInTweaksOnceAsync();
 
         // ── Memory limits: assign what's missing, then enforce on what's running ─────
         // Without the startup sweep, an app already running before Crustcut launched
@@ -273,6 +274,79 @@ public sealed class BackgroundEngine : IDisposable
             File.WriteAllText(marker, DateTime.UtcNow.ToString("O"));
         }
         catch (Exception ex) { EngineLog.Log($"heal: MPO cleanup failed: {ex.Message}"); }
+    }
+
+    /// <summary>
+    /// v0.9.2/v0.9.3's one-click bundle applied three tweaks that are opt-in only now:
+    /// hardware GPU scheduling (black boxes / blurry text on some GPU combinations,
+    /// hybrid iGPU+dGPU machines especially), disable-animations-and-transparency (a
+    /// visible desktop restyle nobody asked for), and Quiet CPU (trades peak speed for
+    /// silence — a preference, not an optimisation). Removing them from the bundle only
+    /// protects NEW machines; anyone who already clicked OPTIMIZE NOW still carries all
+    /// three, re-enforced every 30 minutes. This undoes the automatic application once,
+    /// on upgrade, using the stored pristine undo — each machine gets ITS original value
+    /// back (a machine where Windows had GPU scheduling on by default keeps it on).
+    ///
+    /// Only tweaks present in our enforcement list are touched — that list is the proof
+    /// Crustcut applied them. Anyone who re-applies one by hand keeps it: a deliberate
+    /// toggle stays a deliberate toggle.
+    /// </summary>
+    private async Task HealBundledOptInTweaksOnceAsync()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var marker = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "PrimeOSTuner", "optin-healed-v094");
+        try
+        {
+            if (File.Exists(marker)) return;
+
+            string[] bundledOptIns = { "game.hw-gpu-scheduling", "core.visual-effects", "core.cpu-boost-limit" };
+            var undoStore = new PendingUndoStore(PendingUndoStore.DefaultPath());
+            var enforced = await _sessionTweaks.LoadAsync();
+
+            foreach (var id in bundledOptIns)
+            {
+                if (!enforced.Contains(id, StringComparer.OrdinalIgnoreCase)) continue;
+                var tweak = _tweaks.FirstOrDefault(t => t.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+                if (tweak is null) continue;
+
+                try
+                {
+                    var undo = await undoStore.GetAsync(id);
+                    if (undo is not null)
+                    {
+                        var r = await tweak.RevertAsync(undo);
+                        EngineLog.Log(r.Succeeded
+                            ? $"heal: undid bundled '{tweak.DisplayName}' — restored this machine's original setting (now opt-in only)"
+                            : $"heal: revert of bundled '{tweak.DisplayName}' failed: {r.Error}");
+                        if (r.Succeeded) await undoStore.RemoveAsync(id);
+                    }
+                    else if (tweak is ISelfRevertingTweak selfReverting)
+                    {
+                        // No pristine undo survived — the Windows default is the only
+                        // honest fallback, and only tweaks that know theirs offer it.
+                        await selfReverting.RevertToDefaultAsync();
+                        EngineLog.Log($"heal: undid bundled '{tweak.DisplayName}' to the Windows default (no stored original; now opt-in only)");
+                    }
+                    else
+                    {
+                        // Can't restore what we never recorded; leaving the machine
+                        // alone beats guessing. Stop re-enforcing it either way.
+                        EngineLog.Log($"heal: '{tweak.DisplayName}' left as-is (no stored original) — no longer re-enforced");
+                    }
+                }
+                catch (Exception ex) { EngineLog.Log($"heal: '{id}' revert threw: {ex.Message}"); }
+
+                // Out of the enforcement list regardless — re-applying a tweak the
+                // bundle should never have applied is the part that must stop.
+                await _sessionTweaks.RemoveAsync(id);
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(marker)!);
+            File.WriteAllText(marker, DateTime.UtcNow.ToString("O"));
+        }
+        catch (Exception ex) { EngineLog.Log($"heal: bundled opt-in cleanup failed: {ex.Message}"); }
     }
 
     /// <summary>
