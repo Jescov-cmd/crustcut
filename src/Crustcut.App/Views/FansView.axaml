@@ -22,7 +22,7 @@
       <TextBlock Text="Fans" Classes="pageTitle" Margin="0,16,0,10"/>
       <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,16"
                  TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left"
-                 Text="Curve-based fan control. Auto watches load AND temperature and cools for whichever needs it more — light work stays quiet, heavy work or a hot machine ramps — while Silent, Balanced and Performance pin it manually. Calibrate once so the minimum speeds match your actual fans. Safety is built in: fans never stop, anything over 85 °C forces full speed, pumps are never slowed, and your motherboard takes back control the moment this is off or Crustcut closes. Your graphics card runs its own fans."/>
+                 Text="Curve-based fan control. Auto watches load AND temperature and cools for whichever needs it more — light work stays quiet, heavy work or a hot machine ramps — while Silent, Balanced and Performance pin it manually. Calibrate once so the minimum speeds match your actual fans. Safety is built in: fans never stop, anything over 90 °C forces full speed, pumps are never slowed, and your motherboard takes back control the moment this is off or Crustcut closes. Your graphics card runs its own fans."/>
 
       <Border Classes="card" IsVisible="{Binding !IsSupported}">
         <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource Text1}" FontSize="12"
@@ -43,7 +43,7 @@
                           Click="ToggleClick"/>
           </Grid>
 
-          <Border Background="#22FFB84D" CornerRadius="8" Padding="11,8"
+          <Border Background="#22FFB84D" CornerRadius="2" Padding="11,8"
                   IsVisible="{Binding ConflictSuspected}">
             <TextBlock FontSize="11" Foreground="{DynamicResource Warn}" TextWrapping="Wrap"
                        Text="Conflict detected: another program keeps overriding the fans. If you use lighting or vendor control software, turn off ITS fan control — the rest of it keeps working."/>
@@ -84,7 +84,7 @@
                               VerticalAlignment="Top"
                               IsChecked="{Binding GovernorEnabled, Mode=TwoWay}"/>
               </Grid>
-              <Border Background="#2247B8FF" CornerRadius="8" Padding="11,7"
+              <Border Background="#2247B8FF" CornerRadius="2" Padding="11,7"
                       IsVisible="{Binding BoostTrimmed}">
                 <TextBlock FontSize="11" Foreground="{DynamicResource Text1}" TextWrapping="Wrap"
                            Text="Cooling down: turbo boost is trimmed right now. It comes back automatically once the CPU has been cool for a minute."/>

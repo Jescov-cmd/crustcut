@@ -22,8 +22,9 @@ public class BuiltInProfilesTests
             BuiltInProfiles.Performance.TweakIds.Should().Contain(t);
 
         BuiltInProfiles.Performance.TweakIds.Should().Contain("game.timer-resolution");
-        BuiltInProfiles.Performance.TweakIds.Should().Contain("game.hw-gpu-scheduling");
         BuiltInProfiles.Performance.TweakIds.Should().Contain("game.system-responsiveness");
+        // hw-gpu-scheduling is deliberately ABSENT: it's opt-in (black boxes on some
+        // GPU combinations) and bundles never apply opt-in tweaks.
     }
 
     [Fact]

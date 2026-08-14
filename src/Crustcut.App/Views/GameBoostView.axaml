@@ -19,7 +19,7 @@
               <StackPanel Grid.Column="0" Margin="0,0,16,0">
                 <TextBlock Text="Basic" Classes="key"/>
                 <TextBlock Classes="sub" Margin="0,3,0,0"
-                           Text="The safe everyday set — Game Mode, GPU scheduling, mouse precision, snappier UI."/>
+                           Text="The safe everyday set — Game Mode, mouse precision, a faster power plan, snappier UI."/>
               </StackPanel>
               <Button Grid.Column="1" Content="APPLY" Classes="primary" VerticalAlignment="Center"
                       IsEnabled="{Binding !IsWorking}" Click="BasicClick"/>
@@ -43,7 +43,7 @@
               <StackPanel Grid.Column="0" Margin="0,0,16,0">
                 <TextBlock Text="Aggressive" Classes="key"/>
                 <TextBlock Classes="sub" Margin="0,3,0,0"
-                           Text="Everything, including core parking off and visual effects trimmed. For squeezing out the last few frames."/>
+                           Text="Everything, plus Cortana, Modern Standby and hibernation off. For squeezing out the last few frames; may affect sleep on laptops."/>
               </StackPanel>
               <Button Grid.Column="1" Content="APPLY" Classes="primary" VerticalAlignment="Center"
                       IsEnabled="{Binding !IsWorking}" Click="AggressiveClick"/>

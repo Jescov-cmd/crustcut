@@ -18,17 +18,19 @@ public static class BuiltInProfiles
             "core.advertising-id",
         });
 
+    // NOTE: opt-in tweaks (hardware GPU scheduling, disable-animations, Quiet CPU, MPO)
+    // must never appear in these lists — and ProfileApplier filters them even if one
+    // sneaks in. They're the tweaks whose failure mode is visible on the wrong machine.
     public static readonly ModeProfile Performance = new(
         Id: "performance",
         DisplayName: "Performance Mode",
-        Description: "Maximum gaming preset: everything in Basic, plus 0.5 ms timer resolution, hardware GPU scheduling, multimedia thread responsiveness maxed, and the Ultimate Performance power plan. Some tweaks require admin and a reboot.",
+        Description: "Maximum gaming preset: everything in Basic, plus 0.5 ms timer resolution, multimedia thread responsiveness maxed, and the Ultimate Performance power plan. Some tweaks require admin and a reboot.",
         TweakIds: new[]
         {
             "game.game-mode",
             "game.mouse-accel",
             "core.power-plan",
             "game.timer-resolution",
-            "game.hw-gpu-scheduling",
             "game.system-responsiveness",
             "game.per-app-gpu-pref",
             "core.win32-priority-separation",
@@ -46,7 +48,6 @@ public static class BuiltInProfiles
             "core.usb-selective-suspend",
             "core.power-throttling-disable",
             "core.ultimate-performance",
-            "core.visual-effects",
             "game.mmcss-games-priority",
             "core.snappy-ui",
             "core.widgets-disable",

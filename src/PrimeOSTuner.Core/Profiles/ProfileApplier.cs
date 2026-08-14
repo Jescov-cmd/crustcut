@@ -34,6 +34,15 @@ public sealed class ProfileApplier
                 continue;
             }
 
+            // Same rule as "Optimize now": a bundle never applies opt-in tweaks. These
+            // are the ones whose benefit is machine-specific and whose failure mode is
+            // visible (MPO, hardware GPU scheduling, the desktop restyle, Quiet CPU) —
+            // the OPTIMIZE NOW filter was added after the MPO incident, but Game Boost
+            // profiles kept applying them, which reopened the same wound from a
+            // different door. Skipped silently, not failed: the profile still applies
+            // everything it legitimately can.
+            if (tweak is IOptInTweak { OptIn: true }) continue;
+
             progress?.Report((i, profile.TweakIds.Count, tweak.DisplayName));
 
             try

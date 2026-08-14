@@ -18,7 +18,12 @@
                  TextWrapping="Wrap"
                  Text="Give the apps you care about more CPU priority, cap how much memory an app may keep, and protect favourites from cleanups. Anything with an open window is protected automatically."/>
 
-      <StackPanel Orientation="Horizontal" Spacing="9" Margin="0,0,0,16">
+      <!-- WrapPanel, not a horizontal StackPanel: five buttons don't fit at the minimum
+           window width, and a StackPanel just clips the overflow off the right edge. -->
+      <WrapPanel Margin="0,0,0,16">
+        <WrapPanel.Styles>
+          <Style Selector="Button"><Setter Property="Margin" Value="0,0,9,8"/></Style>
+        </WrapPanel.Styles>
         <Button x:Name="CleanNowButton" Content="FREE UP RAM" Classes="primary" Click="CleanNowClick"
                 ToolTip.Tip="Releases memory held by idle background programs. Apps you're using are left alone."/>
         <Button x:Name="DeepCleanButton" Content="DEEP CLEAN" Classes="secondary" Click="DeepCleanClick"
@@ -27,7 +32,7 @@
                 ToolTip.Tip="Measures what each running BACKGROUND app uses and caps it with 50% headroom. Apps with a window are skipped — capping one can make it render badly. Games are never capped."/>
         <Button Content="SCAN RUNNING APPS" Classes="secondary" Click="RescanClick"/>
         <Button Content="RECOMMENDED FOR MY GAMES" Classes="secondary" Click="RecommendedClick"/>
-      </StackPanel>
+      </WrapPanel>
 
       <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,12">
         <ToggleSwitch OnContent="" OffContent="" MinWidth="0"

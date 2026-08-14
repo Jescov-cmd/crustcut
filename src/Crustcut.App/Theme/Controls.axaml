@@ -83,7 +83,9 @@
     <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="MinHeight" Value="26"/>
     <Setter Property="Padding" Value="14,0"/>
-    <Setter Property="CornerRadius" Value="13"/>
+    <!-- Square, not pill. The brand is 8-bit — hard pixels, hard shadows — and rounded
+         capsules fought that. Square also matches the nav rail and the wordmark. -->
+    <Setter Property="CornerRadius" Value="0"/>
     <Setter Property="FontSize" Value="10.5"/>
     <Setter Property="FontWeight" Value="Bold"/>
     <Setter Property="Background" Value="Transparent"/>
@@ -130,11 +132,11 @@
     <Setter Property="TextElement.Foreground" Value="{DynamicResource Danger}"/>
   </Style>
 
-  <!-- ── Protect pill (Memory rows): labelled toggle, wheat when active ── -->
+  <!-- ── Protect toggle (Memory rows): labelled toggle, wheat when active ── -->
   <Style Selector="ToggleButton.protect">
     <Setter Property="MinHeight" Value="26"/>
     <Setter Property="Padding" Value="12,0"/>
-    <Setter Property="CornerRadius" Value="13"/>
+    <Setter Property="CornerRadius" Value="0"/>
     <Setter Property="FontSize" Value="10.5"/>
     <Setter Property="FontWeight" Value="Bold"/>
     <Setter Property="Background" Value="Transparent"/>

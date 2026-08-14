@@ -29,15 +29,15 @@
             <Border Classes="row" Width="{Binding #PanelGrid.Bounds.Width}">
               <StackPanel>
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                  <Border CornerRadius="9" Padding="8,2" Background="#22FF6B6B"
+                  <Border CornerRadius="2" Padding="8,2" Background="#22FF6B6B"
                           IsVisible="{Binding IsProblem}">
                     <TextBlock Text="PROBLEM" FontSize="9" Foreground="{DynamicResource Danger}"/>
                   </Border>
-                  <Border CornerRadius="9" Padding="8,2" Background="#22FFB84D"
+                  <Border CornerRadius="2" Padding="8,2" Background="#22FFB84D"
                           IsVisible="{Binding IsWarning}">
                     <TextBlock Text="WARNING" FontSize="9" Foreground="{DynamicResource Warn}"/>
                   </Border>
-                  <Border CornerRadius="9" Padding="8,2" Background="#223ECF8E"
+                  <Border CornerRadius="2" Padding="8,2" Background="#223ECF8E"
                           IsVisible="{Binding IsPassed}">
                     <TextBlock Text="OK" FontSize="9" Foreground="{DynamicResource Good}"/>
                   </Border>

@@ -59,7 +59,7 @@
 
             <TextBlock Classes="hint"
                        Text="Scheduled cleanup only runs when memory is actually above 70% — evicting memory that apps still need just makes Windows compress it and burn CPU putting it back."/>
-            <Border Background="#22FFB84D" CornerRadius="8" Padding="11,8" Margin="0,10,0,0"
+            <Border Background="#22FFB84D" CornerRadius="2" Padding="11,8" Margin="0,10,0,0"
                     IsVisible="{Binding IntervalIsAggressive}">
               <TextBlock FontSize="11" Foreground="{DynamicResource Warn}" TextWrapping="Wrap"
                          Text="Short intervals re-evict memory before it settles. 10 minutes or more is plenty."/>
