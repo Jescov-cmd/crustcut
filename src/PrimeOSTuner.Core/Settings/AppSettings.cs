@@ -28,6 +28,10 @@ public sealed class AppSettings
     public bool FanControlEnabled { get; set; } = false;
     public string FanMode { get; set; } = "Balanced";
 
+    /// <summary>Trim turbo boost while the CPU holds ≥85°C; restore once it cools.
+    /// Off by default — trading peak speed for temperature is the user's call.</summary>
+    public bool ThermalGovernorEnabled { get; set; } = false;
+
     /// <summary>Adaptive mode: the engine reads memory pressure each minute and decides
     /// when/how hard to clean (including standby purges and Deep escalation) instead of
     /// running the fixed schedule/threshold settings. Supersedes them while on.</summary>

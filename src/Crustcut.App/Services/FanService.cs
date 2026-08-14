@@ -21,6 +21,8 @@ public sealed class FanService : IFanControlService, IDisposable
     private readonly IFanController _fans;
     private readonly AppSettingsStore _settings;
     private readonly FanTuningStore _tuning;
+    private readonly PrimeOSTuner.Win.IPowerPlanClient? _power;
+    private readonly ThermalGovernor _governor = new();
     private readonly System.Timers.Timer _timer = new(2000) { AutoReset = true };
     private readonly object _gate = new();
 
@@ -34,11 +36,18 @@ public sealed class FanService : IFanControlService, IDisposable
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "PrimeOSTuner", "fan-control-active");
 
-    public FanService(IFanController fans, AppSettingsStore settings, FanTuningStore tuning)
+    // Present while the governor holds boost trimmed; carries the value to give back.
+    private static string GovernorMarkerPath() => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "PrimeOSTuner", "thermal-governor-active");
+
+    public FanService(IFanController fans, AppSettingsStore settings, FanTuningStore tuning,
+        PrimeOSTuner.Win.IPowerPlanClient? power = null)
     {
         _fans = fans;
         _settings = settings;
         _tuning = tuning;
+        _power = power;
 
         // Crash recovery FIRST: if the marker survived, the last run died while it owned
         // the fans — hand them back to the BIOS before doing anything else.
@@ -49,6 +58,17 @@ public sealed class FanService : IFanControlService, IDisposable
                 _fans.RestoreAuto();
                 File.Delete(MarkerPath());
                 EngineLog.Log("fans: previous run crashed while controlling fans — BIOS control restored");
+            }
+        }
+        catch { }
+
+        // Same story for the governor: dying while boost was trimmed must not leave a
+        // machine permanently slower. The marker holds the boost value to give back.
+        try
+        {
+            if (_power is not null && File.Exists(GovernorMarkerPath()))
+            {
+                RestoreBoost("previous run ended while boost was trimmed");
             }
         }
         catch { }
@@ -99,6 +119,18 @@ public sealed class FanService : IFanControlService, IDisposable
         }
     }
 
+    public bool ThermalGovernorEnabled
+    {
+        get => SafeSettings().ThermalGovernorEnabled;
+        set
+        {
+            var s = SafeSettings();
+            s.ThermalGovernorEnabled = value;
+            try { _settings.Save(s); } catch { }
+            Tick();   // switching off restores boost on this tick, not the next
+        }
+    }
+
     public FanStatus Status()
     {
         // RPM display correction (tachometer pulses-per-revolution differ by fan).
@@ -108,7 +140,7 @@ public sealed class FanService : IFanControlService, IDisposable
                 : f)
             .ToList();
         return new FanStatus(_engaged, _lastTemp, _lastDuty, fans, _conflictSuspected,
-            _resolvedMode, Math.Round(_smoothedLoad));
+            _resolvedMode, Math.Round(_smoothedLoad), BoostTrimmed);
     }
 
     public bool IsCalibrated => _tuning.HasCalibration;
@@ -218,6 +250,9 @@ public sealed class FanService : IFanControlService, IDisposable
             if (!s.FanControlEnabled)
             {
                 if (_engaged) Disengage("turned off");
+                // The governor lives under fan control: no fan loop, no temp readings,
+                // so a trimmed boost must be handed back rather than held blind.
+                if (_governor.Reduced) RestoreBoost("fan control turned off");
                 return;
             }
 
@@ -242,6 +277,8 @@ public sealed class FanService : IFanControlService, IDisposable
                     new Progress<string>(m => EngineLog.Log($"fans: {m}"))));
                 return;
             }
+
+            RunThermalGovernor(s, t);
 
             var selected = Enum.TryParse<FanMode>(s.FanMode, out var m) ? m : FanMode.Balanced;
             var mode = FanPolicy.ResolveMode(selected, _smoothedLoad, t, _resolvedMode);
@@ -272,6 +309,81 @@ public sealed class FanService : IFanControlService, IDisposable
         }
         catch { /* never let the loop die; next tick retries */ }
         finally { System.Threading.Monitor.Exit(_gate); }
+    }
+
+    /// <summary>
+    /// The user-facing version of "change CPU power by heat": when the CPU has been
+    /// genuinely hot for a sustained stretch, trim turbo boost (the supported powercfg
+    /// lever — measured 79→57°C on the reference machine); once it has stayed cool for a
+    /// minute, give it back. Voltage itself is deliberately untouched: that requires a
+    /// kernel driver writing undocumented registers, and its failure mode is crashes and
+    /// corrupted data, not noise.
+    /// </summary>
+    private void RunThermalGovernor(AppSettings s, double tempC)
+    {
+        if (_power is null) return;
+        if (!s.ThermalGovernorEnabled)
+        {
+            // Switched off while boost was trimmed → give the power back now.
+            if (_governor.Reduced) RestoreBoost("governor switched off");
+            return;
+        }
+
+        switch (_governor.Update(tempC, DateTime.UtcNow))
+        {
+            case GovernorAction.ReduceBoost:
+                try
+                {
+                    var current = _power.GetActiveSchemeSettingIndexFromRegistry(
+                        ThermalGovernor.SubProcessorGuid, ThermalGovernor.PerfBoostModeGuid);
+                    if (current == ThermalGovernor.BoostDisabled)
+                    {
+                        // Quiet CPU (or the user) already has boost off — nothing to trim,
+                        // and nothing we'd be entitled to give back later.
+                        _governor.NotifyRestored();
+                        return;
+                    }
+                    var restoreTo = current ?? ThermalGovernor.BoostWindowsDefault;
+                    File.WriteAllText(GovernorMarkerPath(), restoreTo.ToString());
+                    _power.SetValueIndexOnAllSchemes(
+                        ThermalGovernor.SubProcessorGuid, ThermalGovernor.PerfBoostModeGuid,
+                        ThermalGovernor.BoostDisabled);
+                    BoostTrimmed = true;
+                    EngineLog.Log($"governor: CPU held ≥{ThermalGovernor.ReduceAtC:F0}°C — turbo boost trimmed until it cools ({tempC:F0}°C now)");
+                }
+                catch (Exception ex) { EngineLog.Log($"governor: trim failed: {ex.Message}"); }
+                break;
+
+            case GovernorAction.RestoreBoost:
+                RestoreBoost($"cool for {ThermalGovernor.RestoreAfterSeconds:F0}s ({tempC:F0}°C)");
+                break;
+        }
+    }
+
+    /// <summary>Boost trimmed by the governor right now — surfaced in the Fans UI.</summary>
+    public bool BoostTrimmed { get; private set; }
+
+    private void RestoreBoost(string reason)
+    {
+        if (_power is null) return;
+        try
+        {
+            var restoreTo = ThermalGovernor.BoostWindowsDefault;
+            try
+            {
+                if (File.Exists(GovernorMarkerPath()) &&
+                    int.TryParse(File.ReadAllText(GovernorMarkerPath()).Trim(), out var saved))
+                    restoreTo = saved;
+            }
+            catch { }
+            _power.SetValueIndexOnAllSchemes(
+                ThermalGovernor.SubProcessorGuid, ThermalGovernor.PerfBoostModeGuid, restoreTo);
+            try { File.Delete(GovernorMarkerPath()); } catch { }
+            _governor.NotifyRestored();
+            BoostTrimmed = false;
+            EngineLog.Log($"governor: turbo boost restored ({reason})");
+        }
+        catch (Exception ex) { EngineLog.Log($"governor: restore failed: {ex.Message}"); }
     }
 
     /// <summary>
@@ -317,6 +429,7 @@ public sealed class FanService : IFanControlService, IDisposable
         _timer.Stop();
         _timer.Dispose();
         if (_engaged) Disengage("app closing");
+        if (_governor.Reduced) RestoreBoost("app closing");
         _fans.Dispose();
     }
 }

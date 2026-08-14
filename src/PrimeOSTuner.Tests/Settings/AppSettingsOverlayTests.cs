@@ -61,6 +61,7 @@ public class AppSettingsOverlayTests
         s.RamAutoOptimizeOnThreshold.Should().BeFalse();
         s.StandbyAutoPurgeEnabled.Should().BeFalse();
         s.FanControlEnabled.Should().BeFalse();
+        s.ThermalGovernorEnabled.Should().BeFalse();
         s.StartAtBoot.Should().BeFalse();
     }
 }

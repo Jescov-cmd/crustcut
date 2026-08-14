@@ -272,8 +272,9 @@ public sealed class Composition
             new AppUpdateInstaller(new UpdateInstaller(downloadHttp)));
 
         // ── Fans: curve control loop (owns the hardware handle and all safety) ────────
+        // powerClient gives the thermal governor its boost lever.
         FanService = new FanService(new PrimeOSTuner.Win.Fans.LhmFanController(), settingsStore,
-            new FanTuningStore(FanTuningStore.DefaultPath()));
+            new FanTuningStore(FanTuningStore.DefaultPath()), powerClient);
         Fans = new FansViewModel(FanService);
         // Auto mode follows real system load, so a light 2D game stays quiet and a heavy
         // workload ramps — whether or not it is a "game" at all.

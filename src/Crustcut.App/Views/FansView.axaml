@@ -68,6 +68,29 @@
             <TextBlock Text="{Binding CalibrationText}" Classes="label"
                        VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="420"/>
           </StackPanel>
+
+          <!-- Heat-based power management: the safe version of "lower the CPU's power
+               when it's hot". Boost, not voltage — voltage needs a kernel driver and can
+               crash or corrupt; boost is Windows' own supported lever. -->
+          <Border Background="{DynamicResource SurfaceRail}" CornerRadius="4" Padding="12,10">
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Spacing="3" MaxWidth="470" HorizontalAlignment="Left">
+                  <TextBlock Text="COOL-DOWN ASSIST" Classes="label"/>
+                  <TextBlock FontSize="11.5" Foreground="{DynamicResource Text2}" TextWrapping="Wrap"
+                             Text="If the CPU stays above 85 ° for 20 seconds, its turbo boost is trimmed so it actually cools instead of boosting back into the heat. Full power returns by itself after a cool minute. Costs a few percent in short bursts while active; sustained speed is unaffected."/>
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" OnContent="" OffContent=""
+                              VerticalAlignment="Top"
+                              IsChecked="{Binding GovernorEnabled, Mode=TwoWay}"/>
+              </Grid>
+              <Border Background="#2247B8FF" CornerRadius="8" Padding="11,7"
+                      IsVisible="{Binding BoostTrimmed}">
+                <TextBlock FontSize="11" Foreground="{DynamicResource Text1}" TextWrapping="Wrap"
+                           Text="Cooling down: turbo boost is trimmed right now. It comes back automatically once the CPU has been cool for a minute."/>
+              </Border>
+            </StackPanel>
+          </Border>
         </StackPanel>
       </Border>
 

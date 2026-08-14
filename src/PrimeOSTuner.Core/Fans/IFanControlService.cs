@@ -11,7 +11,8 @@ public sealed record FanStatus(
     IReadOnlyList<FanInfo> Fans,
     bool ConflictSuspected,
     FanMode ResolvedMode = FanMode.Balanced,
-    double LoadPercent = 0);
+    double LoadPercent = 0,
+    bool BoostTrimmed = false);
 
 /// <summary>
 /// The running fan-control loop. Enabled/Mode persist to settings; the implementation
@@ -23,6 +24,10 @@ public interface IFanControlService
     bool Enabled { get; set; }
     FanMode Mode { get; set; }
     FanStatus Status();
+
+    /// <summary>Heat-based power management: trim turbo boost while the CPU holds at
+    /// sustained high temperature, restore it once cool. Persists to settings.</summary>
+    bool ThermalGovernorEnabled { get; set; }
 
     /// <summary>True once this machine's fans have been measured.</summary>
     bool IsCalibrated { get; }

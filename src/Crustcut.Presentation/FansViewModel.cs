@@ -26,6 +26,7 @@ public partial class FansViewModel : ObservableObject
     [ObservableProperty] private bool _conflictSuspected;
     [ObservableProperty] private bool _isCalibrating;
     [ObservableProperty] private string _calibrationText = "";
+    [ObservableProperty] private bool _boostTrimmed;
 
     public ObservableCollection<FanRowVm> Fans { get; } = new();
 
@@ -45,6 +46,23 @@ public partial class FansViewModel : ObservableObject
         _service.Enabled = on;
         Enabled = on;
         Refresh();
+    }
+
+    /// <summary>
+    /// Heat-based power management. This is the safe form of "change the CPU's power by
+    /// temperature": sustained ≥85°C trims turbo boost, a cool minute restores it.
+    /// Bound two-way from the view's toggle.
+    /// </summary>
+    public bool GovernorEnabled
+    {
+        get => _service?.ThermalGovernorEnabled ?? false;
+        set
+        {
+            if (_service is null) return;
+            _service.ThermalGovernorEnabled = value;
+            OnPropertyChanged(nameof(GovernorEnabled));
+            Refresh();
+        }
     }
 
     public void SelectMode(FanMode mode)
@@ -96,6 +114,7 @@ public partial class FansViewModel : ObservableObject
         TempText = s.TempC is double t ? $"{t:F0} °C" : "—";
         DutyText = s.Engaged && s.DutyPercent is double d ? $"{d:F0} %" : "auto (BIOS)";
         ConflictSuspected = s.ConflictSuspected;
+        BoostTrimmed = s.BoostTrimmed;
         StatusText = !Enabled
             ? "Fans are under your motherboard's automatic control."
             : s.ConflictSuspected
