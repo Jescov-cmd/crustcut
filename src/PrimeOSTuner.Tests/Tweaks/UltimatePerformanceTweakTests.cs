@@ -56,29 +56,51 @@ public class UltimatePerformanceTweakTests
         ppc.Verify(p => p.RunPowercfg(It.Is<string>(s => s.StartsWith("/duplicatescheme"))), Times.Never);
     }
 
+    /// <summary>
+    /// The normal case IS "the user is on Ultimate Performance" — enabling the plan is
+    /// pointless without switching to it. Windows refuses to delete the active plan, and
+    /// the old code silently skipped it: the toggle claimed success, removed nothing, and
+    /// the user was told to go fix it in Control Panel by hand. Now revert steps the
+    /// machine onto Balanced first, then removes every Ultimate scheme.
+    /// </summary>
     [Fact]
-    public async Task RevertAsync_deletes_every_ultimate_scheme_except_the_active_one()
+    public async Task RevertAsync_switches_to_Balanced_first_so_the_active_scheme_can_be_deleted()
     {
+        var balanced = Guid.Parse("381b4222-f694-41f0-9685-ff5bb260df2e");
         var dup1 = Guid.Parse("11111111-1111-1111-1111-111111111111");
-        var dup2 = Guid.Parse("22222222-2222-2222-2222-222222222222");
         var activeUltimate = Guid.Parse("33333333-3333-3333-3333-333333333333");
         var ppc = new Mock<IPowerPlanClient>();
         ppc.Setup(p => p.GetActivePlan()).Returns(new PowerPlan(activeUltimate, "Ultimate Performance"));
         ppc.Setup(p => p.ListPlans()).Returns(new[]
         {
             new PowerPlan(dup1, "Ultimate Performance"),
-            new PowerPlan(dup2, "Ultimate Performance"),
             new PowerPlan(activeUltimate, "Ultimate Performance"),
-            new PowerPlan(Guid.Parse("381b4222-f694-41f0-9685-ff5bb260df2e"), "Balanced"),
+            new PowerPlan(balanced, "Balanced"),
         });
 
         var tweak = new UltimatePerformanceTweak(ppc.Object);
         var result = await tweak.RevertAsync("\"ignored-stale-guid\"");
 
         result.Succeeded.Should().BeTrue();
+        ppc.Verify(p => p.SetActivePlan(balanced), Times.Once);
         ppc.Verify(p => p.RunPowercfg($"/delete {dup1:D}"), Times.Once);
-        ppc.Verify(p => p.RunPowercfg($"/delete {dup2:D}"), Times.Once);
-        ppc.Verify(p => p.RunPowercfg($"/delete {activeUltimate:D}"), Times.Never); // can't delete active
+        ppc.Verify(p => p.RunPowercfg($"/delete {activeUltimate:D}"), Times.Once);
+        result.Message.Should().Contain("Balanced");
+    }
+
+    [Fact]
+    public async Task RevertAsync_does_not_touch_the_active_plan_when_it_is_not_ultimate()
+    {
+        var gone = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var ppc = new Mock<IPowerPlanClient>();
+        ppc.Setup(p => p.GetActivePlan()).Returns(new PowerPlan(Guid.Parse("381b4222-f694-41f0-9685-ff5bb260df2e"), "Balanced"));
+        ppc.Setup(p => p.ListPlans()).Returns(new[] { new PowerPlan(gone, "Ultimate Performance") });
+
+        var tweak = new UltimatePerformanceTweak(ppc.Object);
+        (await tweak.RevertAsync("\"stale\"")).Succeeded.Should().BeTrue();
+
+        ppc.Verify(p => p.SetActivePlan(It.IsAny<Guid>()), Times.Never);
+        ppc.Verify(p => p.RunPowercfg($"/delete {gone:D}"), Times.Once);
     }
 
     [Fact]

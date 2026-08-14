@@ -53,22 +53,53 @@ public sealed class UltimatePerformanceTweak : ITweak, ICategorizedTweak
         return Task.FromResult(TweakResult.Success(JsonSerializer.Serialize(match.Groups["guid"].Value)));
     }
 
+    /// <summary>The Balanced plan every Windows install ships with.</summary>
+    private static readonly Guid BalancedGuid = new("381b4222-f694-41f0-9685-ff5bb260df2e");
+
     public Task<TweakResult> RevertAsync(string undoData, CancellationToken ct = default)
     {
-        // Remove every Ultimate Performance scheme present (older builds could create
-        // several). Skip the active scheme — powercfg can't delete it — and treat a
-        // "doesn't exist" failure as success, since the goal is simply "none present".
+        // Windows refuses to delete the ACTIVE power plan. The old code "handled" that by
+        // silently skipping it — so if the user was ON Ultimate Performance (the normal
+        // case, since enabling it is pointless without switching to it), the toggle
+        // reported success while removing nothing, and the user was told to go fix it in
+        // Control Panel themselves. Step off the plan first, then delete.
+        var ultimates = _power.ListPlans()
+            .Where(p => p.Name.Equals("Ultimate Performance", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        if (ultimates.Count == 0) return Task.FromResult(TweakResult.Success());
+
         Guid? active = null;
         try { active = _power.GetActivePlan().Guid; } catch { /* best effort */ }
 
-        foreach (var plan in _power.ListPlans()
-                     .Where(p => p.Name.Equals("Ultimate Performance", StringComparison.OrdinalIgnoreCase)))
+        var switched = false;
+        if (active is Guid a && ultimates.Any(p => p.Guid == a))
         {
-            if (active == plan.Guid) continue;
-            try { _power.RunPowercfg($"/delete {plan.Guid:D}"); }
-            catch { /* already gone, or in use — ignore; revert is best-effort cleanup */ }
+            try
+            {
+                _power.SetActivePlan(BalancedGuid);
+                switched = true;
+            }
+            catch (Exception ex)
+            {
+                // No Balanced plan (heavily customised machine): fall back to any
+                // non-Ultimate plan rather than telling the user to do it by hand.
+                var fallback = _power.ListPlans().FirstOrDefault(p =>
+                    !p.Name.Equals("Ultimate Performance", StringComparison.OrdinalIgnoreCase));
+                if (fallback is null)
+                    return Task.FromResult(TweakResult.Failure(
+                        $"Couldn't switch off the Ultimate Performance plan: {ex.Message}"));
+                _power.SetActivePlan(fallback.Guid);
+                switched = true;
+            }
         }
-        return Task.FromResult(TweakResult.Success());
+
+        foreach (var plan in ultimates)
+        {
+            try { _power.RunPowercfg($"/delete {plan.Guid:D}"); }
+            catch { /* already gone — the goal is simply "none present" */ }
+        }
+        return Task.FromResult(TweakResult.Success(null,
+            switched ? "Switched to the Balanced plan and removed Ultimate Performance." : null));
     }
 
     public Task<string> PreviewAsync(CancellationToken ct = default)
