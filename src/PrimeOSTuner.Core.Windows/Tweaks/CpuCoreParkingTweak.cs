@@ -1,19 +1,18 @@
+using System.Text.Json;
 using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class CpuCoreParkingTweak : ITweak, ICategorizedTweak
+public sealed class CpuCoreParkingTweak : ITweak, ICategorizedTweak, ISelfRevertingTweak
 {
     public string Category => "power";
     public string? RiskNote => "Runs hotter: keeps every CPU core awake instead of letting idle ones sleep, so the system stays warmer and the fans spin up more — especially at the desktop.";
 
-    private const string Subgroup = "SUB_PROCESSOR";
-    private const string Setting = "CPMINCORES";
     private const int TargetValue = 100;
+    private const int WindowsDefault = 0;   // parking allowed — what every shipped plan uses
 
-    // GUIDs for the same subgroup/setting, used to read the value from the registry.
     // CPMINCORES is a HIDDEN power setting, so `powercfg /query` returns nothing for it —
-    // the probe has to read the persisted value directly.
+    // probing reads the persisted value straight from the registry.
     private const string ProcessorSubgroupGuid = "54533251-82be-4824-96c1-47b60b740d00";
     private const string CoreParkingMinCoresGuid = "0cc5b647-c1df-4637-891a-dec35c318583";
 
@@ -28,10 +27,10 @@ public sealed class CpuCoreParkingTweak : ITweak, ICategorizedTweak
 
     public CpuCoreParkingTweak(IPowerPlanClient client) { _client = client; }
 
+    private sealed record Undo(Dictionary<Guid, int?>? PerScheme);
+
     public Task<TweakState> ProbeAsync(CancellationToken ct = default)
     {
-        // Read from the registry, not powercfg /query — CPMINCORES is hidden and the query
-        // returns nothing, which made the tile always read "off" even after a successful apply.
         var current = _client.GetActiveSchemeSettingIndexFromRegistry(ProcessorSubgroupGuid, CoreParkingMinCoresGuid);
         if (current is null) return Task.FromResult(TweakState.NotApplied);
         return Task.FromResult(current.Value == TargetValue ? TweakState.Applied : TweakState.NotApplied);
@@ -39,22 +38,56 @@ public sealed class CpuCoreParkingTweak : ITweak, ICategorizedTweak
 
     public Task<TweakResult> ApplyAsync(IProgress<int>? progress = null, CancellationToken ct = default)
     {
-        var previous = _client.GetActiveSchemeSettingIndexFromRegistry(ProcessorSubgroupGuid, CoreParkingMinCoresGuid) ?? 0;
-        _client.SetActiveAcValueIndex(Subgroup, Setting, TargetValue);
-        return Task.FromResult(TweakResult.Success(previous.ToString()));
+        // Every scheme, like the boost tweak: power settings belong to a scheme, and
+        // writing only the active one evaporates when the user changes plan.
+        var previous = _client.SetValueIndexOnAllSchemes(
+            ProcessorSubgroupGuid, CoreParkingMinCoresGuid, TargetValue);
+        return Task.FromResult(TweakResult.Success(
+            JsonSerializer.Serialize(new Undo(new Dictionary<Guid, int?>(previous)))));
     }
 
     public Task<TweakResult> RevertAsync(string undoData, CancellationToken ct = default)
     {
-        if (!int.TryParse(undoData, out var prev))
-            return Task.FromResult(TweakResult.Failure("Invalid undo data"));
-        _client.SetActiveAcValueIndex(Subgroup, Setting, prev);
+        // Legacy undo from older builds is a bare int ("0"). And whatever the format, an
+        // undo that "restores" the ON value is poisoned — recorded by an apply that ran
+        // while the tweak was already applied. Reverting to it makes the toggle snap
+        // back on, so it gets the Windows default instead.
+        if (int.TryParse(undoData, out var legacy))
+        {
+            return RestoreEverywhere(legacy == TargetValue ? WindowsDefault : legacy);
+        }
+        try
+        {
+            var undo = JsonSerializer.Deserialize<Undo>(undoData);
+            if (undo?.PerScheme is { Count: > 0 } perScheme)
+            {
+                var sanitised = perScheme.ToDictionary(
+                    kv => kv.Key,
+                    kv => kv.Value == TargetValue ? WindowsDefault : kv.Value);
+                _client.RestoreValueIndexPerScheme(
+                    ProcessorSubgroupGuid, CoreParkingMinCoresGuid, sanitised, WindowsDefault);
+                return Task.FromResult(TweakResult.Success());
+            }
+        }
+        catch { /* unreadable → default below */ }
+        return RestoreEverywhere(WindowsDefault);
+    }
+
+    /// <summary>Undo lost or applied outside the app: back to the Windows default.</summary>
+    public Task<TweakResult> RevertToDefaultAsync(CancellationToken ct = default)
+        => RestoreEverywhere(WindowsDefault);
+
+    private Task<TweakResult> RestoreEverywhere(int value)
+    {
+        _client.RestoreValueIndexPerScheme(
+            ProcessorSubgroupGuid, CoreParkingMinCoresGuid,
+            new Dictionary<Guid, int?>(), value);
         return Task.FromResult(TweakResult.Success());
     }
 
     public Task<string> PreviewAsync(CancellationToken ct = default)
     {
         var current = _client.GetActiveSchemeSettingIndexFromRegistry(ProcessorSubgroupGuid, CoreParkingMinCoresGuid);
-        return Task.FromResult($"Will run powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPMINCORES 100. Current value: {current?.ToString() ?? "default"}.");
+        return Task.FromResult($"Will set CPMINCORES to 100 on every power plan. Current value: {current?.ToString() ?? "default"}.");
     }
 }

@@ -195,7 +195,10 @@ public partial class OptimizeViewModel : ObservableObject
             return;
         }
 
-        row.UndoData = result.UndoData;
+        // ??= : the FIRST apply's undo is the pristine pre-Crustcut value. Re-applying an
+        // already-applied tweak captures the applied state as its "previous", and letting
+        // that overwrite the pristine undo is how toggles ended up reverting to ON.
+        row.UndoData ??= result.UndoData;
         // Mark reboot BEFORE writing history so a history-write failure can't swallow it.
         if (row.RequiresReboot) MarkPendingReboot(row);
         try

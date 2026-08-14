@@ -62,6 +62,47 @@ public class PowerPlanTweakTests
         client.Verify(c => c.SetActivePlan(missing), Times.Never);
     }
 
+    /// <summary>
+    /// The "this optimizer won't disable" bug. Applying while ALREADY on Ultimate
+    /// Performance (OPTIMIZE NOW, then a manual toggle) records Ultimate itself as the
+    /// "previous" plan — so revert switched Ultimate → Ultimate, reported success, and
+    /// the toggle snapped back on forever. A poisoned previous gets the fallback.
+    /// </summary>
+    [Fact]
+    public async Task Revert_falls_back_when_the_saved_previous_plan_is_itself_Ultimate()
+    {
+        var dupUltimate = Guid.Parse("9d3904d8-f70d-4c4f-8e43-3e828f88ac33");
+        var client = new Mock<IPowerPlanClient>();
+        client.Setup(c => c.ListPlans()).Returns(new[]
+        {
+            new PowerPlan(BalancedGuid, "Balanced"),
+            new PowerPlan(dupUltimate, "Ultimate Performance"),
+        });
+
+        var tweak = new PowerPlanTweak(client.Object);
+        var result = await tweak.RevertAsync(dupUltimate.ToString("D"));
+
+        result.Succeeded.Should().BeTrue();
+        client.Verify(c => c.SetActivePlan(BalancedGuid), Times.Once);
+        client.Verify(c => c.SetActivePlan(dupUltimate), Times.Never);
+    }
+
+    [Fact]
+    public async Task Revert_to_default_switches_to_Balanced_without_undo_data()
+    {
+        var client = new Mock<IPowerPlanClient>();
+        client.Setup(c => c.ListPlans()).Returns(new[]
+        {
+            new PowerPlan(BalancedGuid, "Balanced"),
+            new PowerPlan(UltimateGuid, "Ultimate Performance"),
+        });
+
+        var tweak = new PowerPlanTweak(client.Object);
+        (await tweak.RevertToDefaultAsync()).Succeeded.Should().BeTrue();
+
+        client.Verify(c => c.SetActivePlan(BalancedGuid), Times.Once);
+    }
+
     // Regression: Apply activates a DUPLICATED Ultimate Performance scheme whose GUID is
     // NOT the template GUID. The probe must match by NAME, or the tile always reads "off".
     [Fact]

@@ -2,7 +2,7 @@ using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Tweaks;
 
-public sealed class PowerPlanTweak : ITweak, ICategorizedTweak
+public sealed class PowerPlanTweak : ITweak, ICategorizedTweak, ISelfRevertingTweak
 {
     private readonly IPowerPlanClient _client;
 
@@ -39,18 +39,34 @@ public sealed class PowerPlanTweak : ITweak, ICategorizedTweak
 
     public Task<TweakResult> RevertAsync(string undoData, CancellationToken ct = default)
     {
-        if (!Guid.TryParse(undoData, out var previous))
-            return Task.FromResult(TweakResult.Failure("Invalid undo data"));
+        Guid.TryParse(undoData, out var previous);
 
-        // The saved "previous" plan can be gone — the user deleted it, or a Windows update
-        // removed an OEM plan. powercfg /setactive on a missing GUID fails with "Invalid
-        // Parameters" and the whole revert throws, making it impossible to turn the tweak
-        // off (error popup, toggle snaps back on). Fall back to a real, existing plan
-        // (prefer Balanced) so turning it off always works.
+        // Two ways the saved "previous" plan betrays the revert:
+        // - it's GONE (user deleted it, or a Windows update removed an OEM plan) —
+        //   /setactive on a missing GUID throws and the toggle snaps back on;
+        // - it IS an Ultimate Performance plan. That happens when apply ran while the
+        //   machine was already on Ultimate (an OPTIMIZE NOW followed by a manual toggle
+        //   does exactly this): the recorded "previous" is the plan itself, so revert
+        //   "switched" Ultimate → Ultimate, reported success, and the tweak never turned
+        //   off. Poisoned undo gets the fallback, same as missing undo.
         var plans = _client.ListPlans();
-        var target = plans.Any(p => p.Guid == previous) ? previous : (PickFallback(plans) ?? previous);
+        var saved = plans.FirstOrDefault(p => p.Guid == previous);
+        var target = saved is not null &&
+                     !saved.Name.Equals("Ultimate Performance", StringComparison.OrdinalIgnoreCase)
+            ? saved.Guid
+            : PickFallback(plans) ?? previous;
 
         _client.SetActivePlan(target);
+        return Task.FromResult(TweakResult.Success());
+    }
+
+    /// <summary>Undo lost or applied outside the app: step back to a sane everyday plan.</summary>
+    public Task<TweakResult> RevertToDefaultAsync(CancellationToken ct = default)
+    {
+        var fallback = PickFallback(_client.ListPlans());
+        if (fallback is null)
+            return Task.FromResult(TweakResult.Failure("No other power plan exists to switch to."));
+        _client.SetActivePlan(fallback.Value);
         return Task.FromResult(TweakResult.Success());
     }
 

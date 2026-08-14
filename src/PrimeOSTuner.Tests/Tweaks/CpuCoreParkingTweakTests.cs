@@ -12,17 +12,18 @@ public class CpuCoreParkingTweakTests
     private const string SetGuid = "0cc5b647-c1df-4637-891a-dec35c318583";
 
     [Fact]
-    public async Task Apply_calls_setacvalueindex_with_SUB_PROCESSOR_CPMINCORES_100()
+    public async Task Apply_writes_CPMINCORES_100_to_every_scheme()
     {
         var client = new Mock<IPowerPlanClient>();
-        client.Setup(c => c.GetActiveSchemeSettingIndexFromRegistry(SubGuid, SetGuid)).Returns(0);
+        client.Setup(c => c.SetValueIndexOnAllSchemes(SubGuid, SetGuid, 100))
+              .Returns(new Dictionary<Guid, int?> { [Guid.NewGuid()] = 0 });
 
         var tweak = new CpuCoreParkingTweak(client.Object);
         var result = await tweak.ApplyAsync();
 
         result.Succeeded.Should().BeTrue();
-        client.Verify(c => c.SetActiveAcValueIndex("SUB_PROCESSOR", "CPMINCORES", 100), Times.Once);
-        result.UndoData.Should().Contain("0");
+        client.Verify(c => c.SetValueIndexOnAllSchemes(SubGuid, SetGuid, 100), Times.Once);
+        result.UndoData.Should().Contain("PerScheme");
     }
 
     [Fact]
@@ -51,14 +52,43 @@ public class CpuCoreParkingTweakTests
     }
 
     [Fact]
-    public async Task Revert_restores_previous_index()
+    public async Task Revert_restores_a_legacy_int_undo_everywhere()
     {
         var client = new Mock<IPowerPlanClient>();
         var tweak = new CpuCoreParkingTweak(client.Object);
 
-        var result = await tweak.RevertAsync("25");
+        (await tweak.RevertAsync("25")).Succeeded.Should().BeTrue();
 
-        result.Succeeded.Should().BeTrue();
-        client.Verify(c => c.SetActiveAcValueIndex("SUB_PROCESSOR", "CPMINCORES", 25), Times.Once);
+        client.Verify(c => c.RestoreValueIndexPerScheme(
+            SubGuid, SetGuid, It.IsAny<IReadOnlyDictionary<Guid, int?>>(), 25), Times.Once);
+    }
+
+    /// <summary>
+    /// An undo that "restores" 100 was recorded by an apply that ran while the tweak was
+    /// already applied. Reverting to it turns the tweak back ON — the exact "this
+    /// optimizer won't disable" bug. Poisoned undo gets the Windows default instead.
+    /// </summary>
+    [Fact]
+    public async Task Revert_treats_an_undo_equal_to_the_on_value_as_poisoned()
+    {
+        var client = new Mock<IPowerPlanClient>();
+        var tweak = new CpuCoreParkingTweak(client.Object);
+
+        (await tweak.RevertAsync("100")).Succeeded.Should().BeTrue();
+
+        client.Verify(c => c.RestoreValueIndexPerScheme(
+            SubGuid, SetGuid, It.IsAny<IReadOnlyDictionary<Guid, int?>>(), 0), Times.Once);
+    }
+
+    [Fact]
+    public async Task Revert_to_default_works_without_any_undo_data()
+    {
+        var client = new Mock<IPowerPlanClient>();
+        var tweak = new CpuCoreParkingTweak(client.Object);
+
+        (await tweak.RevertToDefaultAsync()).Succeeded.Should().BeTrue();
+
+        client.Verify(c => c.RestoreValueIndexPerScheme(
+            SubGuid, SetGuid, It.IsAny<IReadOnlyDictionary<Guid, int?>>(), 0), Times.Once);
     }
 }
