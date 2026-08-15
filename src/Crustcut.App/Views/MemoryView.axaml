@@ -46,6 +46,34 @@
                  Foreground="{DynamicResource Text3}" Margin="0,0,0,4"/>
       <TextBlock x:Name="StatusText" FontSize="11.5"
                  Foreground="{DynamicResource Text3}" Margin="0,0,0,12"/>
+
+      <!-- Live visibility beats cleaning: on a RAM-starved machine the real fix is
+           closing the right app, and this is how you find it. -->
+      <Border Background="{DynamicResource SurfacePanel}" BorderBrush="{DynamicResource Hairline}"
+              BorderThickness="1" CornerRadius="3" Padding="14,10" Margin="0,0,0,14"
+              MaxWidth="560" HorizontalAlignment="Left">
+        <StackPanel Spacing="6">
+          <TextBlock Text="USING THE MOST MEMORY RIGHT NOW" FontSize="10.5" FontWeight="SemiBold"
+                     Foreground="{DynamicResource Text3}"/>
+          <ItemsControl ItemsSource="{Binding TopMemory}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="*,110,90" Margin="0,2,0,0">
+                  <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="12"
+                             Foreground="{DynamicResource Text1}" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Column="1" Text="{Binding Detail}" FontSize="10.5"
+                             Foreground="{DynamicResource Text3}" VerticalAlignment="Center"
+                             HorizontalAlignment="Right"/>
+                  <TextBlock Grid.Column="2" Text="{Binding UsageMb}" FontSize="12"
+                             FontFamily="Consolas, Cascadia Mono, monospace"
+                             Foreground="{DynamicResource Text0}" HorizontalAlignment="Right"
+                             VerticalAlignment="Center"/>
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
     </StackPanel>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">

@@ -21,7 +21,15 @@ public static class BoostScoreCalculator
     {
         // One-shot actions (cache flushes, health checks) probe NotApplied forever — they
         // have no "on" state, so counting them makes 100 permanently unreachable.
-        var eligible = tweaks.Where(t => !t.IsDestructive && t is not IOneShotTweak).ToList();
+        // Opt-in tweaks are excluded too: they're the machine-specific gambles (hardware
+        // GPU scheduling, MPO, the desktop restyle, Quiet CPU) that bundles refuse to
+        // apply — so the score must not dock points for declining them. Leaving them in
+        // meant the only way to "improve" the number was to apply exactly the settings
+        // that break machines like the reference one.
+        var eligible = tweaks
+            .Where(t => !t.IsDestructive && t is not IOneShotTweak
+                        && t is not IOptInTweak { OptIn: true })
+            .ToList();
         double points = 0;
         int counted = 0;
 

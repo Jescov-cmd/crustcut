@@ -16,6 +16,28 @@
       <TextBlock Text="History" Classes="pageTitle" Margin="0,16,0,10"/>
       <TextBlock Text="{Binding Status}" FontSize="12"
                  Foreground="{DynamicResource Text2}" Margin="0,0,0,14"/>
+
+      <!-- The engine's own diary: automatic cleanups (with names), fan decisions,
+           Cool-Down Assist trims, upgrade heals. Everything Crustcut does on its own
+           should be visible here — invisible background behaviour is how this app's
+           worst bugs stayed hidden. -->
+      <Border Background="{DynamicResource SurfacePanel}" BorderBrush="{DynamicResource Hairline}"
+              BorderThickness="1" CornerRadius="3" Padding="14,10" Margin="0,0,0,14">
+        <StackPanel Spacing="6">
+          <TextBlock Text="WHAT CRUSTCUT DID RECENTLY (automatic actions)" FontSize="10.5"
+                     FontWeight="SemiBold" Foreground="{DynamicResource Text3}"/>
+          <ItemsControl x:Name="ActivityList">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding}" FontSize="11"
+                           FontFamily="Consolas, Cascadia Mono, monospace"
+                           Foreground="{DynamicResource Text2}" TextWrapping="Wrap"
+                           Margin="0,1,0,0"/>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
     </StackPanel>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">

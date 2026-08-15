@@ -22,6 +22,9 @@ public partial class MainWindow : Window
         _pages = new PageFactory(app);
         DataContext = shell;
 
+        var v = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
+        VersionLabel.Text = v is null ? "" : $"v{v.ToString(3)}";
+
         _shell.PropertyChanged += OnShellPropertyChanged;
         ShowActivePage();
     }

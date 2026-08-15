@@ -20,6 +20,46 @@ public partial class MemoryPriorityViewModel : ObservableObject
 
     public ObservableCollection<PriorityRuleVm> Rules { get; } = new();
 
+    /// <summary>One line of the live "using the most memory" list.</summary>
+    public sealed record TopMemoryRowVm(string Name, string UsageMb, string Detail);
+
+    /// <summary>
+    /// The apps eating the most RAM right now, grouped by executable. On a machine that
+    /// lives near its memory ceiling this list is worth more than any cleaner: freeing
+    /// memory that running apps still own just churns, but CLOSING the right app is a
+    /// real gigabyte. Seeing beats sweeping.
+    /// </summary>
+    public ObservableCollection<TopMemoryRowVm> TopMemory { get; } = new();
+
+    public async Task RefreshTopMemoryAsync()
+    {
+        var rows = await Task.Run(() =>
+        {
+            var groups = new Dictionary<string, (long Bytes, int Count)>(StringComparer.OrdinalIgnoreCase);
+            foreach (var p in Process.GetProcesses())
+            {
+                try
+                {
+                    var g = groups.GetValueOrDefault(p.ProcessName);
+                    groups[p.ProcessName] = (g.Bytes + p.WorkingSet64, g.Count + 1);
+                }
+                catch { /* exited mid-scan */ }
+                finally { p.Dispose(); }
+            }
+            return groups
+                .Where(kv => !kv.Key.Equals("Memory Compression", StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(kv => kv.Value.Bytes)
+                .Take(6)
+                .Select(kv => new TopMemoryRowVm(
+                    kv.Key,
+                    $"{kv.Value.Bytes / (1024.0 * 1024):N0} MB",
+                    kv.Value.Count > 1 ? $"{kv.Value.Count} processes" : ""))
+                .ToList();
+        });
+        TopMemory.Clear();
+        foreach (var r in rows) TopMemory.Add(r);
+    }
+
     /// <summary>Levels offered in the priority dropdown. Realtime is intentionally absent.</summary>
     public static IReadOnlyList<PriorityLevel> PriorityLevels { get; } = Enum.GetValues<PriorityLevel>();
 

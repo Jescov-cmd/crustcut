@@ -59,7 +59,9 @@
             <Image Source="avares://Crustcut/Assets/wordmark.png" Height="20"
                    VerticalAlignment="Center"
                    RenderOptions.BitmapInterpolationMode="HighQuality"/>
-            <TextBlock Text="v0.9.3" FontSize="9.5"
+            <!-- Set from the real assembly version in code-behind; a hardcoded string
+                 here silently drifted a version behind at least once. -->
+            <TextBlock x:Name="VersionLabel" FontSize="9.5"
                        Foreground="{DynamicResource Text3}"
                        VerticalAlignment="Center" Margin="0,6,0,0"/>
           </StackPanel>
