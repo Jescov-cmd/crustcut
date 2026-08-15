@@ -8,8 +8,7 @@
         Background="{DynamicResource SurfaceBase}"
         Icon="avares://Crustcut/Assets/icon.ico"
         FontFamily="Segoe UI"
-        ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaTitleBarHeightHint="0">
+        SystemDecorations="None">
 
   <Window.Styles>
     <!-- Nav row: square, full-bleed, hairline-free. Selection is a filled row plus a 3px
@@ -45,9 +44,12 @@
       <Setter Property="Margin" Value="12,16,0,5"/>
     </Style>
 
-    <!-- Avalonia 12 draws its own managed title bar (title text + caption buttons) when
-         the client area is extended — which painted a second "Crustcut" straight over
-         ours. TitleBarHeightHint=0 on the Window collapses it. -->
+    <!-- SystemDecorations=None, not ExtendClientArea: two attempts at "extend and hide
+         the chrome" left EITHER Avalonia's drawn title OR the native caption buttons
+         painting over ours (and the self-render screenshots can't see native chrome, so
+         each looked fixed until the user saw the real screen). Borderless is the only
+         deterministic answer: nothing draws chrome but us. Resize is reimplemented via
+         edge grips in code-behind; rounded corners come back via DWM in code. -->
 
     <!-- Window controls: square, borderless, generous hit area — ours, not Windows'. -->
     <Style Selector="Button.winctl">
@@ -75,9 +77,10 @@
     </Style>
   </Window.Styles>
 
-  <!-- Custom chrome: the native title bar is gone (ExtendClientArea + NoChrome), so the
-       top strip is ours — wordmark on the left, square minimize/close on the right, the
-       whole strip draggable. This is what removes the stock icon-and-title row. -->
+  <!-- Custom chrome: the window is borderless, so the top strip is ours — wordmark on
+       the left, square minimize/close on the right, the whole strip draggable. The
+       invisible edge borders named Resize* are the window's resize grips. -->
+  <Panel>
   <Grid RowDefinitions="34,*">
 
     <Border Grid.Row="0" Background="{DynamicResource SurfaceRail}"
@@ -185,4 +188,16 @@
       </DockPanel>
     </Grid>
   </Grid>
+
+  <!-- Resize grips: 5px invisible strips on every edge and 10px corners, on top of
+       everything. Borderless windows have no native resize border, so these ARE it. -->
+  <Border Name="ResizeN"  Height="5" VerticalAlignment="Top" Background="Transparent" Cursor="SizeNorthSouth" PointerPressed="ResizePressed"/>
+  <Border Name="ResizeS"  Height="5" VerticalAlignment="Bottom" Background="Transparent" Cursor="SizeNorthSouth" PointerPressed="ResizePressed"/>
+  <Border Name="ResizeW"  Width="5" HorizontalAlignment="Left" Background="Transparent" Cursor="SizeWestEast" PointerPressed="ResizePressed"/>
+  <Border Name="ResizeE"  Width="5" HorizontalAlignment="Right" Background="Transparent" Cursor="SizeWestEast" PointerPressed="ResizePressed"/>
+  <Border Name="ResizeNW" Width="10" Height="10" HorizontalAlignment="Left"  VerticalAlignment="Top"    Background="Transparent" Cursor="TopLeftCorner" PointerPressed="ResizePressed"/>
+  <Border Name="ResizeNE" Width="10" Height="10" HorizontalAlignment="Right" VerticalAlignment="Top"    Background="Transparent" Cursor="TopRightCorner" PointerPressed="ResizePressed"/>
+  <Border Name="ResizeSW" Width="10" Height="10" HorizontalAlignment="Left"  VerticalAlignment="Bottom" Background="Transparent" Cursor="BottomLeftCorner" PointerPressed="ResizePressed"/>
+  <Border Name="ResizeSE" Width="10" Height="10" HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="Transparent" Cursor="BottomRightCorner" PointerPressed="ResizePressed"/>
+  </Panel>
 </Window>

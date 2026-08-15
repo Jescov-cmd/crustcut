@@ -59,6 +59,44 @@ public partial class MainWindow : Window
     private void CloseClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         => Close();
 
+    private void ResizePressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    {
+        if (WindowState != WindowState.Normal) return;   // no resizing a maximized window
+        if (sender is not Border b) return;
+        var edge = b.Name switch
+        {
+            "ResizeN" => WindowEdge.North,
+            "ResizeS" => WindowEdge.South,
+            "ResizeW" => WindowEdge.West,
+            "ResizeE" => WindowEdge.East,
+            "ResizeNW" => WindowEdge.NorthWest,
+            "ResizeNE" => WindowEdge.NorthEast,
+            "ResizeSW" => WindowEdge.SouthWest,
+            _ => WindowEdge.SouthEast,
+        };
+        BeginResizeDrag(edge, e);
+    }
+
+    protected override void OnOpened(EventArgs e)
+    {
+        base.OnOpened(e);
+        // A borderless window loses Windows 11's rounded corners; DWM gives them back.
+        try
+        {
+            var handle = TryGetPlatformHandle()?.Handle;
+            if (handle is IntPtr h && h != IntPtr.Zero)
+            {
+                const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+                var pref = 2; // DWMWCP_ROUND
+                _ = DwmSetWindowAttribute(h, DWMWA_WINDOW_CORNER_PREFERENCE, ref pref, sizeof(int));
+            }
+        }
+        catch { /* pre-Win11: square corners, which suit the app anyway */ }
+    }
+
+    [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+
     private void ShowActivePage() => PageHost.Content = _pages.Create(_shell.ActiveTab);
 
     /// <summary>Switches tab programmatically. Used by the --screenshot debug flag.</summary>
