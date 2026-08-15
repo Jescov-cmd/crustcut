@@ -6,7 +6,9 @@
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource SurfaceBase}"
         Icon="avares://Crustcut/Assets/icon.ico"
-        FontFamily="Segoe UI">
+        FontFamily="Segoe UI"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="-1">
 
   <Window.Styles>
     <!-- Nav row: square, full-bleed, hairline-free. Selection is a filled row plus a 3px
@@ -41,31 +43,64 @@
       <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
       <Setter Property="Margin" Value="12,16,0,5"/>
     </Style>
+
+    <!-- Window controls: square, borderless, generous hit area — ours, not Windows'. -->
+    <Style Selector="Button.winctl">
+      <Setter Property="Width" Value="44"/>
+      <Setter Property="Height" Value="34"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="CornerRadius" Value="0"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text2}"/>
+      <Setter Property="FontSize" Value="12"/>
+    </Style>
+    <Style Selector="Button.winctl:pressed">
+      <Setter Property="RenderTransform" Value="none"/>
+    </Style>
+    <Style Selector="Button.winctl:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#2E2E2E"/>
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource Text0}"/>
+    </Style>
+    <!-- Close hovers red — the one convention worth keeping from stock chrome. -->
+    <Style Selector="Button.winctl.close:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#C42B1C"/>
+      <Setter Property="TextElement.Foreground" Value="#FFFFFF"/>
+    </Style>
   </Window.Styles>
 
-  <!-- No custom title bar: the window keeps its native chrome, so drawing our own put a
-       second "Crustcut" directly under the real one and wasted 39px of height. -->
-  <Grid>
+  <!-- Custom chrome: the native title bar is gone (ExtendClientArea + NoChrome), so the
+       top strip is ours — wordmark on the left, square minimize/close on the right, the
+       whole strip draggable. This is what removes the stock icon-and-title row. -->
+  <Grid RowDefinitions="34,*">
 
-    <Grid ColumnDefinitions="216,1,*">
+    <Border Grid.Row="0" Background="{DynamicResource SurfaceRail}"
+            BorderBrush="{DynamicResource Hairline}" BorderThickness="0,0,0,1"
+            PointerPressed="TitleBarPressed">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+        <!-- Brand: the 8-bit wordmark. Rendered at 2x and displayed at half size so the
+             pixels stay crisp on high-DPI displays. -->
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="7" Margin="14,0,0,0">
+          <Image Source="avares://Crustcut/Assets/wordmark.png" Height="16"
+                 VerticalAlignment="Center"
+                 RenderOptions.BitmapInterpolationMode="HighQuality"/>
+          <!-- Set from the real assembly version in code-behind; a hardcoded string
+               here silently drifted a version behind at least once. -->
+          <TextBlock x:Name="VersionLabel" FontSize="9.5"
+                     Foreground="{DynamicResource Text3}"
+                     VerticalAlignment="Center" Margin="0,4,0,0"/>
+        </StackPanel>
+        <Button Grid.Column="2" Classes="winctl" Content="─" Click="MinimizeClick"/>
+        <Button Grid.Column="3" Classes="winctl close" Content="✕" Click="CloseClick"/>
+      </Grid>
+    </Border>
+
+    <Grid Grid.Row="1" ColumnDefinitions="216,1,*">
 
       <!-- ===== NAV TREE ===== -->
       <Border Grid.Column="0" Background="{DynamicResource SurfaceRail}">
         <DockPanel>
-          <!-- Brand: the 8-bit wordmark. Rendered at 2x and displayed at half size so the
-               pixels stay crisp on high-DPI displays. -->
-          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="7"
-                      Height="46" Margin="12,0,0,0" VerticalAlignment="Center">
-            <Image Source="avares://Crustcut/Assets/wordmark.png" Height="20"
-                   VerticalAlignment="Center"
-                   RenderOptions.BitmapInterpolationMode="HighQuality"/>
-            <!-- Set from the real assembly version in code-behind; a hardcoded string
-                 here silently drifted a version behind at least once. -->
-            <TextBlock x:Name="VersionLabel" FontSize="9.5"
-                       Foreground="{DynamicResource Text3}"
-                       VerticalAlignment="Center" Margin="0,6,0,0"/>
-          </StackPanel>
-
           <Border DockPanel.Dock="Bottom" Height="30" Padding="12,0"
                   BorderBrush="{DynamicResource Hairline}" BorderThickness="0,1,0,0">
             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">

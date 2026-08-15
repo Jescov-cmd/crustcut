@@ -25,6 +25,10 @@ public partial class MainWindow : Window
         var v = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
         VersionLabel.Text = v is null ? "" : $"v{v.ToString(3)}";
 
+        // Avalonia 12: ExtendClientAreaToDecorationsHint alone removes the stock caption
+        // bar (the old ChromeHints enum is gone from the API); our title strip supplies
+        // the minimize/close buttons.
+
         _shell.PropertyChanged += OnShellPropertyChanged;
         ShowActivePage();
     }
@@ -33,6 +37,27 @@ public partial class MainWindow : Window
     {
         if (e.PropertyName == nameof(ShellViewModel.ActiveTab)) ShowActivePage();
     }
+
+    // ── Custom chrome ────────────────────────────────────────────────────────────────
+    private void TitleBarPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+        if (e.ClickCount == 2)
+        {
+            WindowState = WindowState == WindowState.Maximized
+                ? WindowState.Normal : WindowState.Maximized;
+            return;
+        }
+        BeginMoveDrag(e);
+    }
+
+    private void MinimizeClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        => WindowState = WindowState.Minimized;
+
+    // Close(), not Shutdown: the Closing handler owns the minimise-to-tray decision, and
+    // our X must behave exactly like the one Windows used to draw.
+    private void CloseClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        => Close();
 
     private void ShowActivePage() => PageHost.Content = _pages.Create(_shell.ActiveTab);
 

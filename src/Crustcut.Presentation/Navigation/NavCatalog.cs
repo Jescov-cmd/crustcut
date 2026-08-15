@@ -29,6 +29,7 @@ public static class NavCatalog
         // Every current guide is PC-hardware/Windows content (BIOS, NVIDIA panel, XMP…).
         // Windows-only until mac guides are written.
         new NavItem("Guides",    "GUIDES",     Learn, WindowsOnly: true),
+        new NavItem("WhatsNew",  "WHAT'S NEW", Learn),
     };
 
     private static readonly IReadOnlyList<NavItem> BottomAll = new[]

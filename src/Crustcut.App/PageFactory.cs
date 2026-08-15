@@ -61,6 +61,8 @@ public sealed class PageFactory
 
         "Guides" => new GuidesView { DataContext = _app?.Guides },
 
+        "WhatsNew" => new WhatsNewView(),
+
         "Settings" => new SettingsView { DataContext = _app?.Settings },
 
         _ => new PlaceholderView(LabelFor(tabId)),
