@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:chrome="clr-namespace:Avalonia.Controls.Chrome;assembly=Avalonia.Controls"
         x:Class="Crustcut.App.MainWindow"
         Title="Crustcut"
         Width="1240" Height="780" MinWidth="900" MinHeight="580"
@@ -8,7 +9,7 @@
         Icon="avares://Crustcut/Assets/icon.ico"
         FontFamily="Segoe UI"
         ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaTitleBarHeightHint="-1">
+        ExtendClientAreaTitleBarHeightHint="0">
 
   <Window.Styles>
     <!-- Nav row: square, full-bleed, hairline-free. Selection is a filled row plus a 3px
@@ -43,6 +44,10 @@
       <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
       <Setter Property="Margin" Value="12,16,0,5"/>
     </Style>
+
+    <!-- Avalonia 12 draws its own managed title bar (title text + caption buttons) when
+         the client area is extended — which painted a second "Crustcut" straight over
+         ours. TitleBarHeightHint=0 on the Window collapses it. -->
 
     <!-- Window controls: square, borderless, generous hit area — ours, not Windows'. -->
     <Style Selector="Button.winctl">
@@ -81,15 +86,10 @@
       <Grid ColumnDefinitions="Auto,*,Auto,Auto">
         <!-- Brand: the 8-bit wordmark. Rendered at 2x and displayed at half size so the
              pixels stay crisp on high-DPI displays. -->
-        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="7" Margin="14,0,0,0">
-          <Image Source="avares://Crustcut/Assets/wordmark.png" Height="16"
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="14,0,0,0">
+          <Image Source="avares://Crustcut/Assets/wordmark.png" Height="20"
                  VerticalAlignment="Center"
                  RenderOptions.BitmapInterpolationMode="HighQuality"/>
-          <!-- Set from the real assembly version in code-behind; a hardcoded string
-               here silently drifted a version behind at least once. -->
-          <TextBlock x:Name="VersionLabel" FontSize="9.5"
-                     Foreground="{DynamicResource Text3}"
-                     VerticalAlignment="Center" Margin="0,4,0,0"/>
         </StackPanel>
         <Button Grid.Column="2" Classes="winctl" Content="─" Click="MinimizeClick"/>
         <Button Grid.Column="3" Classes="winctl close" Content="✕" Click="CloseClick"/>
@@ -103,11 +103,17 @@
         <DockPanel>
           <Border DockPanel.Dock="Bottom" Height="30" Padding="12,0"
                   BorderBrush="{DynamicResource Hairline}" BorderThickness="0,1,0,0">
-            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-              <Ellipse Width="6" Height="6" Fill="{DynamicResource Good}"/>
-              <TextBlock Text="Watching apps" FontSize="11"
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Ellipse Width="6" Height="6" Fill="{DynamicResource Good}"/>
+                <TextBlock Text="Watching apps" FontSize="11"
+                           Foreground="{DynamicResource Text3}" VerticalAlignment="Center"/>
+              </StackPanel>
+              <!-- Set from the real assembly version in code-behind; a hardcoded string
+                   here silently drifted a version behind at least once. -->
+              <TextBlock Grid.Column="1" x:Name="VersionLabel" FontSize="10"
                          Foreground="{DynamicResource Text3}" VerticalAlignment="Center"/>
-            </StackPanel>
+            </Grid>
           </Border>
 
           <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding Bottom}" Margin="0,0,0,8">
