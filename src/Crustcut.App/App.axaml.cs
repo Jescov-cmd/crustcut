@@ -26,6 +26,16 @@ public partial class App : Application
             var overlayShotPath = SelfScreenshot.ParseOverlayShot(Program.Args);
             var navStressPath = NavStress.Parse(Program.Args);
 
+            // The panic button: revert every applied optimization and disable every
+            // automatic behaviour, then exit. For "is Crustcut causing my problem?"
+            // A/B tests and for support — one command returns the machine to stock.
+            if (Array.IndexOf(Program.Args, "--revert-all") >= 0)
+            {
+                _ = RunRevertAllThenExitAsync();
+                base.OnFrameworkInitializationCompleted();
+                return;
+            }
+
             // The screenshot run is a throwaway process: skip the single-instance guard so
             // it can run while the real app is open.
             _guard = new SingleInstanceGuard();
@@ -149,6 +159,66 @@ public partial class App : Application
 
         e.Cancel = true;
         _window?.Hide();
+    }
+
+    /// <summary>
+    /// Reverts every applied tweak (stored undo first, tweak's own default second),
+    /// empties the re-enforcement list so nothing comes back, and switches off every
+    /// automatic behaviour in settings. Writes a report next to the exe and exits.
+    /// </summary>
+    private static async Task RunRevertAllThenExitAsync()
+    {
+        var report = new System.Text.StringBuilder();
+        report.AppendLine($"Crustcut --revert-all  {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        try
+        {
+            var comp = new Composition();
+            var undoStore = new PrimeOSTuner.Core.Tweaks.PendingUndoStore(
+                PrimeOSTuner.Core.Tweaks.PendingUndoStore.DefaultPath());
+            var session = new PrimeOSTuner.Core.Profiles.SessionTweakStore(
+                PrimeOSTuner.Core.Profiles.SessionTweakStore.DefaultPath());
+
+            foreach (var tweak in comp.Tweaks)
+            {
+                try
+                {
+                    if (tweak is PrimeOSTuner.Core.Tweaks.IOneShotTweak) continue;
+                    if (tweak.IsDestructive) continue;   // reverting an uninstall isn't a thing
+                    if (await tweak.ProbeAsync() != PrimeOSTuner.Core.Tweaks.TweakState.Applied) continue;
+
+                    var undo = await undoStore.GetAsync(tweak.Id);
+                    PrimeOSTuner.Core.Tweaks.TweakResult r;
+                    if (undo is not null) r = await tweak.RevertAsync(undo);
+                    else if (tweak is PrimeOSTuner.Core.Tweaks.ISelfRevertingTweak selfRevert) r = await selfRevert.RevertToDefaultAsync();
+                    else { report.AppendLine($"SKIP  {tweak.Id} (no undo data and no known default)"); continue; }
+
+                    report.AppendLine($"{(r.Succeeded ? "OFF " : "FAIL")}  {tweak.Id}{(r.Succeeded ? "" : " — " + r.Error)}");
+                    if (r.Succeeded) { await undoStore.RemoveAsync(tweak.Id); await session.RemoveAsync(tweak.Id); }
+                }
+                catch (Exception ex) { report.AppendLine($"FAIL  {tweak.Id} — {ex.Message}"); }
+            }
+
+            // Nothing automatic stays armed: the point of stock is that Crustcut only
+            // watches. Fan control is left as the user set it — it's cooling, not an
+            // optimization, and turning it off mid-test would change noise, not FPS.
+            var store = new PrimeOSTuner.Core.Settings.AppSettingsStore(
+                PrimeOSTuner.Core.Settings.AppSettingsStore.DefaultPath());
+            var s = store.Load();
+            s.RamAdaptiveEnabled = false;
+            s.RamAutoOptimizeOnInterval = false;
+            s.RamAutoOptimizeOnThreshold = false;
+            s.StandbyAutoPurgeEnabled = false;
+            s.AutoMemoryLimitsEnabled = false;
+            s.ThermalGovernorEnabled = false;
+            store.Save(s);
+            report.AppendLine("OFF   adaptive/scheduled/threshold RAM cleanup, standby auto-purge, auto memory limits, Cool-Down Assist");
+        }
+        catch (Exception ex) { report.AppendLine($"ABORT — {ex.Message}"); }
+
+        var outPath = Path.Combine(AppContext.BaseDirectory, "revert-all-report.txt");
+        try { File.WriteAllText(outPath, report.ToString()); } catch { }
+        EngineLog.Log("revert-all: completed — machine returned to stock, automatics disabled");
+        Environment.Exit(0);
     }
 
     private void ShowWindow()

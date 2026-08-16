@@ -32,6 +32,11 @@ public sealed class AppSettings
     /// Off by default — trading peak speed for temperature is the user's call.</summary>
     public bool ThermalGovernorEnabled { get; set; } = false;
 
+    /// <summary>Freeze the curated background apps (RGB, sync clients, launchers) while
+    /// ANY game runs and wake them on exit — no per-game profile needed. Off by default:
+    /// pausing other software is the user's call.</summary>
+    public bool SuspendBackgroundAppsInGame { get; set; } = false;
+
     /// <summary>Adaptive mode: the engine reads memory pressure each minute and decides
     /// when/how hard to clean (including standby purges and Deep escalation) instead of
     /// running the fixed schedule/threshold settings. Supersedes them while on.</summary>

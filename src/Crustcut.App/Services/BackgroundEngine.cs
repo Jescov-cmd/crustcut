@@ -96,7 +96,8 @@ public sealed class BackgroundEngine : IDisposable
             _lifecycle = new ProfileLifecycleService(
                 _watcher, _profileStore, _activeStore, profiles, _applier,
                 _suspender,
-                _sentinel, _frames);
+                _sentinel, _frames,
+                suspendForEveryGame: () => SafeSettings().SuspendBackgroundAppsInGame);
 
             await _lifecycle.RecoverFromCrashAsync();
             _lifecycle.Start();

@@ -14,6 +14,11 @@ namespace PrimeOSTuner.Win.Suspension;
 /// </summary>
 public static class BackgroundSuspendList
 {
+    // Curation rule: only apps whose PAUSE is invisible during gameplay. RGB and
+    // wallpaper software just stops animating; sync clients stop syncing; launchers stop
+    // updating. Deliberately absent: voice/audio tools (WaveLink, Discord — freezing them
+    // kills the user's microphone mid-game), capture tools (Medal — people want their
+    // clips), and macro/input software people actively use in-game (Stream Deck).
     public static readonly IReadOnlyList<string> Default = new[]
     {
         "OneDrive",
@@ -22,5 +27,16 @@ public static class BackgroundSuspendList
         "GoogleDriveFS",
         "Spotify",
         "EpicGamesLauncher",
+        "SignalRgb",
+        "SignalRgbLauncher",
+        "lghub",
+        "lghub_agent",
+        "lghub_updater",
+        "wallpaper32",
+        "wallpaper64",
+        "Overwolf",
+        "CurseForge",
+        "GalaxyClient",
+        "EADesktop",
     };
 }

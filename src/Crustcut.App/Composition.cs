@@ -219,10 +219,14 @@ public sealed class Composition
         Memory = new MemoryPriorityViewModel(priorityStore, engine, gameRegistry, priorityClient, ramTweak, deepRamTweak, settingsStore);
 
         // ── Game watcher + lifecycle inputs (lifecycle itself starts in the engine) ───
+        // The Java detector catches Minecraft behind javaw.exe (Modrinth, CurseForge,
+        // Lunar, vanilla) — exe-name matching alone is blind to all of them.
+        var javaDetector = new PrimeOSTuner.Core.Windows.Games.JavaGameDetector();
         var watcher = new GameProcessWatcher(
             knownGamesProvider: () => gameRegistry.GetAllAsync(),
             processSnapshotProvider: null,
-            pollIntervalMs: 2000);
+            pollIntervalMs: 2000,
+            syntheticDetector: javaDetector.DetectRunning);
 
         var specsHttp = new HttpClient
         {

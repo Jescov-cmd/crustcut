@@ -17,13 +17,20 @@ public sealed class GameProcessWatcher : IGameProcessWatcher, IDisposable
 
     public bool IsRunning { get; private set; }
 
+    private readonly Func<KnownGame?>? _syntheticDetector;
+
     public GameProcessWatcher(
         Func<Task<IReadOnlyList<KnownGame>>> knownGamesProvider,
         Func<string[]>? processSnapshotProvider = null,
-        int pollIntervalMs = 2000)
+        int pollIntervalMs = 2000,
+        Func<KnownGame?>? syntheticDetector = null)
     {
         _knownGamesProvider = knownGamesProvider;
         _processSnapshotProvider = processSnapshotProvider ?? DefaultSnapshot;
+        // Some games can't be matched by exe name — modded Minecraft is a plain
+        // javaw.exe. A synthetic detector inspects deeper (command lines) and reports
+        // a running game directly; it gets the same started/stopped treatment.
+        _syntheticDetector = syntheticDetector;
         _pollIntervalMs = pollIntervalMs;
         _timer = new System.Timers.Timer(_pollIntervalMs) { AutoReset = true };
         _timer.Elapsed += async (_, _) =>
@@ -71,6 +78,23 @@ public sealed class GameProcessWatcher : IGameProcessWatcher, IDisposable
             {
                 _running.Remove(game.Id);
                 GameStopped?.Invoke(this, new GameStoppedArgs(game, "process exit"));
+            }
+        }
+
+        var synthetic = _syntheticDetector?.Invoke();
+        if (synthetic is not null && !_running.ContainsKey(synthetic.Id))
+        {
+            _running[synthetic.Id] = synthetic;
+            GameStarted?.Invoke(this, synthetic);
+        }
+        else if (synthetic is null && _syntheticDetector is not null)
+        {
+            // Only synthetic ids can be ended here — exe-name games are handled above.
+            var ended = _running.Values.FirstOrDefault(g => g.Id.StartsWith("java.", StringComparison.Ordinal));
+            if (ended is not null)
+            {
+                _running.Remove(ended.Id);
+                GameStopped?.Invoke(this, new GameStoppedArgs(ended, "process exit"));
             }
         }
     }

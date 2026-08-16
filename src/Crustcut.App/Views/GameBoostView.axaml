@@ -50,6 +50,21 @@
             </Grid>
           </Border>
 
+          <!-- "Play without closing everything": the RGB/sync/launcher apps freeze the
+               moment ANY game is detected and wake when it exits. Freeze = paused in
+               place, not closed — zero CPU, memory reclaimable, state intact. -->
+          <Border Classes="panel">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Grid.Column="0" Spacing="3" MaxWidth="560" HorizontalAlignment="Left">
+                <TextBlock Text="PAUSE BACKGROUND APPS WHILE GAMING" Classes="panelTitle" Margin="0"/>
+                <TextBlock Classes="sub"
+                           Text="When a game starts, lighting, wallpaper, sync and launcher apps (SignalRGB, Logitech G HUB, OneDrive, Spotify…) are frozen in place — zero CPU, and Windows can reclaim their memory for the game. They wake untouched the moment you quit. Microphone, capture and streaming tools are never paused."/>
+              </StackPanel>
+              <ToggleSwitch Grid.Column="1" OnContent="" OffContent="" VerticalAlignment="Top"
+                            IsChecked="{Binding SuspendInGame, Mode=TwoWay}"/>
+            </Grid>
+          </Border>
+
           <TextBlock Text="{Binding StatusMessage}" FontSize="12"
                      Foreground="{DynamicResource AccentWheat}" TextWrapping="Wrap"/>
 

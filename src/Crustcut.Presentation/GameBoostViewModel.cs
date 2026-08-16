@@ -10,6 +10,23 @@ public partial class GameBoostViewModel : ObservableObject
 {
     private readonly ProfileApplier _applier;
     private readonly AppSettingsStore _settings;
+
+    /// <summary>Freeze curated background apps for every detected game. Two-way bound.</summary>
+    public bool SuspendInGame
+    {
+        get { try { return _settings.Load().SuspendBackgroundAppsInGame; } catch { return false; } }
+        set
+        {
+            try
+            {
+                var s = _settings.Load();
+                s.SuspendBackgroundAppsInGame = value;
+                _settings.Save(s);
+            }
+            catch { }
+            OnPropertyChanged(nameof(SuspendInGame));
+        }
+    }
     private readonly IBackgroundSuspenderService? _suspender;
     private bool _suppressSave;
 

@@ -46,7 +46,8 @@ public sealed class ProfileLifecycleService
         ProfileApplier applier,
         IBackgroundSuspenderService? suspender = null,
         ISentinelService? sentinel = null,
-        FrameRecordingService? recorder = null)
+        FrameRecordingService? recorder = null,
+        Func<bool>? suspendForEveryGame = null)
     {
         _watcher = watcher;
         _profiles = profiles;
@@ -56,7 +57,13 @@ public sealed class ProfileLifecycleService
         _suspender = suspender;
         _sentinel = sentinel;
         _recorder = recorder;
+        _suspendForEveryGame = suspendForEveryGame;
     }
+
+    // When true, background apps are frozen for EVERY detected game, no profile needed —
+    // "pause the RGB and sync apps while I play, wake them after" as a standing rule
+    // rather than something earned by assigning a boost profile per game.
+    private readonly Func<bool>? _suspendForEveryGame;
 
     public void Start()
     {
@@ -106,8 +113,17 @@ public sealed class ProfileLifecycleService
             try { _recorder?.OnGameStarted(game, pid); }
             catch { /* recording must never break a game launch */ }
 
-            // The optimization profile (and background-app suspension) only apply if the user
-            // assigned one to this game.
+            // Suspension by standing rule: no profile required when the user has switched
+            // it on globally. SuspendBackgroundApps is pid-idempotent, so hitting it again
+            // below (profile path) double-freezes nothing; ResumeAll on stop wakes both.
+            if (_suspendForEveryGame?.Invoke() == true)
+            {
+                try { _suspender?.SuspendBackgroundApps(); }
+                catch { /* freezing optional apps must never break a game launch */ }
+            }
+
+            // The optimization profile (and profile-driven suspension) only apply if the
+            // user assigned one to this game.
             var modeName = await _profiles.GetProfileForAsync(game.Id);
             if (modeName is null) return;
             if (!_profileLookup.TryGetValue(modeName, out var profile)) return;
