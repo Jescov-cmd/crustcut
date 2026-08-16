@@ -57,13 +57,16 @@ public partial class CleanupViewModel : ObservableObject
     [ObservableProperty] private bool _isScanning;
     [ObservableProperty] private bool _hasDesktopItems;
 
+    private readonly PrimeOSTuner.Core.Platform.IStartupAppsClient? _startup;
+
     public CleanupViewModel(
         BloatwareDetector detector,
         IInstalledProgramsClient programs,
         IReadOnlyList<DesktopBloatwareCatalogEntry> desktopCatalog,
         BloatwareUninstallService uninstall,
         BloatwareDisableService disable,
-        IDialogService dialogs)
+        IDialogService dialogs,
+        PrimeOSTuner.Core.Platform.IStartupAppsClient? startup = null)
     {
         _detector = detector;
         _programs = programs;
@@ -71,6 +74,62 @@ public partial class CleanupViewModel : ObservableObject
         _uninstall = uninstall;
         _disable = disable;
         _dialogs = dialogs;
+        _startup = startup;
+    }
+
+    // ── Startup programs ──────────────────────────────────────────────────────────────
+
+    public sealed class StartupRowVm : ObservableObject
+    {
+        public PrimeOSTuner.Core.Platform.StartupApp App { get; internal set; }
+        public string Name => App.Name;
+        public string Command => App.Command;
+        public string SourceLabel => App.Source switch
+        {
+            PrimeOSTuner.Core.Platform.StartupSource.AllUsers => "all users",
+            PrimeOSTuner.Core.Platform.StartupSource.StartupFolder => "Startup folder",
+            _ => "this user",
+        };
+        private bool _enabled;
+        public bool Enabled { get => _enabled; set => SetProperty(ref _enabled, value); }
+        public StartupRowVm(PrimeOSTuner.Core.Platform.StartupApp app) { App = app; _enabled = app.Enabled; }
+    }
+
+    public ObservableCollection<StartupRowVm> StartupApps { get; } = new();
+
+    public bool HasStartupSupport => _startup is not null;
+
+    /// <summary>Loads/reloads the startup list. Cheap; called on each page visit.</summary>
+    public async Task LoadStartupAppsAsync()
+    {
+        if (_startup is null) return;
+        var apps = await Task.Run(() => _startup.List());
+        StartupApps.Clear();
+        foreach (var a in apps) StartupApps.Add(new StartupRowVm(a));
+    }
+
+    /// <summary>
+    /// One toggle = one program, at the user's explicit click — the destructive-actions
+    /// rule. Nothing is deleted: this writes the same disabled mark Task Manager writes,
+    /// so either app can undo it.
+    /// </summary>
+    public async Task<bool> SetStartupEnabledAsync(StartupRowVm row, bool enabled)
+    {
+        if (_startup is null) return false;
+        var ok = await Task.Run(() => _startup.TrySetEnabled(row.App, enabled));
+        if (ok)
+        {
+            row.App = row.App with { Enabled = enabled };
+            row.Enabled = enabled;
+        }
+        else
+        {
+            row.Enabled = row.App.Enabled;   // snap the switch back — the write failed
+            await _dialogs.ShowAsync(row.Name,
+                "Couldn't change this startup entry (it may need administrator rights).",
+                DialogKind.Error);
+        }
+        return ok;
     }
 
     public async Task RefreshAsync()

@@ -196,7 +196,8 @@ public sealed class Composition
             DesktopBloatwareCatalog.LoadFromFile(DesktopBloatwareCatalog.DefaultPath()),
             new BloatwareUninstallService(appx),
             new BloatwareDisableService(serviceClient),
-            dialogs);
+            dialogs,
+            new PrimeOSTuner.Core.Windows.Platform.StartupAppsClient());
 
         // ── Memory ────────────────────────────────────────────────────────────────────
         var booster = new GameBooster(ramCleaner);

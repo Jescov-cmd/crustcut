@@ -17,9 +17,10 @@ public static class WhatsNewCatalog
 
     public static readonly IReadOnlyList<WhatsNewRelease> Releases = new[]
     {
-        new WhatsNewRelease("0.9.4", "Cooler, quieter, more honest", "in progress",
+        new WhatsNewRelease("0.9.4", "Cooler, quieter, more honest", "August 14, 2026",
             new[]
             {
+                I("Startup manager (Cleanup tab): see everything that launches with Windows and switch off what you don't need — the single biggest everyday speed win. Nothing is uninstalled, and Task Manager shows the same state."),
                 I("Cool-Down Assist (Fans tab): if the CPU stays hot for 20 seconds, its turbo boost is trimmed until it cools. The safe form of heat-based power management."),
                 I("Fan curves retuned for CPUs that boost: quiet when the machine is actually cool, real airflow when it's genuinely hot, and no more chasing temperatures the CPU maintains on purpose."),
                 I("Fixed: the automatic memory cleaner was trimming apps minimised to the tray, which made them come back blurry. It now recognises tray apps as apps."),

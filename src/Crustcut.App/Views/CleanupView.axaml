@@ -25,6 +25,43 @@
       <Grid x:Name="PanelGrid">
       <StackPanel>
 
+        <!-- Startup programs: what launches with Windows is the #1 reason a PC feels
+             slow. Toggles write the same marks Task Manager uses — nothing is deleted,
+             either app can undo the other. -->
+        <Border Background="{DynamicResource SurfacePanel}" BorderBrush="{DynamicResource Hairline}"
+                BorderThickness="1" CornerRadius="3" Padding="14,10" Margin="0,0,0,16"
+                IsVisible="{Binding HasStartupSupport}">
+          <StackPanel Spacing="6">
+            <TextBlock Text="STARTS WITH WINDOWS" FontSize="10.5" FontWeight="SemiBold"
+                       Foreground="{DynamicResource Text3}"/>
+            <TextBlock Text="Everything that launches itself at boot. Fewer of these = a faster startup and more free memory all day. Switching one off doesn't uninstall anything — it just stops the auto-launch, same as Task Manager, and you can switch it back any time."
+                       FontSize="11.5" Foreground="{DynamicResource Text2}" TextWrapping="Wrap"/>
+            <ItemsControl ItemsSource="{Binding StartupApps}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid ColumnDefinitions="*,90,Auto" Margin="0,4,0,0">
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="SemiBold"
+                                 Foreground="{DynamicResource Text1}"/>
+                      <TextBlock Text="{Binding Command}" FontSize="10.5"
+                                 Foreground="{DynamicResource Text3}"
+                                 TextTrimming="CharacterEllipsis" Margin="0,1,12,0"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="{Binding SourceLabel}" FontSize="10.5"
+                               Foreground="{DynamicResource Text3}" VerticalAlignment="Center"
+                               HorizontalAlignment="Right" Margin="0,0,12,0"/>
+                    <ToggleSwitch Grid.Column="2" OnContent="" OffContent="" MinWidth="0"
+                                  VerticalAlignment="Center"
+                                  IsChecked="{Binding Enabled, Mode=OneWay}"
+                                  Click="StartupToggleClick"
+                                  Tag="{Binding}"/>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
         <ItemsControl ItemsSource="{Binding Items}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
