@@ -74,8 +74,16 @@ public sealed class BackgroundEngine : IDisposable
 
     public async Task StartAsync()
     {
-        EngineLog.Log("engine: StartAsync entered");
-        var s = SafeSettings();
+        // Version + path + the automation flags, every boot. When settings changed
+        // between sessions with nobody admitting to it (it happened), this line is the
+        // difference between diagnosing in seconds and guessing for an evening.
+        var ver = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "?";
+        var s0 = SafeSettings();
+        EngineLog.Log($"engine: StartAsync entered — v{ver} at {Environment.ProcessPath} " +
+            $"[adaptive={s0.RamAdaptiveEnabled} interval={s0.RamAutoOptimizeOnInterval} " +
+            $"threshold={s0.RamAutoOptimizeOnThreshold} purge={s0.StandbyAutoPurgeEnabled} " +
+            $"autoLimits={s0.AutoMemoryLimitsEnabled} suspend={s0.SuspendBackgroundAppsInGame}]");
+        var s = s0;
 
         // ── Sentinel on/off follows the saved setting ────────────────────────────────
         try { _sentinel.Enabled = s.SentinelEnabled; }

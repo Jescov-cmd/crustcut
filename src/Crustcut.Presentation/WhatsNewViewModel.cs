@@ -21,6 +21,8 @@ public static class WhatsNewCatalog
             new[]
             {
                 I("Startup manager (Cleanup tab): see everything that launches with Windows and switch off what you don't need — the single biggest everyday speed win. Nothing is uninstalled, and Task Manager shows the same state."),
+                I("Minecraft is finally detected — including modded, through Modrinth, CurseForge and Lunar. Crustcut used to be blind to Java games and would treat your machine as idle while you played."),
+                I("Pause background apps while gaming (Game Boost tab): RGB, wallpaper, sync and launcher apps are frozen in place when any game starts and wake untouched when you quit. Microphone, capture and streaming tools are never paused."),
                 I("Cool-Down Assist (Fans tab): if the CPU stays hot for 20 seconds, its turbo boost is trimmed until it cools. The safe form of heat-based power management."),
                 I("Fan curves retuned for CPUs that boost: quiet when the machine is actually cool, real airflow when it's genuinely hot, and no more chasing temperatures the CPU maintains on purpose."),
                 I("Fixed: the automatic memory cleaner was trimming apps minimised to the tray, which made them come back blurry. It now recognises tray apps as apps."),
