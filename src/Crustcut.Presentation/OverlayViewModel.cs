@@ -53,8 +53,29 @@ public partial class OverlayViewModel : ObservableObject, IDisposable
         _sampler = sampler;
         _frames = frames;
         _ui = ui;
-        _sampler.Sampled += OnSampled;
-        _frames.FpsChanged += OnFpsChanged;
+    }
+
+    private bool _live;
+
+    /// <summary>
+    /// Subscribes to the live feeds only while the overlay window exists. It used to listen
+    /// from app start, so with the overlay switched off it still formatted five strings
+    /// and queued a UI-thread update every second, all day, for a window that wasn't there.
+    /// </summary>
+    public void SetLive(bool live)
+    {
+        if (live == _live) return;
+        _live = live;
+        if (live)
+        {
+            _sampler.Sampled += OnSampled;
+            _frames.FpsChanged += OnFpsChanged;
+        }
+        else
+        {
+            _sampler.Sampled -= OnSampled;
+            _frames.FpsChanged -= OnFpsChanged;
+        }
     }
 
     public void ApplySettings(AppSettings s)
@@ -111,9 +132,5 @@ public partial class OverlayViewModel : ObservableObject, IDisposable
     private static double Gb(long bytes) => bytes / 1024.0 / 1024.0 / 1024.0;
     private static double Mbps(long bytesPerSec) => bytesPerSec * 8.0 / 1_000_000.0;
 
-    public void Dispose()
-    {
-        _sampler.Sampled -= OnSampled;
-        _frames.FpsChanged -= OnFpsChanged;
-    }
+    public void Dispose() => SetLive(false);
 }

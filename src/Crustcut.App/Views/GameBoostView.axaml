@@ -10,7 +10,7 @@
                  Text="Applies a bundle of optimizations in one go. Everything is reversible from the Optimize page or History."/>
     </StackPanel>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
       <Grid x:Name="PanelGrid" VerticalAlignment="Top">
         <StackPanel Width="{Binding #PanelGrid.Bounds.Width}" Spacing="12">
 
@@ -58,11 +58,65 @@
               <StackPanel Grid.Column="0" Spacing="3" MaxWidth="560" HorizontalAlignment="Left">
                 <TextBlock Text="PAUSE BACKGROUND APPS WHILE GAMING" Classes="panelTitle" Margin="0"/>
                 <TextBlock Classes="sub"
-                           Text="When a game starts, lighting, wallpaper, sync and launcher apps (SignalRGB, Logitech G HUB, OneDrive, Spotify…) are frozen in place — zero CPU, and Windows can reclaim their memory for the game. They wake untouched the moment you quit. Microphone, capture and streaming tools are never paused."/>
+                           Text="When a game starts, sync, wallpaper and other background apps (OneDrive, iCloud, Dropbox, Wallpaper Engine, Phone Link…) are frozen in place — zero CPU, and Windows can give their memory to the game. They wake untouched the moment you quit, or as soon as you switch to one. Mouse, keyboard, headset and lighting software, voice chat, music, capture tools and launchers are never paused."/>
               </StackPanel>
               <ToggleSwitch Grid.Column="1" OnContent="" OffContent="" VerticalAlignment="Top"
                             IsChecked="{Binding SuspendInGame, Mode=TwoWay}"/>
             </Grid>
+          </Border>
+
+          <!-- The mirror image of the panel above: apps that are only useful IN a game
+               (clip recorders, overlays, crosshairs) sleep whenever no game runs. -->
+          <Border Classes="panel" IsVisible="{Binding GameOnlyAvailable}">
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Spacing="3" MaxWidth="560" HorizontalAlignment="Left">
+                  <TextBlock Text="SLEEP APPS YOU'RE NOT USING" Classes="panelTitle" Margin="0"/>
+                  <TextBlock Classes="sub"
+                             Text="Game apps like Medal, overlays and crosshairs sleep whenever you're not playing — Crustcut finds them on its own — and wake the second a game starts. Add any other app you leave running (a slicer, a sync app, a chat app): it sleeps after a few minutes unused, game or not, and wakes as soon as you open it. Sleeping apps' memory goes to whatever you're doing. Mouse, keyboard, headset and lighting software is never put to sleep."/>
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" OnContent="" OffContent="" VerticalAlignment="Top"
+                              IsChecked="{Binding GameOnlyEnabled, Mode=TwoWay}"/>
+              </Grid>
+
+              <ItemsControl ItemsSource="{Binding GameOnlyApps}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,3">
+                      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Name}" Classes="key"/>
+                        <TextBlock Text="{Binding Detail}" Classes="sub" VerticalAlignment="Center"/>
+                      </StackPanel>
+                      <TextBlock Grid.Column="1" Text="{Binding StateText}" FontSize="10.5" FontWeight="SemiBold"
+                                 Foreground="{DynamicResource AccentWheat}" VerticalAlignment="Center"
+                                 Margin="0,0,12,0"/>
+                      <Button Grid.Column="2" Content="WAKE" Classes="secondary" Margin="0,0,8,0"
+                              IsVisible="{Binding IsFrozen}" Tag="{Binding Name}" Click="WakeClick"
+                              ToolTip.Tip="Wake it now. It won't go back to sleep for a few minutes."/>
+                      <Button Grid.Column="3" Content="✕" MinHeight="26" Height="26" MinWidth="32" Padding="0"
+                              Background="#1F1F1F" BorderBrush="#4A4A4A"
+                              Foreground="{DynamicResource Danger}" FontSize="12"
+                              Tag="{Binding Name}" Click="RemoveGameOnlyClick"
+                              ToolTip.Tip="Take it off the list (wakes it if frozen)"/>
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <TextBlock Classes="sub" IsVisible="{Binding GameOnlyListEmpty}"
+                         Text="Nothing on the list is running, so there's nothing to put to sleep. Medal, Overwolf, Outplayed, Lossless Scaling, Crosshair X and Blitz are added automatically whenever they run — anything else, add below."/>
+
+              <!-- Anything not on the automatic list is one tap away, but out of the way. -->
+              <Button Content="+ ADD ANOTHER APP" Classes="secondary" HorizontalAlignment="Left"
+                      IsVisible="{Binding !ShowAddPicker}" Click="ShowPickerClick"/>
+              <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding ShowAddPicker}">
+                <ComboBox Width="240" Height="28" FontSize="12"
+                          ItemsSource="{Binding GameOnlyCandidates}"
+                          SelectedItem="{Binding SelectedCandidate, Mode=TwoWay}"
+                          PlaceholderText="Pick a running app…"/>
+                <Button Content="ADD" Classes="secondary" Click="AddGameOnlyClick"/>
+              </StackPanel>
+            </StackPanel>
           </Border>
 
           <TextBlock Text="{Binding StatusMessage}" FontSize="12"

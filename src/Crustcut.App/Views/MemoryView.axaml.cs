@@ -19,21 +19,14 @@ public partial class MemoryView : UserControl
         {
             if (DataContext is MemoryPriorityViewModel vm) await vm.RefreshTopMemoryAsync();
         };
-    }
-
-    protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
-    {
-        base.OnAttachedToVisualTree(e);
-        // Proof-of-life for the automatic cleanup, refreshed on every visit.
-        LastCleanupText.Text = MemoryPriorityViewModel.LastCleanupText();
-        if (DataContext is MemoryPriorityViewModel vm) _ = vm.RefreshTopMemoryAsync();
-        _topMemTimer.Start();
-    }
-
-    protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
-    {
-        base.OnDetachedFromVisualTree(e);
-        _topMemTimer.Stop();
+        PageActivity.Track(this, active =>
+        {
+            if (!active) { _topMemTimer.Stop(); return; }
+            // Proof-of-life for the automatic cleanup, refreshed on every visit.
+            LastCleanupText.Text = MemoryPriorityViewModel.LastCleanupText();
+            if (DataContext is MemoryPriorityViewModel vm) _ = vm.RefreshTopMemoryAsync();
+            _topMemTimer.Start();
+        });
     }
 
     private async void CleanNowClick(object? sender, RoutedEventArgs e)

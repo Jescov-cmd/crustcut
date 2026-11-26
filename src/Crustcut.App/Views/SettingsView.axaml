@@ -37,7 +37,7 @@
                       Content="Adaptive cleanup (recommended)"
                       Foreground="{DynamicResource Text1}"/>
             <TextBlock Classes="hint"
-                       Text="Crustcut watches memory pressure every minute and decides when and how hard to clean: nothing while memory is comfortable, stronger cleanup as pressure rises, standby purges when the cache hoards, and it backs off entirely mid paging-storm. The manual schedule below is ignored while this is on."/>
+                       Text="Crustcut watches memory pressure every minute and decides when to clean: nothing while memory is comfortable, more often as pressure rises, and it backs off entirely mid paging-storm. It only ever trims idle background programs — Windows' file cache is never purged automatically, because that just makes things reload from disk. The manual schedule below is ignored while this is on."/>
           </StackPanel>
 
           <StackPanel IsEnabled="{Binding !RamAdaptiveEnabled}">
@@ -79,14 +79,6 @@
                            FormatString="0"/>
             <TextBlock Text="% used" Foreground="{DynamicResource Text2}"
                        FontSize="12" VerticalAlignment="Center"/>
-          </StackPanel>
-
-          <StackPanel>
-            <CheckBox IsChecked="{Binding StandbyAutoPurgeEnabled, Mode=TwoWay}"
-                      Content="Clear standby cache when memory gets critically tight"
-                      Foreground="{DynamicResource Text1}"/>
-            <TextBlock Classes="hint"
-                       Text="The game-stutter fix: fires only when free memory drops under 1 GB while Windows' file cache holds over 1.5 GB — never on a healthy system, at most every 10 minutes."/>
           </StackPanel>
           </StackPanel>
           </StackPanel>

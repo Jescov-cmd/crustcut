@@ -156,7 +156,7 @@ public sealed class ProfileLifecycleService
             try { _sentinel?.OnGameStopped(); }
             catch { /* never trap on Sentinel teardown */ }
 
-            try { if (_recorder is not null) await _recorder.OnGameStoppedAsync(); }
+            try { if (_recorder is not null) await _recorder.OnGameStoppedAsync(e.Game); }
             catch { /* recording must never break game-exit teardown */ }
 
             try { _suspender?.ResumeAll(); }
@@ -173,16 +173,37 @@ public sealed class ProfileLifecycleService
         }
     }
 
-    private static int ResolvePid(KnownGame game)
+    /// <summary>
+    /// The process that is actually the game. "First process with this name" was wrong
+    /// whenever more than one exists — and for Minecraft that is the normal case: every
+    /// Java program is javaw.exe/java.exe (Gradle daemons, mod dev clients, launcher
+    /// helpers). Frame recording then attached to a background Java process that barely
+    /// draws, and saved sessions of 16 frames over minutes with nonsense lows and highs.
+    /// The game is the candidate that owns a window; among those, the biggest.
+    /// </summary>
+    public static int ResolvePid(KnownGame game)
     {
-        var exeName = game.ExecutableNames.FirstOrDefault();
-        if (string.IsNullOrEmpty(exeName)) return 0;
-
-        var trimmed = exeName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
-            ? exeName[..^4]
-            : exeName;
-        var procs = System.Diagnostics.Process.GetProcessesByName(trimmed);
-        try { return procs.Length > 0 ? procs[0].Id : 0; }
-        finally { foreach (var p in procs) p.Dispose(); }
+        var candidates = new List<(int Pid, bool HasWindow, long Memory)>();
+        foreach (var exeName in game.ExecutableNames)
+        {
+            if (string.IsNullOrEmpty(exeName)) continue;
+            var trimmed = exeName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
+                ? exeName[..^4]
+                : exeName;
+            foreach (var p in System.Diagnostics.Process.GetProcessesByName(trimmed))
+            {
+                try { candidates.Add((p.Id, p.MainWindowHandle != IntPtr.Zero, p.WorkingSet64)); }
+                catch { /* exited mid-scan */ }
+                finally { p.Dispose(); }
+            }
+        }
+        return PickGamePid(candidates);
     }
+
+    public static int PickGamePid(IEnumerable<(int Pid, bool HasWindow, long Memory)> candidates) =>
+        candidates
+            .OrderByDescending(c => c.HasWindow)
+            .ThenByDescending(c => c.Memory)
+            .Select(c => c.Pid)
+            .FirstOrDefault();
 }

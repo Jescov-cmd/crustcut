@@ -33,9 +33,10 @@ public sealed class OverlayService : IDisposable, Crustcut.Presentation.IOverlay
 
         if (_window is null)
         {
+            _vm.SetLive(true);
             _window = new OverlayWindow { DataContext = _vm };
             _window.Position = new PixelPoint((int)settings.OverlayX, (int)settings.OverlayY);
-            _window.Closed += (_, _) => _window = null;
+            _window.Closed += (_, _) => { _window = null; _vm.SetLive(false); };
             _window.Show();
 
             // Hotkey has to be registered after the window exists — it needs the HWND.
@@ -49,6 +50,7 @@ public sealed class OverlayService : IDisposable, Crustcut.Presentation.IOverlay
         PersistPosition();
         _window.Close();
         _window = null;
+        _vm.SetLive(false);
     }
 
     /// <summary>Toggles drag-to-reposition. Persists the new position when leaving edit mode.</summary>

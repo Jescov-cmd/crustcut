@@ -39,6 +39,9 @@ public sealed class Composition
 {
     public IReadOnlyList<ITweak> Tweaks { get; }
     public OverviewViewModel Overview { get; }
+
+    /// <summary>Tabs whose first-visit load has run this session (shared by every window).</summary>
+    public HashSet<string> LoadedTabs { get; } = new(StringComparer.Ordinal);
     public OptimizeViewModel? Optimize { get; }
     public CleanupViewModel? Cleanup { get; }
     public MemoryPriorityViewModel? Memory { get; }
@@ -54,6 +57,13 @@ public sealed class Composition
     public FansViewModel Fans { get; }
     public UpdateViewModel? Updates { get; }
     public FanService? FanService { get; }
+    public GameOnlyAppsService? GameOnlyApps { get; }
+
+    /// <summary>Hands our own idle pages back to Windows (null where unsupported).</summary>
+    public Action? TrimOwnWorkingSet { get; }
+#if WINDOWS
+    public PrimeOSTuner.Core.Windows.Games.JavaGameDetector? JavaDetector { get; }
+#endif
     public AppRegistrationService Registration { get; }
 
 #if WINDOWS
@@ -65,6 +75,7 @@ public sealed class Composition
         var history = new TweakHistory(TweakHistory.DefaultPath());
 
         // ── Games (needed early: tweaks and the watcher key off the library) ──────────
+        var addedGames = new AddedGamesStore(AddedGamesStore.DefaultPath());
         var gameRegistry = new GameRegistry(
             new SteamLibraryScanner(),
             new XboxLibraryScanner(),
@@ -75,7 +86,7 @@ public sealed class Composition
                 new EaGameScanner(),
                 new GogGameScanner(),
             },
-            new AddedGamesStore(AddedGamesStore.DefaultPath()));
+            addedGames);
 
         // Game install paths, resolved once on first use and never during startup — the
         // library scan hits Steam/Xbox/Epic/Ubisoft/EA/GOG and takes seconds.
@@ -105,6 +116,7 @@ public sealed class Composition
             GC.Collect(2, GCCollectionMode.Optimized, blocking: false);
             trimmer.TrimWorkingSet(Environment.ProcessId);
         };
+        TrimOwnWorkingSet = () => trimmer.TrimWorkingSet(Environment.ProcessId);
         var ramTweak = new RamCleanerTweak(ramCleaner, protectList, priorityClient);
         var standbyClient = new StandbyListClient();
         var deepRamTweak = new RamCleanerTweak(ramCleaner, protectList, priorityClient, RamCleanMode.Deep, standbyClient);
@@ -141,6 +153,7 @@ public sealed class Composition
             new DefenderGameExclusionsTweak(() => lazyGamePaths.Value),
             new PerAppGpuPreferenceTweak(registryClient, new DeferredEnumerable<string>(() => lazyGamePaths.Value)),
             new TcpGamingLatencyTweak(),
+            new NicLatencyTweak(),
             new StandbyPurgeTweak(standbyClient),
         };
 
@@ -154,13 +167,16 @@ public sealed class Composition
 
         var oneClick = new OneClickOptimizer(Tweaks, history);
         var applier = new ProfileApplier(Tweaks, history);
-        var suspender = new BackgroundSuspenderService(new NtProcessSuspender());
+        GameOnlyAppsService? sleepList = null;   // created below; the pause list must skip what it owns
+        var suspender = new BackgroundSuspenderService(new NtProcessSuspender(),
+            ownedElsewhere: () => sleepList?.ListedNames() ?? Array.Empty<string>());
 
         // ── Monitoring + frame recording (shared instances) ───────────────────────────
         // One sampler feeds Overview, the overlay and the auto-RAM threshold; one frame
         // store feeds the recorder, Overview and Sessions — the store raises Updated, so
         // every consumer must share the instance that the recorder saves through.
-        var sampler = new SystemSampler(new HardwareClient());
+        var hardware = new HardwareClient();
+        var sampler = new SystemSampler(hardware);
         var frameStore = new FrameSessionStore(FrameSessionStore.DefaultPath());
 
         var presentMonPath = Path.Combine(
@@ -169,7 +185,12 @@ public sealed class Composition
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "PrimeOSTuner", "frames");
 
-        var frames = new FrameRecordingService(new PresentMonRunner(presentMonPath), frameStore, framesDir);
+        var frames = new FrameRecordingService(new PresentMonRunner(presentMonPath), frameStore, framesDir,
+            resolvePid: ProfileLifecycleService.ResolvePid, log: EngineLog.Log,
+            gameHeapLimit: g => g.Id == JavaGameHeuristics.MinecraftJava.Id ? JavaDetector?.MinecraftMaxHeapBytes : null);
+        // While a game runs, each system sample is lined up against its frames — the raw
+        // material for the "why did it stutter" verdict saved with the session.
+        sampler.Sampled += (_, sample) => frames.OnSystemSample(sample);
 
         // ── Pages ─────────────────────────────────────────────────────────────────────
         Overview = new OverviewViewModel(
@@ -201,7 +222,8 @@ public sealed class Composition
 
         // ── Memory ────────────────────────────────────────────────────────────────────
         var booster = new GameBooster(ramCleaner);
-        var engine = new PriorityRuleEngine(new WmiProcessWatcher(), priorityClient, booster);
+        var processWatcher = new WmiProcessWatcher();   // shared: priority rules + game-only wake-on-launch
+        var engine = new PriorityRuleEngine(processWatcher, priorityClient, booster);
 
         // Migrate the legacy BelowNormal defaults FIRST (old builds bulk-deprioritised
         // every scanned app, VS Code included), then feed the engine. Start() needs admin
@@ -222,11 +244,28 @@ public sealed class Composition
         // The Java detector catches Minecraft behind javaw.exe (Modrinth, CurseForge,
         // Lunar, vanilla) — exe-name matching alone is blind to all of them.
         var javaDetector = new PrimeOSTuner.Core.Windows.Games.JavaGameDetector();
+        // processStarts: Windows' launch events make detection near-instant; the 2 s poll
+        // is only the fallback. Starts and stops are logged so the History tab shows them.
         var watcher = new GameProcessWatcher(
             knownGamesProvider: () => gameRegistry.GetAllAsync(),
             processSnapshotProvider: null,
             pollIntervalMs: 2000,
-            syntheticDetector: javaDetector.DetectRunning);
+            syntheticDetector: javaDetector.DetectRunning,
+            processStarts: processWatcher,
+            log: EngineLog.Log,
+            exitConfirmTicks: 2);
+        JavaDetector = javaDetector;
+
+        // Games nobody told us about: a full-screen window keeping the GPU busy gets added
+        // to the Games list, and the watcher is poked so the session starts right away.
+        var learner = new AutoGameLearner(
+            foreground: PrimeOSTuner.Core.Windows.Games.ForegroundProbe.Read,
+            gpu: hardware,
+            identify: PrimeOSTuner.Core.Windows.Games.ForegroundProbe.Identify,
+            knownExes: () => watcher.KnownExecutables,
+            learn: async game => { await addedGames.AddAsync(game); watcher.RequestTick(); },
+            log: EngineLog.Log);
+        sampler.Sampled += (_, s) => learner.OnSample(s.TakenAtUtc);
 
         var specsHttp = new HttpClient
         {
@@ -251,7 +290,9 @@ public sealed class Composition
             ui);
 
         Sessions = new SessionsViewModel(frameStore, sentinel, settingsStore, ui);
-        GameBoost = new GameBoostViewModel(applier, settingsStore, suspender, ui);
+        GameOnlyApps = sleepList = new GameOnlyAppsService(settingsStore, new NtProcessSuspender(), trimmer,
+            watcher, processWatcher, pausedForGames: suspender);
+        GameBoost = new GameBoostViewModel(applier, settingsStore, suspender, ui, GameOnlyApps);
         Guides = new GuidesViewModel();
 
         // ── Background engine: everything that must run without any tab open ──────────
@@ -261,7 +302,7 @@ public sealed class Composition
             new ActiveTweaksStore(ActiveTweaksStore.DefaultPath()),
             new GameProfileStore(GameProfileStore.DefaultPath()),
             new SessionTweakStore(SessionTweakStore.DefaultPath()),
-            standbyClient, deepRamTweak, selfTrim,
+            standbyClient, selfTrim,
             priorityStore, engine, priorityClient);
 
         // ── Updates: quiet check against the published releases ───────────────────────

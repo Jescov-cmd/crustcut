@@ -29,6 +29,27 @@ public class PriorityRuleEngineTests
         booster.Verify(b => b.QueueAsync(It.IsAny<int>(), It.IsAny<IEnumerable<int>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>A launch is checked by asking about that one pid — not by snapshotting
+    /// every process on the machine (node.exe and Code.exe start dozens of times a minute).</summary>
+    [Fact]
+    public async Task A_launch_is_verified_by_its_own_path_without_a_full_snapshot()
+    {
+        var watcher = new TestWatcher();
+        var priority = new Mock<IPriorityClient>();
+        priority.Setup(p => p.ImagePathOf(1234)).Returns(@"c:\games\CS2.exe");
+        priority.Setup(p => p.ImagePathOf(99)).Returns(@"D:\Other\cs2.exe");
+        var engine = new PriorityRuleEngine(watcher, priority.Object, new Mock<IGameBooster>().Object);
+        await engine.ReloadAsync(new[] { Rule(@"C:\Games\cs2.exe") });
+        engine.Start();
+
+        watcher.RaiseStarted(1234, "cs2.exe");
+        watcher.RaiseStarted(99, "cs2.exe");   // same name, different install
+
+        priority.Verify(p => p.TrySetPriority(1234, PriorityLevel.High), Times.Once);
+        priority.Verify(p => p.TrySetPriority(99, It.IsAny<PriorityLevel>()), Times.Never);
+        priority.Verify(p => p.FindPidsForExe(It.IsAny<string>()), Times.Never);
+    }
+
     [Fact]
     public async Task Fires_GameBooster_when_rule_has_booster_enabled()
     {

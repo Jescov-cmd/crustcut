@@ -16,4 +16,8 @@ public interface IBackgroundSuspenderService
 
     IReadOnlyList<SuspendedProcessInfo> SuspendBackgroundApps();
     void ResumeAll();
+
+    /// <summary>Wakes one paused app early (the user brought it to the front mid-game).
+    /// It stays awake for the rest of the game.</summary>
+    void Resume(string name) { }
 }

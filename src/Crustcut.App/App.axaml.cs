@@ -14,7 +14,11 @@ public partial class App : Application
     private Composition? _composition;
     private SingleInstanceGuard? _guard;
     private MainWindow? _window;
+    private readonly ShellViewModel _shell = new();
     private bool _exiting;
+    // --navstress measures the close-to-tray footprint, so its window close must always
+    // go to the tray whatever the user's setting says — otherwise the run just exits.
+    private bool _alwaysCloseToTray;
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
@@ -72,38 +76,37 @@ public partial class App : Application
             _composition = new Composition();
             var settings = new AppSettingsStore(AppSettingsStore.DefaultPath()).Load();
 
-            _window = new MainWindow(new ShellViewModel(), _composition);
-            _window.Closing += OnWindowClosing;
-
             // Closing the last window must not kill the process while we live in the tray.
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
+            // The window exists only while it's on screen. Starting minimised builds none
+            // at all, and closing to the tray destroys it (see OnWindowClosing) — a hidden
+            // window kept every visited page, every cover image and every page timer alive
+            // for the whole session, which was most of the app's idle memory.
+            //
             // NOTE: assigning desktop.MainWindow makes Avalonia SHOW that window when the
-            // lifetime starts. Setting it here and calling Hide() afterwards is why
-            // "start minimised to the tray" still flashed the window open on every boot —
-            // Hide() ran before the lifetime had shown it, and the show won. When starting
-            // minimised we leave MainWindow unset and adopt the window on first display.
-            if (!settings.StartMinimized) desktop.MainWindow = _window;
-
+            // lifetime starts. When starting minimised we therefore create nothing and leave
+            // MainWindow unset; the first tray click builds and adopts the window.
             if (shotPath is not null)
             {
-                desktop.MainWindow = _window;
-                if (shotTab is not null) _window.NavigateTo(shotTab);
-                if (shotW > 0 && shotH > 0) { _window.Width = shotW; _window.Height = shotH; }
-                _window.Show();
-                _ = SelfScreenshot.CaptureThenExitAsync(_window, shotPath);
+                var w = EnsureWindow();
+                desktop.MainWindow = w;
+                if (shotTab is not null) w.NavigateTo(shotTab);
+                if (shotW > 0 && shotH > 0) { w.Width = shotW; w.Height = shotH; }
+                w.Show();
+                _ = SelfScreenshot.CaptureThenExitAsync(w, shotPath);
             }
             else if (navStressPath is not null)
             {
-                desktop.MainWindow = _window;
-                _window.Show();
-                _ = NavStress.RunThenExitAsync(_window, navStressPath, () => Shutdown());
+                _alwaysCloseToTray = true;
+                var w = EnsureWindow();
+                desktop.MainWindow = w;
+                w.Show();
+                _ = NavStress.RunThenExitAsync(w, navStressPath, () => Shutdown());
             }
-            else if (settings.StartMinimized)
+            else if (!settings.StartMinimized)
             {
-                // Nothing to do: the window was never shown and MainWindow was left unset,
-                // so the app lives in the tray until the user asks for it. The Settings
-                // page explains that the tray icon is the only affordance.
+                desktop.MainWindow = EnsureWindow();
             }
             // Watching, profiles, recording, overlay, enforcement, auto-RAM. On a
             // background thread: started from here, its continuations would otherwise run
@@ -111,13 +114,20 @@ public partial class App : Application
             // and made the whole app "not responding" for seconds after launch. UI-touching
             // parts inside marshal themselves via IUiDispatcher.
             // Engine is null on macOS — no Windows subsystems to run.
-            if (_composition.Engine is { } engine)
+            // Not in a throwaway measuring/screenshot copy: the engine acts on the real
+            // machine — fans, memory caps, enforcement — and a second copy doing that fights
+            // the user's own Crustcut (it once "restored BIOS fan control" under it).
+            // --engine opts back in, for measuring the engine's own footprint.
+            var runEngine = !isDebugCapture || Array.IndexOf(Program.Args, "--engine") >= 0;
+            if (runEngine && _composition.Engine is { } engine)
                 _ = Task.Run(() => engine.StartAsync());
+            if (runEngine) _composition.GameOnlyApps?.Start();
+            StartMemoryWatch();
 
             // Update check: quiet, once per launch, never blocking startup.
             if (_composition.Updates is { } updates)
             {
-                _window.AttachUpdates(updates);
+                // The window's banner wiring happens in EnsureWindow, per window instance.
                 updates.PropertyChanged += (_, e) =>
                 {
                     if (e.PropertyName == nameof(updates.UpdateAvailable) && updates.UpdateAvailable)
@@ -140,6 +150,7 @@ public partial class App : Application
             desktop.ShutdownRequested += (_, _) =>
             {
                 _composition?.FanService?.Dispose();   // hands fans back to the BIOS
+                _composition?.GameOnlyApps?.Dispose(); // never leave an app frozen behind us
                 _composition?.Engine?.Dispose();
                 _composition?.Overlay?.Dispose();
                 _composition?.Overview.Dispose();
@@ -155,10 +166,72 @@ public partial class App : Application
         if (_exiting) return;
 
         var settings = new AppSettingsStore(AppSettingsStore.DefaultPath()).Load();
-        if (!settings.MinimizeToTrayOnClose) { Shutdown(); return; }
+        if (!settings.MinimizeToTrayOnClose && !_alwaysCloseToTray) { Shutdown(); return; }
 
-        e.Cancel = true;
-        _window?.Hide();
+        // Let the close go through: the window is destroyed and rebuilt on the next tray
+        // click (EnsureWindow). ShutdownMode.OnExplicitShutdown keeps the process alive.
+    }
+
+    /// <summary>The main window, built on demand. The shell view model is shared so the
+    /// reopened window lands on the tab the user left.</summary>
+    private MainWindow EnsureWindow()
+    {
+        if (_window is not null) return _window;
+        var window = new MainWindow(_shell, _composition);
+        window.Closing += OnWindowClosing;
+        window.Closed += OnWindowClosed;
+        if (_composition?.Updates is { } updates) window.AttachUpdates(updates);
+        _window = window;
+        return window;
+    }
+
+    private void OnWindowClosed(object? sender, EventArgs e)
+    {
+        if (sender is MainWindow w)
+        {
+            w.Closing -= OnWindowClosing;
+            w.Closed -= OnWindowClosed;
+        }
+        _window = null;
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime d) d.MainWindow = null;
+        if (_exiting) return;
+
+        // Give the freed pages, images and render surfaces back to Windows now rather than
+        // whenever the GC next gets round to it: the user just sent us to the tray, which is
+        // exactly when our footprint should shrink. Aggressive = compact and decommit.
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(1500);
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+            GC.WaitForPendingFinalizers();
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+            // Then release our working set. Sitting in the tray, Crustcut touches only a sliver
+            // of its pages each minute — the rest (UI code, fonts, render state) is exactly
+            // the idle memory the RAM cleaner reclaims from other apps, so it goes back too.
+            // What we still use faults back in quietly; this is the one app that can't
+            // start a refault war with itself.
+            _composition?.TrimOwnWorkingSet?.Invoke();
+        });
+    }
+
+    private static System.Threading.Timer? _memoryWatch;
+
+    /// <summary>Crustcut's own memory: an early cleanup whenever native memory piles up
+    /// (see <see cref="PrimeOSTuner.Core.Diagnostics.MemoryWatch"/>), and a line in the log
+    /// every 5 minutes saying where it stands and which job made it grow.</summary>
+    private static void StartMemoryWatch()
+    {
+        var ticks = 0;
+        _memoryWatch ??= new System.Threading.Timer(_ =>
+        {
+            try
+            {
+                if (PrimeOSTuner.Core.Diagnostics.MemoryWatch.CollectIfNativeGrew() is { } first) EngineLog.Log(first);
+                if (++ticks % 150 == 0 && PrimeOSTuner.Core.Diagnostics.MemoryWatch.Report() is { } line) EngineLog.Log(line);
+                else if (ticks == 1) PrimeOSTuner.Core.Diagnostics.MemoryWatch.Report();   // baseline
+            }
+            catch { /* diagnostics must never take the app down */ }
+        }, null, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
     }
 
     /// <summary>
@@ -207,11 +280,10 @@ public partial class App : Application
             s.RamAdaptiveEnabled = false;
             s.RamAutoOptimizeOnInterval = false;
             s.RamAutoOptimizeOnThreshold = false;
-            s.StandbyAutoPurgeEnabled = false;
             s.AutoMemoryLimitsEnabled = false;
             s.ThermalGovernorEnabled = false;
             store.Save(s);
-            report.AppendLine("OFF   adaptive/scheduled/threshold RAM cleanup, standby auto-purge, auto memory limits, Cool-Down Assist");
+            report.AppendLine("OFF   adaptive/scheduled/threshold RAM cleanup, auto memory limits, Cool-Down Assist");
         }
         catch (Exception ex) { report.AppendLine($"ABORT — {ex.Message}"); }
 
@@ -223,12 +295,13 @@ public partial class App : Application
 
     private void ShowWindow()
     {
-        if (_window is null) return;
+        if (_composition is null || _exiting) return;
+        var window = EnsureWindow();
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: null } d)
-            d.MainWindow = _window;   // adopted on first display (start-minimised path)
-        _window.Show();
-        _window.WindowState = WindowState.Normal;
-        _window.Activate();
+            d.MainWindow = window;   // adopted on display (start-minimised / reopened path)
+        window.Show();
+        window.WindowState = WindowState.Normal;
+        window.Activate();
     }
 
     private void Shutdown()

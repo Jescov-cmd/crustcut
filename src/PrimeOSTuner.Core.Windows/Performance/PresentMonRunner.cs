@@ -95,6 +95,10 @@ public sealed class PresentMonRunner : IPresentMonRunner
         finally
         {
             lock (_gate) { if (ReferenceEquals(_current, proc)) _current = null; }
+            // Cancelled mid-stream (the game ended, or capture moved to another process):
+            // PresentMon is still running with nobody reading its output. Left alone it
+            // lingers — an orphaned capture session, until its pipe fills and it stalls.
+            try { if (proc is { HasExited: false }) proc.Kill(entireProcessTree: true); } catch { }
             try { proc?.Dispose(); } catch { }
         }
     }
@@ -117,12 +121,14 @@ public sealed class PresentMonRunner : IPresentMonRunner
         }
     }
 
+    // stderr is NOT redirected: nothing ever read it, and PresentMon reports lost-event
+    // warnings there during long sessions — once that pipe's buffer filled, PresentMon
+    // blocked writing to it and frame capture silently stalled for the rest of the game.
     private ProcessStartInfo NewPsi() => new(_binaryPath)
     {
         CreateNoWindow = true,
         UseShellExecute = false,
         RedirectStandardOutput = true,
-        RedirectStandardError = true,
     };
 
     // PresentMon 2.x flags (double-dash). --v1_metrics keeps the msBetweenPresents column;

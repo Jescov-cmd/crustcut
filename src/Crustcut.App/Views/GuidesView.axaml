@@ -21,7 +21,7 @@
                 <StackPanel Margin="4,3">
                   <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="SemiBold"
                              Foreground="{DynamicResource Text1}" TextWrapping="Wrap"/>
-                  <TextBlock Text="{Binding Meta}" FontSize="10.5"
+                  <TextBlock Text="{Binding Meta}" FontSize="10.5" TextWrapping="Wrap"
                              Foreground="{DynamicResource Text3}" Margin="0,2,0,0"/>
                 </StackPanel>
               </DataTemplate>

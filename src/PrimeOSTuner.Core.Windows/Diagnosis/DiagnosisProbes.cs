@@ -79,6 +79,41 @@ public sealed class DiagnosisProbes : IDiagnosisProbes
         catch { return Array.Empty<ProcSample>(); }
     }
 
+    /// <summary>Five one-second readings of "% DPC Time" on every core. Per core on purpose:
+    /// a driver pins one core, and the _Total average divides that across every thread.</summary>
+    public async Task<(double AvgPercent, double PeakPercent)?> SampleDriverTimeAsync(CancellationToken ct)
+    {
+        var counters = new List<PerformanceCounter>();
+        try
+        {
+            foreach (var core in new PerformanceCounterCategory("Processor").GetInstanceNames())
+            {
+                if (core == "_Total") continue;
+                var c = new PerformanceCounter("Processor", "% DPC Time", core, readOnly: true);
+                c.NextValue();   // rate counter: the first read only primes it
+                counters.Add(c);
+            }
+            if (counters.Count == 0) return null;
+
+            var sums = new double[counters.Count];
+            double peak = 0;
+            const int Samples = 5;
+            for (var s = 0; s < Samples; s++)
+            {
+                await Task.Delay(1000, ct);
+                for (var i = 0; i < counters.Count; i++)
+                {
+                    var v = counters[i].NextValue();
+                    sums[i] += v;
+                    peak = Math.Max(peak, v);
+                }
+            }
+            return (sums.Max() / Samples, peak);
+        }
+        catch { return null; }
+        finally { foreach (var c in counters) c.Dispose(); }
+    }
+
     public double? RamUsedPercent()
     {
         try

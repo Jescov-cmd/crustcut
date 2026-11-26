@@ -40,11 +40,26 @@
       </Border>
     </StackPanel>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-      <ItemsControl ItemsSource="{Binding Entries}">
+    <!-- Virtualized: 260+ entries built all at once cost ~16 MB and every one of them was
+         re-styled on each visit. Same rules as the Memory list: ScrollViewer INSIDE the
+         template, ItemsPanel template-bound, rows pinned to the list width. -->
+    <ItemsControl ItemsSource="{Binding Entries}">
+      <ItemsControl.Template>
+        <ControlTemplate>
+          <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
+            <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}"/>
+          </ScrollViewer>
+        </ControlTemplate>
+      </ItemsControl.Template>
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <VirtualizingStackPanel/>
+        </ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Border Classes="row">
+            <Border Classes="row"
+                    Width="{Binding Bounds.Width, RelativeSource={RelativeSource AncestorType=ItemsPresenter, Tree=Visual}}">
               <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Grid.Column="0" Text="{Binding DisplayName}" FontSize="12.5"
                            Foreground="{DynamicResource Text1}" VerticalAlignment="Center"/>
@@ -55,7 +70,6 @@
             </Border>
           </DataTemplate>
         </ItemsControl.ItemTemplate>
-      </ItemsControl>
-    </ScrollViewer>
+    </ItemsControl>
   </DockPanel>
 </UserControl>

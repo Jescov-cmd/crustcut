@@ -59,4 +59,23 @@ public class DiagnosisRulesTests
     public void Gpu_driver_older_than_a_year_warns()
         => DiagnosisRules.EvaluateGpuDriver(DateTime.UtcNow.AddMonths(-18), DateTime.UtcNow)
             .Severity.Should().Be(FindingSeverity.Warning);
+
+    /// <summary>Measured on the user's PC, 2026-09-25, network card buffers reset by a driver update.</summary>
+    [Fact]
+    public void A_driver_hogging_a_core_is_a_problem_that_points_at_the_network_fix()
+    {
+        var f = DiagnosisRules.EvaluateDriverLatency(busiestCoreAvgPercent: 11.9, peakPercent: 21.9);
+        f.Severity.Should().Be(FindingSeverity.Problem);
+        f.Title.Should().Contain("driver");
+        f.FixSuggestion.Should().Contain("Network card latency fix");
+        f.NavTarget.Should().Be("Optimize");
+    }
+
+    [Fact]
+    public void Normal_driver_time_passes()
+        => DiagnosisRules.EvaluateDriverLatency(0.6, 3.1).Severity.Should().Be(FindingSeverity.Passed);
+
+    [Fact]
+    public void Short_spikes_alone_still_count()
+        => DiagnosisRules.EvaluateDriverLatency(2.0, 18).Severity.Should().Be(FindingSeverity.Problem);
 }

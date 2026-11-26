@@ -70,7 +70,6 @@ public partial class SettingsViewModel : ObservableObject
             RamAutoIntervalMinutes = s.RamAutoIntervalMinutes;
             RamAutoOptimizeOnThreshold = s.RamAutoOptimizeOnThreshold;
             RamThresholdPercent = s.RamThresholdPercent;
-            StandbyAutoPurgeEnabled = s.StandbyAutoPurgeEnabled;
             RamAdaptiveEnabled = s.RamAdaptiveEnabled;
             StartAtBoot = s.StartAtBoot;
             StartMinimized = s.StartMinimized;
@@ -103,7 +102,6 @@ public partial class SettingsViewModel : ObservableObject
         s.RamAutoIntervalMinutes = RamAutoIntervalMinutes;
         s.RamAutoOptimizeOnThreshold = RamAutoOptimizeOnThreshold;
         s.RamThresholdPercent = RamThresholdPercent;
-        s.StandbyAutoPurgeEnabled = StandbyAutoPurgeEnabled;
         s.RamAdaptiveEnabled = RamAdaptiveEnabled;
         s.StartAtBoot = StartAtBoot;
         s.StartMinimized = StartMinimized;
@@ -124,7 +122,6 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnRamAutoIntervalMinutesChanged(int value) { Notify(); Save(); }
     partial void OnRamAutoOptimizeOnThresholdChanged(bool value) => Save();
     partial void OnRamThresholdPercentChanged(int value) => Save();
-    partial void OnStandbyAutoPurgeEnabledChanged(bool value) => Save();
     partial void OnRamAdaptiveEnabledChanged(bool value) => Save();
     partial void OnStartAtBootChanged(bool value)
     {

@@ -50,4 +50,11 @@ public interface IFanController : IDisposable
 
     /// <summary>Returns every managed fan to BIOS/automatic control.</summary>
     void RestoreAuto();
+
+    /// <summary>
+    /// On while a human is looking at the fan list: include display-only hardware that is
+    /// expensive to keep open (graphics cards load vendor driver libraries and threads).
+    /// Off the rest of the time. Never affects which fans are controlled.
+    /// </summary>
+    void SetDetailedMonitoring(bool on) { }
 }

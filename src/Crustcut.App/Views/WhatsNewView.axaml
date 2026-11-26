@@ -3,7 +3,10 @@
              x:Class="Crustcut.App.Views.WhatsNewView">
 
   <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,0,20,20">
-    <StackPanel MaxWidth="680" HorizontalAlignment="Left">
+    <!-- Grid + bound width: a StackPanel measured inside a ScrollViewer takes its natural
+         width, so at narrow windows the 680 px cards ran past the right edge. -->
+    <Grid x:Name="PanelGrid" VerticalAlignment="Top">
+    <StackPanel Width="{Binding #PanelGrid.Bounds.Width}" MaxWidth="680" HorizontalAlignment="Left">
       <TextBlock Text="What's new" Classes="pageTitle" Margin="0,16,0,10"/>
       <TextBlock Text="Every release, newest first — features and fixes alike."
                  FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,16"/>
@@ -41,5 +44,6 @@
         </ItemsControl.ItemTemplate>
       </ItemsControl>
     </StackPanel>
+    </Grid>
   </ScrollViewer>
 </UserControl>

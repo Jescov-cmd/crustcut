@@ -10,6 +10,11 @@ public interface IDiagnosisProbes
     (long Free, long Total)? SystemDriveSpace();
     string? ActivePowerPlanName();
     DateTime? NewestGpuDriverDateUtc();
+
+    /// <summary>Driver (DPC) time on the busiest processor core over a few seconds:
+    /// that core's average and its single worst second, in percent.</summary>
+    Task<(double AvgPercent, double PeakPercent)?> SampleDriverTimeAsync(CancellationToken ct)
+        => Task.FromResult<(double, double)?>(null);
 }
 
 public sealed class DiagnosisService
@@ -27,6 +32,10 @@ public sealed class DiagnosisService
 
         progress?.Report("Looking for background hogs…");
         Add(DiagnosisRules.EvaluateBackgroundHogs(await _probes.SampleTopProcessesAsync(ct)));
+
+        progress?.Report("Checking for driver lag…");
+        if (await _probes.SampleDriverTimeAsync(ct) is var (avgDpc, peakDpc))
+            Add(DiagnosisRules.EvaluateDriverLatency(avgDpc, peakDpc));
 
         progress?.Report("Checking memory…");
         if (_probes.RamUsedPercent() is double ram) Add(DiagnosisRules.EvaluateRam(ram));

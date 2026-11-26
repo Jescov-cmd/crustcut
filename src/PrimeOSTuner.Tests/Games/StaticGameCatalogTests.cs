@@ -31,6 +31,25 @@ public class StaticGameCatalogTests
     }
 
     [Fact]
+    public void Roblox_is_recognised_however_it_was_launched()
+    {
+        var match = StaticGameCatalog.All.FirstOrDefault(g => g.Id == "static.roblox");
+        match.Should().NotBeNull();
+        match!.ExecutableNames.Should().Contain("RobloxPlayerBeta.exe");   // Roblox / Bloxstrap / Fishstrap
+        match.ExecutableNames.Should().NotContain("RobloxStudioBeta.exe"); // Studio is a dev tool
+    }
+
+    /// <summary>javaw.exe is every Java program. Matching it by name turned each Gradle
+    /// build into a "Minecraft session"; JavaGameDetector handles Java Minecraft instead.</summary>
+    [Fact]
+    public void No_entry_matches_a_generic_java_runtime()
+    {
+        StaticGameCatalog.All.SelectMany(g => g.ExecutableNames)
+            .Should().NotContain(n => n.Equals("javaw.exe", StringComparison.OrdinalIgnoreCase)
+                                   || n.Equals("java.exe", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void Every_entry_uses_StaticCatalog_source()
     {
         StaticGameCatalog.All.Should().OnlyContain(g => g.Source == KnownGameSource.StaticCatalog);

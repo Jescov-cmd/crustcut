@@ -29,9 +29,16 @@ public partial class PriorityRuleVm : ObservableObject
     [ObservableProperty] private bool _protectFromRamCleanup;
     [ObservableProperty] private bool _gameBooster;
     [ObservableProperty] private bool _isGame;
-    // Nullable: a re-binding ComboBox transiently writes null through the TwoWay binding
-    // before restoring the real selection. Null means "No limit" everywhere it's read.
-    [ObservableProperty] private MemoryLimitOption? _memoryLimit;
+    // A re-binding ComboBox transiently writes null through the TwoWay binding before
+    // restoring the real selection. Null used to be ACCEPTED and read as "No limit", so the
+    // next save of any row persisted the wipe — a silent way to lose a user's cap. "No
+    // limit" is a real option (Mb = null), so null is never a meaningful value: ignore it.
+    private MemoryLimitOption? _memoryLimit;
+    public MemoryLimitOption? MemoryLimit
+    {
+        get => _memoryLimit;
+        set { if (value is not null) SetProperty(ref _memoryLimit, value); }
+    }
     [ObservableProperty] private string _statusText = "Idle";
     [ObservableProperty] private string _statusColor = "#888";
 

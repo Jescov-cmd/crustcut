@@ -12,10 +12,17 @@ namespace Crustcut.App;
 public sealed class PageFactory
 {
     private readonly Composition? _app;
-    private readonly HashSet<string> _loaded = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _loaded;
     private readonly Dictionary<string, Control> _cache = new(StringComparer.Ordinal);
 
-    public PageFactory(Composition? app) => _app = app;
+    // The window (and so this factory) is rebuilt on every tray open, but a tab's first-visit
+    // load — probing every tweak, scanning the game library — is still once per app run:
+    // the loaded set lives on the long-lived Composition.
+    public PageFactory(Composition? app)
+    {
+        _app = app;
+        _loaded = app?.LoadedTabs ?? new HashSet<string>(StringComparer.Ordinal);
+    }
 
     /// <summary>
     /// Views are built ONCE and reused on every later visit. Rebuilding per navigation

@@ -97,7 +97,16 @@ public partial class MainWindow : Window
     [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
 
-    private void ShowActivePage() => PageHost.Content = _pages.Create(_shell.ActiveTab);
+    private void ShowActivePage()
+    {
+        var page = _pages.Create(_shell.ActiveTab);
+        if (!PageHost.Children.Contains(page))
+        {
+            page.IsVisible = false;
+            PageHost.Children.Add(page);
+        }
+        foreach (var child in PageHost.Children) child.IsVisible = ReferenceEquals(child, page);
+    }
 
     /// <summary>Switches tab programmatically. Used by the --screenshot debug flag.</summary>
     public void NavigateTo(string tabId) => _shell.NavigateCommand.Execute(tabId);
@@ -111,20 +120,43 @@ public partial class MainWindow : Window
     public void AttachUpdates(Crustcut.Presentation.UpdateViewModel updates)
     {
         _updates = updates;
-        updates.PropertyChanged += (_, e) =>
+        updates.PropertyChanged += OnUpdatesChanged;
+        // The check may have finished before this window existed (windows are rebuilt on
+        // every tray open), so paint the current state instead of waiting for a change.
+        SyncBanner(null);
+    }
+
+    private void OnUpdatesChanged(object? sender, PropertyChangedEventArgs e) => SyncBanner(e.PropertyName);
+
+    private void SyncBanner(string? changed)
+    {
+        if (_updates is not { } updates) return;
+        if (changed is null or nameof(updates.UpdateAvailable) or nameof(updates.Headline))
         {
-            if (e.PropertyName is nameof(updates.UpdateAvailable) or nameof(updates.Headline))
-            {
-                UpdateBanner.IsVisible = updates.UpdateAvailable;
-                UpdateHeadline.Text = updates.Headline;
-            }
-            if (e.PropertyName is nameof(updates.Status) or nameof(updates.IsBusy))
-            {
-                UpdateStatus.Text = updates.Status;
-                UpdateStatus.IsVisible = !string.IsNullOrEmpty(updates.Status);
-                UpdateNowButton.IsEnabled = !updates.IsBusy;
-            }
-        };
+            UpdateBanner.IsVisible = updates.UpdateAvailable;
+            UpdateHeadline.Text = updates.Headline;
+        }
+        if (changed is null or nameof(updates.Status) or nameof(updates.IsBusy))
+        {
+            UpdateStatus.Text = updates.Status;
+            UpdateStatus.IsVisible = !string.IsNullOrEmpty(updates.Status);
+            UpdateNowButton.IsEnabled = !updates.IsBusy;
+        }
+    }
+
+    /// <summary>
+    /// The shell view model and the update checker outlive this window (it's rebuilt on
+    /// every tray open). Their event subscriptions would otherwise pin this closed window —
+    /// and every page it ever showed — in memory for the rest of the session.
+    /// </summary>
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        _shell.PropertyChanged -= OnShellPropertyChanged;
+        if (_updates is not null) _updates.PropertyChanged -= OnUpdatesChanged;
+        _updates = null;
+        PageHost.Children.Clear();   // detaches the pages: their timers and images stop and go
+        DataContext = null;
     }
 
     private async void UpdateNowClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

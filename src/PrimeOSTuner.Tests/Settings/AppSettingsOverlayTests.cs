@@ -59,7 +59,6 @@ public class AppSettingsOverlayTests
         s.AutoMemoryLimitsEnabled.Should().BeFalse();
         s.RamAutoOptimizeOnInterval.Should().BeFalse();
         s.RamAutoOptimizeOnThreshold.Should().BeFalse();
-        s.StandbyAutoPurgeEnabled.Should().BeFalse();
         s.FanControlEnabled.Should().BeFalse();
         s.ThermalGovernorEnabled.Should().BeFalse();
         s.SuspendBackgroundAppsInGame.Should().BeFalse();

@@ -13,10 +13,6 @@ public sealed class AppSettings
     public bool RamAutoOptimizeOnThreshold { get; set; } = false;
     public int RamThresholdPercent { get; set; } = 70;
 
-    /// <summary>ISLC-style: purge the standby cache automatically, but ONLY when free
-    /// memory is nearly gone while the cache is huge (the game-stutter condition).</summary>
-    public bool StandbyAutoPurgeEnabled { get; set; } = false;
-
     /// <summary>When off, Crustcut never assigns memory caps by itself. Caps the user
     /// set by hand are still enforced — this governs the automatic behaviour only.
     /// Off by default: a hard cap on the wrong process is how the black-rectangle
@@ -37,9 +33,20 @@ public sealed class AppSettings
     /// pausing other software is the user's call.</summary>
     public bool SuspendBackgroundAppsInGame { get; set; } = false;
 
+    /// <summary>The mirror image: apps only useful IN games (clip recorders, overlays)
+    /// are frozen whenever no game runs, and woken the moment one starts. Off by default,
+    /// like every other behaviour that touches other software.</summary>
+    public bool GameOnlyAppsEnabled { get; set; } = false;
+
+    /// <summary>Process names (no .exe) the user marked game-only.</summary>
+    public List<string> GameOnlyApps { get; set; } = new();
+
+    /// <summary>Recommended game-only apps the user took off the list — never auto-added again.</summary>
+    public List<string> GameOnlyExcluded { get; set; } = new();
+
     /// <summary>Adaptive mode: the engine reads memory pressure each minute and decides
-    /// when/how hard to clean (including standby purges and Deep escalation) instead of
-    /// running the fixed schedule/threshold settings. Supersedes them while on.</summary>
+    /// when to trim idle background programs instead of running the fixed
+    /// schedule/threshold settings. Supersedes them while on.</summary>
     public bool RamAdaptiveEnabled { get; set; } = true;
 
     // App behavior

@@ -46,9 +46,14 @@ public sealed class PriorityRuleEngine : IDisposable
         }
 
         // The WMI ProcessName comes from Win32_ProcessStartTrace and is just the EXE filename.
-        // Verify the running PID's EXE path matches the rule's ExePath before applying.
-        var matchingPids = _priority.FindPidsForExe(rule.ExePath);
-        if (!matchingPids.Contains(e.Pid)) return;
+        // Verify the running PID's EXE path matches the rule's ExePath before applying —
+        // by asking about that one pid. (This used to snapshot every process on the
+        // machine, on every launch of node.exe, Code.exe and friends.)
+        var path = _priority.ImagePathOf(e.Pid);
+        var matches = path is not null
+            ? path.Equals(rule.ExePath, StringComparison.OrdinalIgnoreCase)
+            : _priority.FindPidsForExe(rule.ExePath).Contains(e.Pid);
+        if (!matches) return;
 
         _priority.TrySetPriority(e.Pid, rule.Priority);
         // Working-set caps die with the process, so every fresh launch gets re-capped here.

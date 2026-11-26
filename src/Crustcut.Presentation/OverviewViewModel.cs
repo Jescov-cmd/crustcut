@@ -71,14 +71,40 @@ public partial class OverviewViewModel : ObservableObject, IDisposable
         _frameStore = frameStore;
         _ui = ui;
 
-        _sampler.Sampled += OnSampled;
+        // The sampler runs for the whole session (the engine, fans and overlay use it); this
+        // page only listens while it's on screen — see SetViewing.
         _sampler.Start();
         _refreshTimer.Elapsed += async (_, _) => await RefreshActiveAsync();
-        _refreshTimer.Start();
         _ = RefreshBoostScoreAsync();
 
         _frameStore.Updated += (_, _) => _ui.Post(RefreshSessions);
         RefreshSessions();
+    }
+
+    private bool _viewing;
+
+    /// <summary>
+    /// The Overview page is (or stops being) on screen. While nobody can see it there's no
+    /// reason to update nine live readouts and four charts every second, or to re-read the
+    /// active-profile file every two — which is what it did from the tray, all day.
+    /// Charts restart clean on return rather than splicing in stale points.
+    /// </summary>
+    public void SetViewing(bool viewing)
+    {
+        if (viewing == _viewing) return;
+        _viewing = viewing;
+        if (viewing)
+        {
+            CpuHistory.Clear(); RamHistory.Clear(); GpuHistory.Clear(); NetHistory.Clear();
+            _sampler.Sampled += OnSampled;
+            _ = RefreshActiveAsync();
+            _refreshTimer.Start();
+        }
+        else
+        {
+            _sampler.Sampled -= OnSampled;
+            _refreshTimer.Stop();
+        }
     }
 
     private void RefreshSessions()

@@ -4,12 +4,13 @@ namespace Crustcut.App.Views;
 
 public partial class HistoryView : UserControl
 {
-    public HistoryView() => InitializeComponent();
-
-    protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    public HistoryView()
     {
-        base.OnAttachedToVisualTree(e);
-        ActivityList.ItemsSource = ReadRecentActivity();
+        InitializeComponent();
+        PageActivity.Track(this, active =>
+        {
+            if (active) ActivityList.ItemsSource = ReadRecentActivity();
+        });
     }
 
     /// <summary>

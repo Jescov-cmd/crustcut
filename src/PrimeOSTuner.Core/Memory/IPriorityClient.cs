@@ -31,9 +31,26 @@ public interface IPriorityClient
     /// </summary>
     bool TrySetEfficiencyMode(int pid, bool on);
 
+    /// <summary>One process's full image path, or null if it's gone or refuses even a
+    /// limited query. The cheap way to ask about a single pid.</summary>
+    string? ImagePathOf(int pid) => null;
+
     /// <summary>Returns PIDs whose main module path matches one of the given EXE paths (case-insensitive).</summary>
     IReadOnlyList<int> FindPidsForExe(string exePath);
 
     /// <summary>Returns currently running PIDs whose main module path matches any in the protect list. Used by SafeRamCleaner.</summary>
     IReadOnlyList<int> FindPidsForExes(IEnumerable<string> exePaths);
+
+    /// <summary>
+    /// Lookups made on this thread until the returned scope is disposed share ONE snapshot
+    /// of running processes. For sweeps that ask about every rule in a row; a lone lookup
+    /// outside a batch always sees the live process list.
+    /// </summary>
+    IDisposable BeginBatch() => NoBatch.Instance;
+
+    private sealed class NoBatch : IDisposable
+    {
+        public static readonly NoBatch Instance = new();
+        public void Dispose() { }
+    }
 }

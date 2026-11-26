@@ -101,7 +101,7 @@ public sealed class FanService : IFanControlService, IDisposable
         {
             var s = SafeSettings();
             s.FanControlEnabled = value;
-            try { _settings.Save(s); } catch { }
+            SaveSettings(s);
             if (!value) Disengage("disabled by user");
             else Tick();   // take effect immediately, not at the next timer tick
         }
@@ -114,7 +114,7 @@ public sealed class FanService : IFanControlService, IDisposable
         {
             var s = SafeSettings();
             s.FanMode = value.ToString();
-            try { _settings.Save(s); } catch { }
+            SaveSettings(s);
             Tick();
         }
     }
@@ -126,7 +126,7 @@ public sealed class FanService : IFanControlService, IDisposable
         {
             var s = SafeSettings();
             s.ThermalGovernorEnabled = value;
-            try { _settings.Save(s); } catch { }
+            SaveSettings(s);
             Tick();   // switching off restores boost on this tick, not the next
         }
     }
@@ -144,6 +144,8 @@ public sealed class FanService : IFanControlService, IDisposable
     }
 
     public bool IsCalibrated => _tuning.HasCalibration;
+
+    public void SetViewing(bool viewing) => _fans.SetDetailedMonitoring(viewing);
 
     public void CycleRpmScale(string fanName)
     {
@@ -229,18 +231,24 @@ public sealed class FanService : IFanControlService, IDisposable
     }
 
     private int _rediscoverCountdown;
+    private int _rediscoverInterval = 15;   // ticks (2 s each)
+    private const int MaxRediscoverInterval = 900;   // 30 minutes
 
     private void Tick()
     {
         if (!System.Threading.Monitor.TryEnter(_gate)) return;   // ticks never overlap
+        using var tracked = PrimeOSTuner.Core.Diagnostics.MemoryWatch.Track("fans");
         try
         {
             if (!_fans.IsSupported)
             {
-                // Hardware invisible (SignalRGB likely held the chip at startup) —
-                // re-scan every ~60s instead of giving up for the whole session.
+                // Hardware invisible (SignalRGB likely held the chip at startup) — keep
+                // re-scanning instead of giving up for the session, but back off: each
+                // scan closes and reopens the driver, and a machine with no supported chip
+                // would otherwise pay that every minute forever. 30 s, 1, 2, 4… up to 30 min.
                 if (--_rediscoverCountdown > 0) return;
-                _rediscoverCountdown = 30;
+                _rediscoverCountdown = _rediscoverInterval;
+                _rediscoverInterval = Math.Min(_rediscoverInterval * 2, MaxRediscoverInterval);
                 if (_fans.TryRediscover())
                     EngineLog.Log("fans: hardware found on re-scan — control available");
                 else
@@ -418,10 +426,28 @@ public sealed class FanService : IFanControlService, IDisposable
         EngineLog.Log($"fans: BIOS control restored ({reason})");
     }
 
+    // The loop ticks every 2 s; re-reading and parsing the settings file each time was
+    // pure churn. A short cache keeps changes made elsewhere (Settings page, other
+    // services) visible within seconds, and our own setters refresh it immediately.
+    private AppSettings? _settingsCache;
+    private DateTime _settingsReadUtc;
+    private static readonly TimeSpan SettingsCacheTtl = TimeSpan.FromSeconds(5);
+
     private AppSettings SafeSettings()
     {
-        try { return _settings.Load(); }
-        catch { return new AppSettings(); }
+        if (_settingsCache is { } cached && DateTime.UtcNow - _settingsReadUtc < SettingsCacheTtl)
+            return cached;
+        try { _settingsCache = _settings.Load(); }
+        catch { _settingsCache = new AppSettings(); }
+        _settingsReadUtc = DateTime.UtcNow;
+        return _settingsCache;
+    }
+
+    private void SaveSettings(AppSettings s)
+    {
+        try { _settings.Save(s); } catch { }
+        _settingsCache = s;
+        _settingsReadUtc = DateTime.UtcNow;
     }
 
     public void Dispose()

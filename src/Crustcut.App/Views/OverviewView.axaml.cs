@@ -6,7 +6,11 @@ namespace Crustcut.App.Views;
 
 public partial class OverviewView : UserControl
 {
-    public OverviewView() => InitializeComponent();
+    public OverviewView()
+    {
+        InitializeComponent();
+        PageActivity.Track(this, active => (DataContext as OverviewViewModel)?.SetViewing(active));
+    }
 
     private async void OptimizeClick(object? sender, RoutedEventArgs e)
     {

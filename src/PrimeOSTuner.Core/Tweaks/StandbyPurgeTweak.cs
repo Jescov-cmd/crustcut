@@ -16,8 +16,8 @@ public sealed class StandbyPurgeTweak : IOneShotTweak
     public string Description =>
         "Empties Windows' cached-file list. Useful when games stutter " +
         "with RAM nearly full — Windows reclaiming cache mid-game causes hitches. Don't run " +
-        "it habitually: the cache normally speeds things up. Settings has an automatic mode " +
-        "that fires only when memory is genuinely tight.";
+        "it habitually: the cache normally speeds things up, which is why Crustcut never " +
+        "does this on its own.";
 
     public bool RequiresElevation => true;
     public bool IsDestructive => false;

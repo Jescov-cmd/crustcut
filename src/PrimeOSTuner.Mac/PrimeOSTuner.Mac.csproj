@@ -4,7 +4,7 @@
        sources (sysctl, vm_stat, ps, Steam's on-disk library manifests). Platform-neutral
        TFM so it builds anywhere; only meaningful at runtime on macOS. -->
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>

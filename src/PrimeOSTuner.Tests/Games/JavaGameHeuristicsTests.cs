@@ -35,7 +35,7 @@ public class JavaGameHeuristicsTests
         var watcher = new GameProcessWatcher(
             knownGamesProvider: () => Task.FromResult<IReadOnlyList<KnownGame>>(Array.Empty<KnownGame>()),
             processSnapshotProvider: () => Array.Empty<string>(),
-            syntheticDetector: () => detected);
+            syntheticDetector: _ => detected);
 
         var started = new List<string>();
         var stopped = new List<string>();
@@ -52,4 +52,18 @@ public class JavaGameHeuristicsTests
         await watcher.TickAsync();
         stopped.Should().Equal("java.minecraft");
     }
+
+    [Theory]
+    [InlineData("javaw.exe -Xmx8G -Xms2G net.minecraft.client.main.Main", 8L << 30)]
+    [InlineData("javaw.exe -Xms512m -Xmx6144m -cp x net.fabricmc", 6144L << 20)]
+    [InlineData("\"C:\\java\\javaw.exe\" \"-Xmx4096M\" cpw.mods.bootstraplauncher", 4096L << 20)]
+    public void Reads_how_much_memory_minecraft_is_allowed(string cmd, long expected)
+        => JavaGameHeuristics.MaxHeapBytes(cmd).Should().Be(expected);
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("javaw.exe net.minecraft.client.main.Main")]
+    [InlineData("javaw.exe -XmxGarbage")]
+    public void No_heap_flag_means_unknown(string? cmd)
+        => JavaGameHeuristics.MaxHeapBytes(cmd).Should().BeNull();
 }

@@ -59,9 +59,10 @@ public sealed class GameRegistry
 
     // The disk/registry scans (Steam, Xbox, launchers, static catalog) change rarely but
     // GetAllAsync is polled every ~2s by the game watcher. Cache the scan portion for a
-    // short window so we're not hammering the disk and registry. User-added games are NOT
+    // while so we're not hammering the disk and registry (20 s was a full six-launcher
+    // rescan three times a minute, all day, in a tray app). User-added games are NOT
     // cached — they're a quick file read and must reflect edits (e.g. auto-link) instantly.
-    private static readonly TimeSpan ScanCacheTtl = TimeSpan.FromSeconds(20);
+    private static readonly TimeSpan ScanCacheTtl = TimeSpan.FromMinutes(2);
     private readonly object _cacheGate = new();
     private IReadOnlyList<KnownGame>? _scanCache;
     private DateTime _scanCacheUtc;
@@ -110,7 +111,9 @@ public sealed class GameRegistry
             result.Add(new KnownGame(
                 Id: $"steam.{sg.AppId}",
                 DisplayName: sg.Name,
-                ExecutableNames: ExeNames(sg.PrimaryExecutablePath),
+                ExecutableNames: sg.Executables is { Count: > 0 } all
+                    ? all.Select(Path.GetFileName).Where(n => !string.IsNullOrEmpty(n)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray()!
+                    : ExeNames(sg.PrimaryExecutablePath),
                 SteamAppId: sg.AppId,
                 InstallPath: sg.PrimaryExecutablePath,
                 Source: KnownGameSource.Steam));

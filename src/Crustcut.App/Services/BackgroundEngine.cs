@@ -42,8 +42,9 @@ public sealed class BackgroundEngine : IDisposable
     private bool _thresholdFired;
     private bool _ramRunning;
 
+    // Read for pressure inputs only (free bytes, hard-fault rate). The engine never
+    // purges or flushes through it — see AdaptiveRamPolicy for why.
     private readonly IStandbyListClient? _standby;
-    private readonly RamCleanerTweak? _deepRamTweak;
     private readonly Action? _selfTrim;
     private readonly PriorityRuleStore? _ruleStore;
     private readonly PriorityRuleEngine? _ruleEngine;
@@ -56,7 +57,7 @@ public sealed class BackgroundEngine : IDisposable
         IUiDispatcher ui, ProfileApplier applier, IBackgroundSuspenderService suspender,
         ActiveTweaksStore activeStore, GameProfileStore profileStore,
         SessionTweakStore sessionTweaks, IStandbyListClient? standby = null,
-        RamCleanerTweak? deepRamTweak = null, Action? selfTrim = null,
+        Action? selfTrim = null,
         PriorityRuleStore? ruleStore = null, PriorityRuleEngine? ruleEngine = null,
         IPriorityClient? priorityClient = null)
     {
@@ -69,7 +70,6 @@ public sealed class BackgroundEngine : IDisposable
         _sampler = sampler; _ui = ui; _applier = applier; _suspender = suspender;
         _activeStore = activeStore; _profileStore = profileStore; _sessionTweaks = sessionTweaks;
         _standby = standby;
-        _deepRamTweak = deepRamTweak;
     }
 
     public async Task StartAsync()
@@ -81,7 +81,7 @@ public sealed class BackgroundEngine : IDisposable
         var s0 = SafeSettings();
         EngineLog.Log($"engine: StartAsync entered — v{ver} at {Environment.ProcessPath} " +
             $"[adaptive={s0.RamAdaptiveEnabled} interval={s0.RamAutoOptimizeOnInterval} " +
-            $"threshold={s0.RamAutoOptimizeOnThreshold} purge={s0.StandbyAutoPurgeEnabled} " +
+            $"threshold={s0.RamAutoOptimizeOnThreshold} " +
             $"autoLimits={s0.AutoMemoryLimitsEnabled} suspend={s0.SuspendBackgroundAppsInGame}]");
         var s = s0;
 
@@ -138,10 +138,10 @@ public sealed class BackgroundEngine : IDisposable
         await HealMpoOverlayOnceAsync();
         await HealBundledOptInTweaksOnceAsync();
 
-        // ── Memory limits: assign what's missing, then enforce on what's running ─────
+        // ── Memory limits: retire automatic caps, then enforce the user's own ───────
         // Without the startup sweep, an app already running before Crustcut launched
         // kept its old freedom until it happened to restart.
-        await AutoAssignLimitsAsync();
+        await WithdrawAutomaticLimitsAsync();
         await ApplyRuleLimitsToRunningAsync("startup");
 
         // ── Scheduled + threshold RAM cleanup ────────────────────────────────────────
@@ -164,27 +164,14 @@ public sealed class BackgroundEngine : IDisposable
     private double _lastRamPercent;
     private string _lastSkipReason = "";
 
-    // ── ISLC-style standby purge gate ──────────────────────────────────────────────
-    // Purge only when BOTH are true: free memory nearly exhausted AND the cache is huge.
-    // That's the game-stutter condition; anywhere short of it the cache is helping.
-    private const long StandbyFreeFloorBytes = 1024L * 1024 * 1024;      // free < 1 GB
-    private const long StandbyCacheTriggerBytes = 1536L * 1024 * 1024;   // cache > 1.5 GB
-    private static readonly TimeSpan StandbyPurgeCooldown = TimeSpan.FromMinutes(10);
-    private DateTime _lastStandbyPurgeUtc = DateTime.MinValue;
-
-    private void MaybePurgeStandby(AppSettings s)
-    {
-        if (!s.StandbyAutoPurgeEnabled || _standby is null) return;
-        if (DateTime.UtcNow - _lastStandbyPurgeUtc < StandbyPurgeCooldown) return;
-
-        var free = _standby.GetFreeBytes();
-        var cache = _standby.GetStandbyBytes();
-        if (free >= StandbyFreeFloorBytes || cache <= StandbyCacheTriggerBytes) return;
-
-        _lastStandbyPurgeUtc = DateTime.UtcNow;
-        var ok = _standby.TryPurge();
-        EngineLog.Log($"standby: free {free / (1024 * 1024)} MB, cache {cache / (1024 * 1024)} MB — purge {(ok ? "ok" : "REFUSED")}");
-    }
+    // No automatic cache purging lives here any more. The engine used to purge the
+    // standby list on its own (an ISLC-style gate, plus the adaptive policy's own purge
+    // and "Deep" escalation that also flushed the modified list and emptied the system
+    // file cache). None of it freed memory that was actually unavailable — the standby
+    // cache is free memory Windows hands out on demand — and all of it made recently
+    // used files reload from disk, which is felt as hitching and slow app switches.
+    // Cache purging survives only behind deliberate buttons: DEEP CLEAN on the Memory
+    // tab and "Clear standby cache" on Optimize.
 
     private long _lastCleanFreedBytes = -1;   // -1 = no clean measured yet
     private volatile bool _gameRunning;
@@ -363,66 +350,42 @@ public sealed class BackgroundEngine : IDisposable
     /// running apps, curated catalog for known hogs that aren't running. Runs at startup
     /// so limits exist without anyone pressing a button; the Memory tab shows the result.
     /// </summary>
-    private bool _autoLimitsOffLogged;
-
-    private async Task AutoAssignLimitsAsync()
+    /// <summary>
+    /// Automatic memory caps are retired (2026-10-01). On the machine they were built for —
+    /// 15 GB, permanently ~90% used, paging 600–2000 times a second — a cap can't free
+    /// anything: it makes Windows push the capped app's memory out to disk, and the app
+    /// reads it straight back. Windows already trims the least-used pages under pressure,
+    /// and it knows which pages are cold; a fixed number doesn't. The user's verdict was
+    /// that the RAM features "don't work or make it worse", and for this one the paging
+    /// says so too. Caps the user set by hand, and RECOMMENDED LIMITS (a deliberate click),
+    /// are untouched. Every cap Crustcut picked by itself is withdrawn here.
+    /// </summary>
+    private async Task WithdrawAutomaticLimitsAsync()
     {
         if (_ruleStore is null || _priorityClient is null) return;
-        if (!SafeSettings().AutoMemoryLimitsEnabled)
-        {
-            // Caps the user set by hand are still enforced elsewhere; only the automatic
-            // assignment stands down.
-            if (!_autoLimitsOffLogged)
-            {
-                EngineLog.Log("limits: automatic assignment is switched off");
-                _autoLimitsOffLogged = true;
-            }
-            return;
-        }
-        _autoLimitsOffLogged = false;
         try
         {
             var rules = (await _ruleStore.LoadAsync()).ToList();
-            var assigned = 0;
             var withdrawn = 0;
             await Task.Run(() =>
             {
+                using var batch = _priorityClient.BeginBatch();
                 for (var i = 0; i < rules.Count; i++)
                 {
                     var r = rules[i];
-                    if (r.IsGame) continue;
-
-                    // Withdraw automatic caps from apps that have a window. A hard cap
-                    // forces eviction at the ceiling, and on a windowed (GPU-accelerated)
-                    // app that means render surfaces get paged out — black rectangles and
-                    // blurry text. User-chosen caps are left alone; that's their call.
-                    if (r.MemoryLimitMb is not null)
-                    {
-                        if (r.LimitAutoAssigned &&
-                            RecommendedLimits.HasVisibleWindow(r.ExePath, _priorityClient))
-                        {
-                            foreach (var pid in _priorityClient.FindPidsForExe(r.ExePath))
-                                _priorityClient.TryClearMemoryLimit(pid);
-                            rules[i] = r with { MemoryLimitMb = null, LimitAutoAssigned = false };
-                            withdrawn++;
-                        }
-                        continue;
-                    }
-
-                    if (RecommendedLimits.RecommendMb(r.ExePath, _priorityClient) is int mb)
-                    {
-                        rules[i] = r with { MemoryLimitMb = mb, LimitAutoAssigned = true };
-                        assigned++;
-                    }
+                    if (!r.LimitAutoAssigned || r.MemoryLimitMb is null) continue;
+                    foreach (var pid in _priorityClient.FindPidsForExe(r.ExePath))
+                        _priorityClient.TryClearMemoryLimit(pid);
+                    rules[i] = r with { MemoryLimitMb = null, LimitAutoAssigned = false };
+                    withdrawn++;
                 }
             });
-            if (assigned == 0 && withdrawn == 0) return;
+            if (withdrawn == 0) return;
             await _ruleStore.SaveAsync(rules);
             if (_ruleEngine is not null) await _ruleEngine.ReloadAsync(rules);
-            if (assigned > 0) EngineLog.Log($"limits: auto-assigned {assigned} recommended cap(s)");
-            if (withdrawn > 0) EngineLog.Log($"limits: withdrew {withdrawn} automatic cap(s) from apps with windows");
+            EngineLog.Log($"limits: withdrew {withdrawn} automatic cap(s) — on a PC that's already paging, a cap only sends memory to disk and back");
         }
-        catch (Exception ex) { EngineLog.Log($"limits: auto-assign failed: {ex.Message}"); }
+        catch (Exception ex) { EngineLog.Log($"limits: couldn't withdraw automatic caps: {ex.Message}"); }
     }
 
     /// <summary>Applies every rule's cap (and priority) to matching processes that are
@@ -440,6 +403,7 @@ public sealed class BackgroundEngine : IDisposable
             var applied = 0;
             await Task.Run(() =>
             {
+                using var batch = _priorityClient.BeginBatch();
                 foreach (var rule in limited)
                 {
                     foreach (var pid in _priorityClient.FindPidsForExe(rule.ExePath))
@@ -476,7 +440,6 @@ public sealed class BackgroundEngine : IDisposable
                 return;
             }
 
-            MaybePurgeStandby(s);
             string? skip = null;
             var minutes = Math.Max(MinIntervalMinutes, s.RamAutoIntervalMinutes);
             if (!s.RamAutoOptimizeOnInterval || s.RamAutoIntervalMinutes <= 0)
@@ -546,21 +509,12 @@ public sealed class BackgroundEngine : IDisposable
         var snapshot = new RamPressureSnapshot(
             _lastRamPercent,
             _standby!.GetFreeBytes(),
-            _standby.GetStandbyBytes(),
             _standby.GetPageInputPerSec(),
             GameRunning: _gameRunning,
             TrendPercentPerMin: trend);
 
         var decision = AdaptiveRamPolicy.Decide(
-            snapshot, DateTime.UtcNow - _lastAutoRamUtc, _lastCleanFreedBytes,
-            _consecutiveIneffectiveCleans);
-
-        if (decision.PurgeStandby && DateTime.UtcNow - _lastStandbyPurgeUtc >= StandbyPurgeCooldown)
-        {
-            _lastStandbyPurgeUtc = DateTime.UtcNow;
-            var ok = _standby.TryPurge();
-            EngineLog.Log($"adaptive: standby purge ({decision.Reason}) — {(ok ? "ok" : "REFUSED")}");
-        }
+            snapshot, DateTime.UtcNow - _lastAutoRamUtc, _consecutiveIneffectiveCleans);
 
         if (!decision.Clean)
         {
@@ -576,31 +530,17 @@ public sealed class BackgroundEngine : IDisposable
 
         _lastSkipReason = "";
         _ramPercentBeforeClean = _lastRamPercent;
-        EngineLog.Log($"adaptive: {decision.Mode} clean — {decision.Reason}");
+        EngineLog.Log($"adaptive: clean — {decision.Reason}");
 
-        // AUTOMATIC cleans always use Normal's process protection, whatever the mode.
-        // The escalated path used to run the real Deep tweak, whose rules allow trimming
-        // minimized and tray apps — reasonable when a human presses the DEEP CLEAN button,
-        // ruinous on a schedule: it silently gutted Medal (mid-recording), SignalRGB and
-        // Lossless Scaling, they refaulted everything within seconds, and the machine sat
-        // in a permanent evict/refault war that read as idle CPU heat and app blur.
-        // Deep-the-decision now means Normal trimming PLUS the system-cache levers, which
-        // touch no process at all.
-        await RunRamCleanupAsync($"adaptive-{decision.Mode}", _ramTweak);
-        if (decision.Mode == RamCleanMode.Deep && _standby is not null)
-        {
-            try
-            {
-                // Proven order: trims push pages onto the standby list, purge goes last.
-                var cacheBefore = _standby.GetStandbyBytes();
-                _standby.TryFlushModified();
-                _standby.TryTrimSystemCache();
-                _standby.TryPurge();
-                var clearedMb = Math.Max(0, cacheBefore - _standby.GetStandbyBytes()) / (1024 * 1024);
-                if (clearedMb > 0) EngineLog.Log($"adaptive: cleared {clearedMb} MB of system cache");
-            }
-            catch (Exception ex) { EngineLog.Log($"adaptive: cache levers failed: {ex.Message}"); }
-        }
+        // AUTOMATIC cleans are always the Normal tweak: Normal's process protection, and
+        // nothing but working-set trimming. Two escalations used to live here and both
+        // are gone for the same reason — they made the machine worse in ways that looked
+        // like Crustcut wasn't there. Running the real Deep tweak on a schedule gutted
+        // tray apps (Medal mid-recording, SignalRGB, Lossless Scaling) into a permanent
+        // evict/refault war; and the "system-cache levers" (flush modified list, empty
+        // the file cache, purge standby) only ever lowered a number in Task Manager while
+        // forcing every recently used file back off the disk. Deep is a button.
+        await RunRamCleanupAsync("adaptive", _ramTweak);
         _lastCleanFreedBytes = (RamCleanLog.TryRead()?.FreedMb ?? -1) * 1024 * 1024;
         _consecutiveIneffectiveCleans =
             _lastCleanFreedBytes >= 0 && _lastCleanFreedBytes < 150L * 1024 * 1024

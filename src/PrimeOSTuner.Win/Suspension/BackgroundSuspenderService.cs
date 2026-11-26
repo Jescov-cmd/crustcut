@@ -12,7 +12,9 @@ public sealed class BackgroundSuspenderService : IBackgroundSuspenderService
     private readonly IProcessSuspender _suspender;
     private readonly IReadOnlyList<string> _targetNames;
     private readonly Func<string, IEnumerable<int>> _processIdsByName;
+    private readonly Func<IEnumerable<string>> _ownedElsewhere;
     private readonly List<SuspendedProcessInfo> _suspended = new();
+    private readonly HashSet<string> _wokenThisGame = new(StringComparer.OrdinalIgnoreCase);
     private readonly object _gate = new();
 
     public IReadOnlyList<SuspendedProcessInfo> Currently
@@ -25,9 +27,11 @@ public sealed class BackgroundSuspenderService : IBackgroundSuspenderService
     public BackgroundSuspenderService(
         IProcessSuspender suspender,
         IReadOnlyList<string>? targetNames = null,
-        Func<string, IEnumerable<int>>? processIdsByName = null)
+        Func<string, IEnumerable<int>>? processIdsByName = null,
+        Func<IEnumerable<string>>? ownedElsewhere = null)
     {
         _suspender = suspender;
+        _ownedElsewhere = ownedElsewhere ?? (() => Array.Empty<string>());
         _targetNames = targetNames ?? BackgroundSuspendList.Default;
         _processIdsByName = processIdsByName
             ?? (name => Process.GetProcessesByName(name).Select(p => p.Id));
@@ -38,7 +42,16 @@ public sealed class BackgroundSuspenderService : IBackgroundSuspenderService
         var newly = new List<SuspendedProcessInfo>();
         lock (_gate)
         {
-            foreach (var name in _targetNames)
+            // Whatever list a profile hands in, never freeze hardware, audio, input or
+            // system software (GameOnlyPolicy's list is the single source of truth). Game
+            // companions must be awake in games, and apps on the sleep list are that
+            // feature's to freeze: suspending a process twice needs two resumes, and two
+            // owners would leave it frozen.
+            var skip = new HashSet<string>(_ownedElsewhere(), StringComparer.OrdinalIgnoreCase);
+            foreach (var name in _targetNames.Where(n =>
+                         PrimeOSTuner.Core.Suspension.GameOnlyPolicy.CanFreeze(n)
+                         && !PrimeOSTuner.Core.Suspension.GameOnlyPolicy.WakesForGames(n)
+                         && !skip.Contains(n) && !_wokenThisGame.Contains(n)))
             {
                 foreach (var pid in _processIdsByName(name))
                 {
@@ -61,8 +74,22 @@ public sealed class BackgroundSuspenderService : IBackgroundSuspenderService
         {
             snapshot = _suspended.ToArray();
             _suspended.Clear();
+            _wokenThisGame.Clear();
         }
         foreach (var info in snapshot) _suspender.Resume(info.Pid);
         if (snapshot.Length > 0) Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void Resume(string name)
+    {
+        SuspendedProcessInfo[] mine;
+        lock (_gate)
+        {
+            mine = _suspended.Where(s => s.Name.Equals(name, StringComparison.OrdinalIgnoreCase)).ToArray();
+            foreach (var s in mine) _suspended.Remove(s);
+            _wokenThisGame.Add(name);   // a profile re-applying mustn't freeze it again
+        }
+        foreach (var info in mine) _suspender.Resume(info.Pid);
+        if (mine.Length > 0) Changed?.Invoke(this, EventArgs.Empty);
     }
 }

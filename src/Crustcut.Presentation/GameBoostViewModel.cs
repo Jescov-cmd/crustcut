@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PrimeOSTuner.Core.Profiles;
 using PrimeOSTuner.Core.Settings;
+using PrimeOSTuner.Core.Suspension;
 using PrimeOSTuner.Win.Suspension;
 
 namespace Crustcut.Presentation;
@@ -40,13 +41,86 @@ public partial class GameBoostViewModel : ObservableObject
 
     public ObservableCollection<SuspendedProcessInfo> SuspendedApps { get; } = new();
 
+    // ── Game-only apps ────────────────────────────────────────────────────────────────
+    private readonly IGameOnlyApps? _gameOnly;
+    private readonly IUiDispatcher? _ui;
+
+    public bool GameOnlyAvailable => _gameOnly is not null;
+
+    public bool GameOnlyEnabled
+    {
+        get => _gameOnly?.Enabled ?? false;
+        set { if (_gameOnly is not null) _gameOnly.Enabled = value; OnPropertyChanged(); }
+    }
+
+    public ObservableCollection<GameOnlyRowVm> GameOnlyApps { get; } = new();
+    public ObservableCollection<string> GameOnlyCandidates { get; } = new();
+
+    [ObservableProperty] private string? _selectedCandidate;
+    [ObservableProperty] private bool _showAddPicker;
+    [ObservableProperty] private bool _gameOnlyListEmpty;
+
+    public void RefreshGameOnly()
+    {
+        if (_gameOnly is null) return;
+        var rows = _gameOnly.Status().Select(s => new GameOnlyRowVm(s)).ToList();
+        for (var i = 0; i < rows.Count; i++)
+        {
+            if (i >= GameOnlyApps.Count) GameOnlyApps.Add(rows[i]);
+            else if (GameOnlyApps[i] != rows[i]) GameOnlyApps[i] = rows[i];
+        }
+        while (GameOnlyApps.Count > rows.Count) GameOnlyApps.RemoveAt(GameOnlyApps.Count - 1);
+        // "Nothing to put to sleep" also when everything listed is closed — a lone NOT RUNNING
+        // row read as a feature that does nothing.
+        GameOnlyListEmpty = rows.All(r => r.StateText == "NOT RUNNING");
+        OnPropertyChanged(nameof(GameOnlyEnabled));
+    }
+
+    /// <summary>Candidate list scans every process — only on demand (page shown, app added).</summary>
+    public async Task RefreshCandidatesAsync()
+    {
+        if (_gameOnly is null) return;
+        var names = await Task.Run(_gameOnly.Candidates);
+        GameOnlyCandidates.Clear();
+        foreach (var n in names) GameOnlyCandidates.Add(n);
+        SelectedCandidate = GameOnlyCandidates.FirstOrDefault();
+    }
+
+    public async Task AddSelectedAsync()
+    {
+        if (_gameOnly is null || string.IsNullOrEmpty(SelectedCandidate)) return;
+        _gameOnly.Add(SelectedCandidate);
+        RefreshGameOnly();
+        await RefreshCandidatesAsync();
+    }
+
+    public async Task RemoveAsync(string name)
+    {
+        if (_gameOnly is null) return;
+        await Task.Run(() => _gameOnly.Remove(name));
+        RefreshGameOnly();
+        await RefreshCandidatesAsync();
+    }
+
+    public async Task WakeAsync(string name)
+    {
+        if (_gameOnly is null) return;
+        await Task.Run(() => _gameOnly.Wake(name));
+        RefreshGameOnly();
+    }
+
     public GameBoostViewModel(
         ProfileApplier applier, AppSettingsStore settings,
-        IBackgroundSuspenderService? suspender = null, IUiDispatcher? ui = null)
+        IBackgroundSuspenderService? suspender = null, IUiDispatcher? ui = null,
+        IGameOnlyApps? gameOnly = null)
     {
         _applier = applier;
         _settings = settings;
         _suspender = suspender;
+        _gameOnly = gameOnly;
+        _ui = ui;
+        if (_gameOnly is not null)
+            _gameOnly.Changed += (_, _) => { if (_ui is not null) _ui.Post(RefreshGameOnly); else RefreshGameOnly(); };
 
         // Restore the last-activated mode so the toggle reflects what's still active after
         // a restart instead of resetting to off. Suppressed so restoring doesn't re-save.
@@ -138,4 +212,27 @@ public partial class GameBoostViewModel : ObservableObject
             IsWorking = false;
         }
     }
+}
+
+/// <summary>One game-only app as the list shows it.</summary>
+public sealed record GameOnlyRowVm(string Name, string StateText, string Detail, bool IsFrozen)
+{
+    public GameOnlyRowVm(GameOnlyAppStatus s) : this(
+        s.Name,
+        s.State switch
+        {
+            GameOnlyState.Frozen => "ASLEEP",
+            GameOnlyState.Awake => "AWAKE",
+            _ => "NOT RUNNING",
+        },
+        s.State switch
+        {
+            GameOnlyState.Frozen when s.MemoryBytes > 0 => $"gave back {s.MemoryBytes >> 20} MB · " +
+                (s.WakesForGames ? "wakes for games" : "wakes when you open it"),
+            GameOnlyState.Frozen => s.WakesForGames ? "wakes for games" : "wakes when you open it",
+            GameOnlyState.Awake when s.Reason is { } why => $"using {s.MemoryBytes >> 20} MB · awake: {why}",
+            GameOnlyState.Awake => $"using {s.MemoryBytes >> 20} MB",
+            _ => "",
+        },
+        s.State == GameOnlyState.Frozen) { }
 }

@@ -2,6 +2,7 @@ using System.Collections;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 
 namespace Crustcut.App.Controls;
 
@@ -35,6 +36,40 @@ public sealed class Sparkline : Control
     {
         AffectsRender<Sparkline>(ValuesProperty, MaximumProperty);
     }
+
+    // The series is one ObservableCollection that grows in place, so the Values property
+    // never changes after binding — AffectsRender alone meant the chart only repainted
+    // when something else happened to invalidate it. Watch the collection itself, and
+    // only while on screen so a closed page holds no subscription.
+    private System.Collections.Specialized.INotifyCollectionChanged? _watched;
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+        if (change.Property == ValuesProperty && this.IsAttachedToVisualTree()) Watch(Values);
+    }
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        Watch(Values);
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        Watch(null);
+    }
+
+    private void Watch(IEnumerable? values)
+    {
+        if (_watched is not null) _watched.CollectionChanged -= OnValuesChanged;
+        _watched = values as System.Collections.Specialized.INotifyCollectionChanged;
+        if (_watched is not null) _watched.CollectionChanged += OnValuesChanged;
+    }
+
+    private void OnValuesChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        => InvalidateVisual();
 
     public override void Render(DrawingContext ctx)
     {

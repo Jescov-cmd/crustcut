@@ -86,27 +86,6 @@ public partial class MemoryPriorityViewModel : ObservableObject
 
     private readonly ITweak? _deepRamCleaner;
 
-    /// <summary>
-    /// Governs AUTOMATIC cap assignment only. Off means Crustcut never picks a limit for
-    /// you; limits you set by hand keep working either way.
-    /// </summary>
-    public bool AutoLimitsEnabled
-    {
-        get { try { return _settings?.Load().AutoMemoryLimitsEnabled ?? false; } catch { return false; } }
-        set
-        {
-            if (_settings is null) return;
-            try
-            {
-                var s = _settings.Load();
-                s.AutoMemoryLimitsEnabled = value;
-                _settings.Save(s);
-            }
-            catch { }
-            OnPropertyChanged(nameof(AutoLimitsEnabled));
-        }
-    }
-
     /// <summary>Deep clean: minimized apps and small background processes included.
     /// Same result-line contract as <see cref="CleanNowAsync"/>.</summary>
     public async Task<string> DeepCleanAsync()
@@ -429,6 +408,7 @@ public partial class MemoryPriorityViewModel : ObservableObject
         // process — worker thread, never the UI's.
         await Task.Run(() =>
         {
+            using var batch = _priority?.BeginBatch();
             foreach (var r in dirty)
                 ApplyToRunningProcesses(r.ExePath, r.Priority, r.MemoryLimit?.Mb);
         });

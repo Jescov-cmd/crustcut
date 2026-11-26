@@ -9,7 +9,16 @@ public sealed class WmiProcessWatcher : IProcessWatcher
     private bool _disposed;
 
     public event EventHandler<ProcessStartedEvent>? ProcessStarted;
-    public event EventHandler<ProcessStoppedEvent>? ProcessStopped;
+
+    // The stop trace is only subscribed to WMI once someone actually listens. Nothing in
+    // the app does today, and an unused watcher still had every process exit on the
+    // machine marshalled into Crustcut through WMI.
+    private EventHandler<ProcessStoppedEvent>? _processStopped;
+    public event EventHandler<ProcessStoppedEvent>? ProcessStopped
+    {
+        add { _processStopped += value; if (_start is not null) EnsureStopWatcher(); }
+        remove { _processStopped -= value; }
+    }
 
     public void Start()
     {
@@ -19,6 +28,7 @@ public sealed class WmiProcessWatcher : IProcessWatcher
         _start = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM Win32_ProcessStartTrace"));
         _start.EventArrived += (_, args) =>
         {
+            using var tracked = PrimeOSTuner.Core.Diagnostics.MemoryWatch.Track("process-start events");
             try
             {
                 var pid = Convert.ToInt32(args.NewEvent.Properties["ProcessID"].Value);
@@ -29,6 +39,12 @@ public sealed class WmiProcessWatcher : IProcessWatcher
         };
         _start.Start();
 
+        if (_processStopped is not null) EnsureStopWatcher();
+    }
+
+    private void EnsureStopWatcher()
+    {
+        if (_stop is not null || _disposed) return;
         _stop = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM Win32_ProcessStopTrace"));
         _stop.EventArrived += (_, args) =>
         {
@@ -36,7 +52,7 @@ public sealed class WmiProcessWatcher : IProcessWatcher
             {
                 var pid = Convert.ToInt32(args.NewEvent.Properties["ProcessID"].Value);
                 var name = args.NewEvent.Properties["ProcessName"].Value?.ToString() ?? "";
-                ProcessStopped?.Invoke(this, new ProcessStoppedEvent(pid, name));
+                _processStopped?.Invoke(this, new ProcessStoppedEvent(pid, name));
             }
             catch { }
         };

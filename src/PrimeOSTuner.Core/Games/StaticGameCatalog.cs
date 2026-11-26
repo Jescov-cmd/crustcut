@@ -39,10 +39,24 @@ public static class StaticGameCatalog
             SteamAppId: null,
             InstallPath: null,
             Source: KnownGameSource.StaticCatalog),
+        // Bedrock only. Java Edition is NOT matched by name here: "javaw.exe" is every Java
+        // program — Gradle builds, mod dev servers, IDE tooling — so listing it made each
+        // build count as a game session. JavaGameDetector reads command lines instead and
+        // reports real Java Minecraft as "Minecraft (Java)".
         new KnownGame(
             Id: "static.minecraft",
             DisplayName: "Minecraft",
-            ExecutableNames: new[] { "Minecraft.Windows.exe", "javaw.exe" },
+            ExecutableNames: new[] { "Minecraft.Windows.exe" },
+            SteamAppId: null,
+            InstallPath: null,
+            Source: KnownGameSource.StaticCatalog),
+        // RobloxPlayerBeta.exe is the game whether it's started by Roblox's own launcher,
+        // Bloxstrap or Fishstrap (they launch the same player). Windows10Universal.exe is the
+        // Microsoft Store edition. Roblox Studio is left out on purpose: it's a dev tool.
+        new KnownGame(
+            Id: "static.roblox",
+            DisplayName: "Roblox",
+            ExecutableNames: new[] { "RobloxPlayerBeta.exe", "Windows10Universal.exe" },
             SteamAppId: null,
             InstallPath: null,
             Source: KnownGameSource.StaticCatalog),

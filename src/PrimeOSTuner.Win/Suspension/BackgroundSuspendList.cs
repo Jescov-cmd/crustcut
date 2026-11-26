@@ -14,29 +14,33 @@ namespace PrimeOSTuner.Win.Suspension;
 /// </summary>
 public static class BackgroundSuspendList
 {
-    // Curation rule: only apps whose PAUSE is invisible during gameplay. RGB and
-    // wallpaper software just stops animating; sync clients stop syncing; launchers stop
-    // updating. Deliberately absent: voice/audio tools (WaveLink, Discord — freezing them
-    // kills the user's microphone mid-game), capture tools (Medal — people want their
-    // clips), and macro/input software people actively use in-game (Stream Deck).
+    // Curation rule: only apps whose PAUSE is invisible during gameplay. Sync clients stop
+    // syncing, wallpapers stop animating, companion and helper apps stop doing busywork —
+    // and Windows can hand their memory to the game. All of it wakes when the game closes,
+    // or the moment the user brings one to the front.
+    //
+    // Never on this list (the shared never-freeze list in GameOnlyPolicy also blocks them
+    // at the service level, whatever list a profile passes in):
+    // - hardware companion software — G HUB, SignalRGB, iCUE, Synapse: mouse DPI and
+    //   buttons, lighting, fans. Freezing G HUB here is what the user hit on 2026-10-01.
+    // - voice and audio — Discord, Wave Link: a frozen one is a dead microphone.
+    // - music players — Spotify was here until 2026-10-01; a frozen player is silence.
+    // - capture and overlays — Medal, Overwolf: those are the sleep list's, awake in games.
+    // - launchers — Steam, Epic, EA, GOG: games need them running.
+    // - anything that hooks keys or mouse buttons system-wide.
     public static readonly IReadOnlyList<string> Default = new[]
     {
-        "OneDrive",
-        "Dropbox",
-        "googledrivesync",
-        "GoogleDriveFS",
-        "Spotify",
-        "EpicGamesLauncher",
-        "SignalRgb",
-        "SignalRgbLauncher",
-        "lghub",
-        "lghub_agent",
-        "lghub_updater",
-        "wallpaper32",
-        "wallpaper64",
-        "Overwolf",
-        "CurseForge",
-        "GalaxyClient",
-        "EADesktop",
+        // cloud sync
+        "OneDrive", "Dropbox", "googledrivesync", "GoogleDriveFS",
+        "iCloudDrive", "iCloudServices", "iCloudPhotos", "iCloudHome", "iCloud",
+        "MEGAsync", "pCloud", "nextcloud", "Box",
+        // animated wallpapers
+        "wallpaper32", "wallpaper64", "Lively",
+        // phone link and widgets
+        "PhoneExperienceHost", "Widgets",
+        // creative-suite background helpers (not the apps themselves)
+        "Creative Cloud", "CCXProcess", "CCLibrary", "Adobe Desktop Service", "CoreSync",
+        // notes and docs left open in the background
+        "Notion", "Evernote",
     };
 }

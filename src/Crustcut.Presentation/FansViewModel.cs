@@ -101,6 +101,9 @@ public partial class FansViewModel : ObservableObject
         Refresh();
     }
 
+    /// <summary>The view is on screen / gone — graphics-card fans are only read while it is.</summary>
+    public void SetViewing(bool viewing) => _service?.SetViewing(viewing);
+
     /// <summary>Pulls the live picture from the service. Called by the view every ~2s.</summary>
     public void Refresh()
     {
@@ -125,14 +128,20 @@ public partial class FansViewModel : ObservableObject
                         ? $"Auto: {s.LoadPercent:F0}% load, {s.TempC:F0} °C → {s.ResolvedMode} curve."
                         : "Crustcut is controlling your fans.";
 
-        Fans.Clear();
-        foreach (var f in s.Fans)
-            Fans.Add(new FanRowVm(
-                f.Name,
-                f.Rpm is double r ? $"{r:F0} RPM" : "—",
-                f.DutyPercent is double p ? $"{p:F0} %" : (f.Managed ? "—" : ""),
-                f.Note ?? "",
-                f.Managed));
+        // Update rows in place. Clear-and-re-add every 2 s tore down and rebuilt every row's
+        // controls each tick; replacing only rows whose values changed leaves the rest alone.
+        var rows = s.Fans.Select(f => new FanRowVm(
+            f.Name,
+            f.Rpm is double r ? $"{r:F0} RPM" : "—",
+            f.DutyPercent is double p ? $"{p:F0} %" : (f.Managed ? "—" : ""),
+            f.Note ?? "",
+            f.Managed)).ToList();
+        for (var i = 0; i < rows.Count; i++)
+        {
+            if (i >= Fans.Count) Fans.Add(rows[i]);
+            else if (Fans[i] != rows[i]) Fans[i] = rows[i];
+        }
+        while (Fans.Count > rows.Count) Fans.RemoveAt(Fans.Count - 1);
 
         if (!IsCalibrating && CalibrationText.Length == 0)
             CalibrationText = _service.IsCalibrated

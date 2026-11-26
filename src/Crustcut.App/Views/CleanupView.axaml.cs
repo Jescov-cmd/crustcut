@@ -6,13 +6,14 @@ namespace Crustcut.App.Views;
 
 public partial class CleanupView : UserControl
 {
-    public CleanupView() => InitializeComponent();
-
-    protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    public CleanupView()
     {
-        base.OnAttachedToVisualTree(e);
+        InitializeComponent();
         // Startup entries change from outside (installers, Task Manager) — reload per visit.
-        if (DataContext is CleanupViewModel vm) _ = vm.LoadStartupAppsAsync();
+        PageActivity.Track(this, active =>
+        {
+            if (active && DataContext is CleanupViewModel vm) _ = vm.LoadStartupAppsAsync();
+        });
     }
 
     private async void StartupToggleClick(object? sender, RoutedEventArgs e)

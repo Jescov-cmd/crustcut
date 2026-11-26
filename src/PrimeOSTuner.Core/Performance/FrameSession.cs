@@ -9,4 +9,5 @@ public sealed record FrameSession(
     string GameName,
     DateTime StartedAt,
     TimeSpan Duration,
-    FrameSessionStats Stats);
+    FrameSessionStats Stats,
+    StutterReport? Stutter = null);   // why it stuttered; null for sessions recorded before this existed

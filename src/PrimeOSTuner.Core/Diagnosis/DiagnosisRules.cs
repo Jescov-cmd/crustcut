@@ -35,11 +35,31 @@ public static class DiagnosisRules
             "Close what you don't need before gaming, or remove it from startup (Task Manager → Startup apps).");
     }
 
+    /// <summary>
+    /// A driver that holds a processor core for long stretches makes everything on that core
+    /// wait — mouse input, the game's frames, network packets. It feels like lag, and CPU%,
+    /// GPU% and RAM all look normal, which is why it goes unnoticed. A healthy idle core
+    /// spends well under 2% of its time in drivers. Real case (2026-09-25): a network card
+    /// whose buffers a driver update reset held core 0 at 12% average, 22% peak.
+    /// </summary>
+    public static Finding EvaluateDriverLatency(double busiestCoreAvgPercent, double peakPercent)
+    {
+        if (busiestCoreAvgPercent >= 5 || peakPercent >= 15)
+            return new Finding("driver-latency", FindingSeverity.Problem, "A driver is causing lag",
+                $"One processor core is spending {busiestCoreAvgPercent:F0}% of its time inside drivers " +
+                $"(peaks of {peakPercent:F0}%) while the PC is idle. Input, frames and network all wait " +
+                "behind it — this is the kind of lag you feel but can't see in Task Manager.",
+                "The usual cause is the network card. Turn on \"Network card latency fix\" on the Optimize tab.",
+                "Optimize");
+        return new Finding("driver-latency", FindingSeverity.Passed, "No driver lag",
+            $"Drivers use {busiestCoreAvgPercent:F1}% of the busiest core — healthy.");
+    }
+
     public static Finding EvaluateRam(double usedPercent)
         => usedPercent > 85
             ? new Finding("ram", FindingSeverity.Warning, "RAM is nearly full",
                 $"{usedPercent:F0}% of RAM is in use while idle — games will hit the slow page file.",
-                "Close background apps, or use Settings → \"Force-clear standby cache\" after closing a big app.")
+                "Close apps you're not using. On Game Boost, \"Sleep game apps when you're not playing\" hands back what clip recorders and overlays hold.")
             : new Finding("ram", FindingSeverity.Passed, "RAM headroom is fine",
                 $"{usedPercent:F0}% of RAM is in use.");
 

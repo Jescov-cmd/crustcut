@@ -121,27 +121,83 @@ public sealed class PriorityClient : IPriorityClient
     public IReadOnlyList<int> FindPidsForExe(string exePath)
         => FindPidsForExes(new[] { exePath });
 
+    public string? ImagePathOf(int pid)
+    {
+        var handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+        if (handle == IntPtr.Zero) return null;
+        try
+        {
+            var buffer = new char[1024];
+            var size = buffer.Length;
+            return QueryFullProcessImageName(handle, 0, buffer, ref size) ? new string(buffer, 0, size) : null;
+        }
+        finally { CloseHandle(handle); }
+    }
+
     public IReadOnlyList<int> FindPidsForExes(IEnumerable<string> exePaths)
     {
         var set = new HashSet<string>(exePaths, StringComparer.OrdinalIgnoreCase);
         var pids = new List<int>();
+        foreach (var (pid, path) in t_batch ?? SnapshotImagePaths())
+            if (set.Contains(path)) pids.Add(pid);
+        return pids;
+    }
+
+    // Per-thread so a sweep on one worker never hands a stale snapshot to a lookup on
+    // another (the rule engine's process-start path must always see the live list).
+    [ThreadStatic] private static List<(int Pid, string Path)>? t_batch;
+
+    public IDisposable BeginBatch()
+    {
+        if (t_batch is not null) return new BatchScope(owner: false);   // nested: reuse
+        t_batch = SnapshotImagePaths();
+        return new BatchScope(owner: true);
+    }
+
+    private sealed class BatchScope(bool owner) : IDisposable
+    {
+        public void Dispose() { if (owner) t_batch = null; }
+    }
+
+    /// <summary>
+    /// Every running process's full image path. QueryFullProcessImageName needs only
+    /// PROCESS_QUERY_LIMITED_INFORMATION, so it reads processes that refuse the VM-read
+    /// access Process.MainModule demands (anti-cheat-protected games among them), and it
+    /// never walks module lists — MainModule enumerated modules for every process, and
+    /// sweeps called that once per rule.
+    /// </summary>
+    private static List<(int Pid, string Path)> SnapshotImagePaths()
+    {
+        var result = new List<(int, string)>();
+        var buffer = new char[1024];
         foreach (var p in Process.GetProcesses())
         {
             try
             {
-                var path = p.MainModule?.FileName;
-                if (path is not null && set.Contains(path))
-                    pids.Add(p.Id);
+                var handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, p.Id);
+                if (handle == IntPtr.Zero) continue;   // access denied — system processes
+                try
+                {
+                    var size = buffer.Length;
+                    if (QueryFullProcessImageName(handle, 0, buffer, ref size))
+                        result.Add((p.Id, new string(buffer, 0, size)));
+                }
+                finally { CloseHandle(handle); }
             }
-            catch
-            {
-                // Access denied to query module path — common for system processes.
-            }
-            finally
-            {
-                p.Dispose();
-            }
+            catch { /* exited mid-scan */ }
+            finally { p.Dispose(); }
         }
-        return pids;
+        return result;
     }
+
+    private const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr OpenProcess(uint access, bool inherit, int pid);
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "QueryFullProcessImageNameW")]
+    private static extern bool QueryFullProcessImageName(IntPtr process, uint flags, char[] buffer, ref int size);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool CloseHandle(IntPtr handle);
 }

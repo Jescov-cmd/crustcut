@@ -54,6 +54,66 @@ public sealed class SteamLibraryScanner : ISteamLibraryScanner
         }
     }
 
+    /// <summary>
+    /// Steam installs these like games, but they aren't: runtimes, redistributables,
+    /// soundtracks, servers, SDKs. They cluttered the Games tab ("Steamworks Common
+    /// Redistributables", "Lords of the Fallen Soundtrack").
+    /// </summary>
+    public static bool IsNotAGame(string name)
+    {
+        string[] markers =
+        {
+            "Redistributable", "Soundtrack", "Dedicated Server", " SDK", "Steamworks Common",
+            "Steam Linux Runtime", "Proton ", "Proton EasyAntiCheat", "Proton BattlEye",
+            // Tools that live in the tray or run beside games. Listed as "games" they made
+            // Crustcut think a game was running whenever they were open.
+            "Wallpaper Engine", "Lossless Scaling", "Crosshair X", "Mouse X", "Steam 360 Video Player",
+        };
+        if (markers.Any(m => name.Contains(m, StringComparison.OrdinalIgnoreCase))) return true;
+        // "OST" as a word only — never "Ghost" or "Host".
+        return System.Text.RegularExpressions.Regex.IsMatch(name, @"\bOST\b");
+    }
+
+    /// <summary>
+    /// The exes that could be the running game, best guess first. The first *.exe in the
+    /// folder used to be taken as "the game" — for Terraria that was the bundled .NET
+    /// installer (dotNetFx40_Full_setup.exe), so Terraria was never detected. Installers,
+    /// redistributables and crash reporters are dropped; an exe named like the game or its
+    /// folder ranks first; up to 8 are kept, so a launcher-then-game pair is covered too.
+    /// </summary>
+    public static IReadOnlyList<string> PickExecutables(IEnumerable<string> exePaths, string installDir, string gameName)
+    {
+        string[] junk =
+        {
+            "setup", "install", "unins", "redist", "vcredist", "vc_redist", "dxsetup", "dotnet",
+            "directx", "crash", "report", "easyanticheat_setup", "eac_setup", "be_setup",
+            "unitycrashhandler", "cefsharp", "cef_", "cefclient", "cefsimple", "helper", "updater",
+            "prereq", "uplay_", "busybox", "quickeditdisable", "elevate", "createdump", "linkshandler",
+            "steamsvc",
+        };
+        static string Squash(string s) => new(s.Where(char.IsLetterOrDigit).Select(char.ToLowerInvariant).ToArray());
+        var dirKey = Squash(installDir);
+        var nameKey = Squash(gameName);
+
+        return exePaths
+            .Where(p => !junk.Any(j => Path.GetFileNameWithoutExtension(p).Contains(j, StringComparison.OrdinalIgnoreCase)))
+            .Select(p =>
+            {
+                var key = Squash(Path.GetFileNameWithoutExtension(p));
+                var score = 0;
+                if (key.Length > 0 && (dirKey.Contains(key) || key.Contains(dirKey) || nameKey.Contains(key) || key.Contains(nameKey))) score += 10;
+                if (key.Contains("shipping") || key.Contains("win64")) score += 5;     // Unreal's real game exe
+                if (key.Contains("launcher")) score -= 3;
+                long size = 0;
+                try { size = new FileInfo(p).Length; } catch { }
+                return (Path: p, Score: score, Size: size);
+            })
+            .OrderByDescending(x => x.Score).ThenByDescending(x => x.Size)
+            .Take(8)
+            .Select(x => x.Path)
+            .ToList();
+    }
+
     public static SteamGame? ParseAppManifest(string acfPath, string libraryPath)
     {
         if (!File.Exists(acfPath)) return null;
@@ -65,16 +125,24 @@ public sealed class SteamLibraryScanner : ISteamLibraryScanner
             var name = state["name"]?.ToString() ?? "";
             var installDir = state["installdir"]?.ToString() ?? "";
             if (string.IsNullOrEmpty(appId) || string.IsNullOrEmpty(name)) return null;
+            if (IsNotAGame(name)) return null;
 
-            string? exePath = null;
+            IReadOnlyList<string> exes = Array.Empty<string>();
             var commonInstall = Path.Combine(libraryPath, "steamapps", "common", installDir);
             if (Directory.Exists(commonInstall))
             {
-                exePath = Directory.EnumerateFiles(commonInstall, "*.exe", SearchOption.TopDirectoryOnly)
-                    .FirstOrDefault();
+                // A few levels deep: Unreal games keep the real exe in Binaries\Win64, and the
+                // top-level exe is often just a bootstrapper that launches it and quits.
+                var found = Directory.EnumerateFiles(commonInstall, "*.exe", new EnumerationOptions
+                {
+                    RecurseSubdirectories = true,
+                    MaxRecursionDepth = 3,
+                    IgnoreInaccessible = true,
+                });
+                exes = PickExecutables(found, installDir, name);
             }
 
-            return new SteamGame(appId, name, installDir, libraryPath, exePath);
+            return new SteamGame(appId, name, installDir, libraryPath, exes.FirstOrDefault(), exes);
         }
         catch
         {

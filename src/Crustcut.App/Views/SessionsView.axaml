@@ -15,7 +15,7 @@
       </StackPanel>
     </StackPanel>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
       <Grid x:Name="PanelGrid" VerticalAlignment="Top">
         <Border Classes="panel" Width="{Binding #PanelGrid.Bounds.Width}">
           <StackPanel>
@@ -33,17 +33,23 @@
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                   <Border Classes="row">
-                    <Grid ColumnDefinitions="*,90,90,90,150">
-                      <TextBlock Grid.Column="0" Text="{Binding GameName}" Classes="key"
-                                 TextTrimming="CharacterEllipsis"/>
-                      <TextBlock Grid.Column="1" Text="{Binding AvgFpsValue}" Classes="value"/>
-                      <TextBlock Grid.Column="2" Text="{Binding OnePctLowValue}" Classes="value"
-                                 Foreground="{DynamicResource Text2}"/>
-                      <TextBlock Grid.Column="3" Text="{Binding DurationDisplay}" Classes="value"
-                                 Foreground="{DynamicResource Text2}"/>
-                      <TextBlock Grid.Column="4" Text="{Binding StartedAtDisplay}" Classes="value"
-                                 Foreground="{DynamicResource Text3}"/>
-                    </Grid>
+                    <StackPanel>
+                      <Grid ColumnDefinitions="*,90,90,90,150">
+                        <TextBlock Grid.Column="0" Text="{Binding GameName}" Classes="key"
+                                   TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Grid.Column="1" Text="{Binding AvgFpsValue}" Classes="value"/>
+                        <TextBlock Grid.Column="2" Text="{Binding OnePctLowValue}" Classes="value"
+                                   Foreground="{DynamicResource Text2}"/>
+                        <TextBlock Grid.Column="3" Text="{Binding DurationDisplay}" Classes="value"
+                                   Foreground="{DynamicResource Text2}"/>
+                        <TextBlock Grid.Column="4" Text="{Binding StartedAtDisplay}" Classes="value"
+                                   Foreground="{DynamicResource Text3}"/>
+                      </Grid>
+                      <!-- Why it stuttered, in words — the part a player can act on. -->
+                      <TextBlock Text="{Binding Verdict}" IsVisible="{Binding HasVerdict}"
+                                 FontSize="11.5" Foreground="{DynamicResource Text2}"
+                                 TextWrapping="Wrap" Margin="0,6,160,0"/>
+                    </StackPanel>
                   </Border>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>

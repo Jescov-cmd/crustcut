@@ -34,17 +34,10 @@
         <Button Content="RECOMMENDED FOR MY GAMES" Classes="secondary" Click="RecommendedClick"/>
       </WrapPanel>
 
-      <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,12">
-        <ToggleSwitch OnContent="" OffContent="" MinWidth="0"
-                      IsChecked="{Binding AutoLimitsEnabled, Mode=TwoWay}"
-                      ToolTip.Tip="When off, Crustcut never picks memory limits for you. Limits you set yourself in the list below keep working either way."/>
-        <TextBlock Text="Set memory limits automatically (background apps only)"
-                   FontSize="12" Foreground="{DynamicResource Text2}" VerticalAlignment="Center"/>
-      </StackPanel>
 
-      <TextBlock x:Name="LastCleanupText" FontSize="11.5"
+      <TextBlock x:Name="LastCleanupText" FontSize="11.5" TextWrapping="Wrap"
                  Foreground="{DynamicResource Text3}" Margin="0,0,0,4"/>
-      <TextBlock x:Name="StatusText" FontSize="11.5"
+      <TextBlock x:Name="StatusText" FontSize="11.5" TextWrapping="Wrap"
                  Foreground="{DynamicResource Text3}" Margin="0,0,0,12"/>
 
       <!-- Live visibility beats cleaning: on a RAM-starved machine the real fix is
@@ -76,13 +69,34 @@
       </Border>
     </StackPanel>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
-      <Grid x:Name="PanelGrid">
-      <ItemsControl ItemsSource="{Binding Rules}">
+    <!-- Virtualized: only the rows on screen exist. The list used to realise every rule —
+         75 on the user's machine, ~150 dropdowns — so each visit to this tab re-styled
+         them all and froze the UI for about a second. The ScrollViewer lives INSIDE the
+         ItemsControl's template; wrapped around it from outside, the panel is measured
+         with infinite height and virtualization silently switches off. -->
+    <ItemsControl ItemsSource="{Binding Rules}">
+      <ItemsControl.Template>
+        <ControlTemplate>
+          <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
+            <!-- ItemsPanel MUST be template-bound: without it the presenter quietly uses a
+                 plain StackPanel, every row gets built, and the VirtualizingStackPanel below
+                 is never used (it wasn't — 153 dropdowns, +42 MB, 0.75 s first open). -->
+            <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}"/>
+          </ScrollViewer>
+        </ControlTemplate>
+      </ItemsControl.Template>
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <VirtualizingStackPanel/>
+        </ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Border Classes="row" Width="{Binding #PanelGrid.Bounds.Width}">
-              <Grid ColumnDefinitions="*,140,104,Auto,Auto">
+            <!-- Pinned to the list's width: a long exe path otherwise measures the row a few
+                 px wider than the list, pushing the ✕ under the scrollbar. -->
+            <Border Classes="row"
+                    Width="{Binding Bounds.Width, RelativeSource={RelativeSource AncestorType=ItemsPresenter, Tree=Visual}}">
+              <Grid ColumnDefinitions="*,150,114,Auto,Auto">
                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                   <TextBlock Text="{Binding DisplayName}" FontSize="13" FontWeight="SemiBold"
                              Foreground="{DynamicResource Text0}"/>
@@ -128,8 +142,6 @@
             </Border>
           </DataTemplate>
         </ItemsControl.ItemTemplate>
-      </ItemsControl>
-    </Grid>
-    </ScrollViewer>
+    </ItemsControl>
   </DockPanel>
 </UserControl>

@@ -43,4 +43,8 @@ public interface IFanControlService
     /// <summary>Cycles a fan's RPM display correction (x0.5 / x1 / x2) for tachometers
     /// whose pulse-per-revolution count makes the reading half or double the truth.</summary>
     void CycleRpmScale(string fanName);
+
+    /// <summary>The Fans tab is (or stops being) on screen — lets the service open
+    /// display-only hardware just for as long as someone can see it.</summary>
+    void SetViewing(bool viewing) { }
 }

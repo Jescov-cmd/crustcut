@@ -14,19 +14,21 @@ public partial class FansView : UserControl
     {
         InitializeComponent();
         _refresh.Tick += (_, _) => (DataContext as FansViewModel)?.Refresh();
-    }
-
-    protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
-    {
-        base.OnAttachedToVisualTree(e);
-        (DataContext as FansViewModel)?.Refresh();
-        _refresh.Start();
-    }
-
-    protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
-    {
-        base.OnDetachedFromVisualTree(e);
-        _refresh.Stop();   // no reason to poll sensors while the tab isn't visible
+        PageActivity.Track(this, active =>
+        {
+            var vm = DataContext as FansViewModel;
+            if (active)
+            {
+                vm?.SetViewing(true);
+                vm?.Refresh();
+                _refresh.Start();
+            }
+            else
+            {
+                _refresh.Stop();   // no reason to poll sensors while the tab isn't visible
+                vm?.SetViewing(false);
+            }
+        });
     }
 
     private void ToggleClick(object? sender, RoutedEventArgs e)

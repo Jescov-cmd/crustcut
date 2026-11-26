@@ -50,9 +50,9 @@
         <StackPanel Grid.Column="0" Spacing="3">
           <TextBlock Text="System overview" FontSize="15" FontWeight="Bold"
                      Foreground="{DynamicResource Text0}"/>
-          <TextBlock Text="{Binding BoostScoreSubtitle}" FontSize="11.5"
+          <TextBlock Text="{Binding BoostScoreSubtitle}" FontSize="11.5" TextWrapping="Wrap"
                      Foreground="{DynamicResource Text2}"/>
-          <TextBlock Text="{Binding OneClickStatus}" FontSize="11"
+          <TextBlock Text="{Binding OneClickStatus}" FontSize="11" TextWrapping="Wrap"
                      Foreground="{DynamicResource AccentWheat}"
                      IsVisible="{Binding OneClickStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
         </StackPanel>

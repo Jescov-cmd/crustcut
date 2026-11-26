@@ -34,6 +34,25 @@ public static class JavaGameHeuristics
         return false;
     }
 
+    /// <summary>
+    /// The Java heap ceiling from a command line's -Xmx flag ("-Xmx8G", "-Xmx6144m",
+    /// "-Xmx4096M"), in bytes; null when absent or unreadable. Launchers set this from the
+    /// "memory allocated" slider, and it is the single biggest RAM decision in the game.
+    /// </summary>
+    public static long? MaxHeapBytes(string? commandLine)
+    {
+        if (string.IsNullOrEmpty(commandLine)) return null;
+        var m = System.Text.RegularExpressions.Regex.Match(commandLine, @"-Xmx(\d+)([kKmMgG]?)(?=\s|""|$)");
+        if (!m.Success || !long.TryParse(m.Groups[1].Value, out var n)) return null;
+        return m.Groups[2].Value.ToLowerInvariant() switch
+        {
+            "g" => n << 30,
+            "m" => n << 20,
+            "k" => n << 10,
+            _ => n,
+        };
+    }
+
     /// <summary>The synthetic game every detected Java Minecraft maps to — one id, so
     /// profiles/rules assigned to it survive launcher switches and version updates.</summary>
     public static readonly KnownGame MinecraftJava = new(
