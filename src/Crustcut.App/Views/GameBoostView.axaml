@@ -10,7 +10,7 @@
                  Text="Applies a bundle of optimizations in one go. Everything is reversible from the Optimize page or History."/>
     </StackPanel>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,18,0">
       <Grid x:Name="PanelGrid" VerticalAlignment="Top">
         <StackPanel Width="{Binding #PanelGrid.Bounds.Width}" Spacing="12">
 
@@ -58,7 +58,7 @@
               <StackPanel Grid.Column="0" Spacing="3" MaxWidth="560" HorizontalAlignment="Left">
                 <TextBlock Text="PAUSE BACKGROUND APPS WHILE GAMING" Classes="panelTitle" Margin="0"/>
                 <TextBlock Classes="sub"
-                           Text="When a game starts, sync, wallpaper and other background apps (OneDrive, iCloud, Dropbox, Wallpaper Engine, Phone Link…) are frozen in place — zero CPU, and Windows can give their memory to the game. They wake untouched the moment you quit, or as soon as you switch to one. Mouse, keyboard, headset and lighting software, voice chat, music, capture tools and launchers are never paused."/>
+                           Text="While you play, background apps like OneDrive, iCloud, Dropbox, Wallpaper Engine and Phone Link are paused so the game gets their memory. They wake when you quit or switch to one. Mouse, keyboard, headset, lighting, voice chat, music, capture tools and launchers are never paused."/>
               </StackPanel>
               <ToggleSwitch Grid.Column="1" OnContent="" OffContent="" VerticalAlignment="Top"
                             IsChecked="{Binding SuspendInGame, Mode=TwoWay}"/>
@@ -73,7 +73,7 @@
                 <StackPanel Grid.Column="0" Spacing="3" MaxWidth="560" HorizontalAlignment="Left">
                   <TextBlock Text="SLEEP APPS YOU'RE NOT USING" Classes="panelTitle" Margin="0"/>
                   <TextBlock Classes="sub"
-                             Text="Game apps like Medal, overlays and crosshairs sleep whenever you're not playing — Crustcut finds them on its own — and wake the second a game starts. Add any other app you leave running (a slicer, a sync app, a chat app): it sleeps after a few minutes unused, game or not, and wakes as soon as you open it. Sleeping apps' memory goes to whatever you're doing. Mouse, keyboard, headset and lighting software is never put to sleep."/>
+                             Text="Game apps like Medal, overlays and crosshairs sleep when you are not playing and wake the moment a game starts. Crustcut finds them on its own. Anything else you add sleeps after a few minutes unused and wakes when you open it. Mouse, keyboard, headset and lighting software is never put to sleep."/>
                 </StackPanel>
                 <ToggleSwitch Grid.Column="1" OnContent="" OffContent="" VerticalAlignment="Top"
                               IsChecked="{Binding GameOnlyEnabled, Mode=TwoWay}"/>

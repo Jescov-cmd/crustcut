@@ -32,6 +32,41 @@ public sealed class AppSettingsStore
 
     public void Save(AppSettings settings)
     {
-        ResilientJsonFile.WriteText(_path, JsonSerializer.Serialize(settings, JsonOpts));
+        lock (WriteGate)
+            ResilientJsonFile.WriteText(_path, JsonSerializer.Serialize(settings, JsonOpts));
+    }
+
+    // One gate for every store instance in the process: fans, game-only apps, the overlay
+    // and the Settings page each build their own store, and load-change-save sequences
+    // from different threads used to overwrite each other's changes.
+    private static readonly object WriteGate = new();
+
+    /// <summary>
+    /// Reads the file fresh, applies <paramref name="change"/>, writes it back — atomically
+    /// with respect to other updates in this process. If the file exists but can't be read
+    /// (antivirus lock, half-written), NOTHING is written: <see cref="Load"/> would have
+    /// returned defaults, and saving those wiped the user's real settings.
+    /// </summary>
+    /// <returns>The settings as saved, or null when the read failed and nothing changed.</returns>
+    public AppSettings? Update(Action<AppSettings> change)
+    {
+        lock (WriteGate)
+        {
+            AppSettings current;
+            try
+            {
+                var json = File.Exists(_path) ? ResilientJsonFile.ReadText(_path) : null;
+                current = string.IsNullOrWhiteSpace(json)
+                    ? new AppSettings()
+                    : JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+            }
+            catch
+            {
+                return null;
+            }
+            change(current);
+            ResilientJsonFile.WriteText(_path, JsonSerializer.Serialize(current, JsonOpts));
+            return current;
+        }
     }
 }

@@ -20,9 +20,7 @@ public partial class GameBoostViewModel : ObservableObject
         {
             try
             {
-                var s = _settings.Load();
-                s.SuspendBackgroundAppsInGame = value;
-                _settings.Save(s);
+                _settings.Update(s => s.SuspendBackgroundAppsInGame = value);
             }
             catch { }
             OnPropertyChanged(nameof(SuspendInGame));
@@ -161,8 +159,7 @@ public partial class GameBoostViewModel : ObservableObject
                  : IsBasicActive ? "basic" : "";
         try
         {
-            var s = _settings.Load();
-            if (s.GameBoostMode != mode) { s.GameBoostMode = mode; _settings.Save(s); }
+            if (_settings.Load().GameBoostMode != mode) _settings.Update(s => s.GameBoostMode = mode);
         }
         catch { /* persistence is best-effort */ }
     }

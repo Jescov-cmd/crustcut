@@ -24,6 +24,7 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        HookCrashLogging();
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var (shotPath, shotTab, shotW, shotH) = SelfScreenshot.Parse(Program.Args);
@@ -122,6 +123,7 @@ public partial class App : Application
             if (runEngine && _composition.Engine is { } engine)
                 _ = Task.Run(() => engine.StartAsync());
             if (runEngine) _composition.GameOnlyApps?.Start();
+            if (runEngine) _composition.FanService?.Start();
             StartMemoryWatch();
 
             // Update check: quiet, once per launch, never blocking startup.
@@ -137,28 +139,62 @@ public partial class App : Application
             }
             // Start Menu shortcut + heal the autostart task if the exe moved (Windows-only
             // concepts: schtasks + .lnk shortcuts).
-            if (OperatingSystem.IsWindows())
+            // Never from a throwaway copy: that re-pointed the boot task at whatever build
+            // folder the screenshot ran from. Off the UI thread: schtasks can take seconds.
+            if (OperatingSystem.IsWindows() && !isDebugCapture)
             {
-                try
+                var registration = _composition.Registration;
+                var startAtBoot = settings.StartAtBoot;
+                _ = Task.Run(() =>
                 {
-                    _composition.Registration.EnsureStartMenuShortcut();
-                    if (settings.StartAtBoot) _composition.Registration.SetStartAtBoot(true);
-                }
-                catch { }
+                    try
+                    {
+                        registration.EnsureStartMenuShortcut();
+                        if (startAtBoot) registration.SetStartAtBoot(true);
+                    }
+                    catch (Exception ex) { EngineLog.Log($"registration: {ex.Message}"); }
+                });
             }
 
             desktop.ShutdownRequested += (_, _) =>
             {
-                _composition?.FanService?.Dispose();   // hands fans back to the BIOS
-                _composition?.GameOnlyApps?.Dispose(); // never leave an app frozen behind us
-                _composition?.Engine?.Dispose();
-                _composition?.Overlay?.Dispose();
-                _composition?.Overview.Dispose();
-                _guard?.Dispose();
+                // Each step isolated: one throwing Dispose used to skip the rest, leaving
+                // apps frozen or fans pinned. Thawing apps goes first — it matters most.
+                static void Safe(string what, Action a)
+                {
+                    try { a(); } catch (Exception ex) { EngineLog.Log($"shutdown: {what} failed: {ex.Message}"); }
+                }
+                Safe("game-only apps", () => _composition?.GameOnlyApps?.Dispose()); // never leave an app frozen
+                Safe("fans", () => _composition?.FanService?.Dispose());              // hands fans back to the BIOS
+                Safe("engine", () => _composition?.Engine?.Dispose());
+                Safe("overlay", () => _composition?.Overlay?.Dispose());
+                Safe("overview", () => _composition?.Overview.Dispose());
+                Safe("guard", () => _guard?.Dispose());
             };
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>
+    /// Last-resort logging. A tray app that dies silently looks like "Crustcut stopped
+    /// working" with nothing to go on; this puts the reason in engine.log. UI-thread
+    /// exceptions are logged and swallowed so one bad click doesn't kill the tray icon.
+    /// </summary>
+    private static void HookCrashLogging()
+    {
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            EngineLog.Log($"crash: {e.ExceptionObject}");
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            EngineLog.Log($"background task failed: {e.Exception.GetBaseException().Message}");
+            e.SetObserved();
+        };
+        Dispatcher.UIThread.UnhandledException += (_, e) =>
+        {
+            EngineLog.Log($"ui error: {e.Exception}");
+            e.Handled = true;
+        };
     }
 
     private void OnWindowClosing(object? sender, WindowClosingEventArgs e)
@@ -276,13 +312,15 @@ public partial class App : Application
             // optimization, and turning it off mid-test would change noise, not FPS.
             var store = new PrimeOSTuner.Core.Settings.AppSettingsStore(
                 PrimeOSTuner.Core.Settings.AppSettingsStore.DefaultPath());
-            var s = store.Load();
-            s.RamAdaptiveEnabled = false;
-            s.RamAutoOptimizeOnInterval = false;
-            s.RamAutoOptimizeOnThreshold = false;
-            s.AutoMemoryLimitsEnabled = false;
-            s.ThermalGovernorEnabled = false;
-            store.Save(s);
+            if (store.Update(s =>
+                {
+                    s.RamAdaptiveEnabled = false;
+                    s.RamAutoOptimizeOnInterval = false;
+                    s.RamAutoOptimizeOnThreshold = false;
+                    s.AutoMemoryLimitsEnabled = false;
+                    s.ThermalGovernorEnabled = false;
+                }) is null)
+                throw new IOException("settings file unreadable");
             report.AppendLine("OFF   adaptive/scheduled/threshold RAM cleanup, auto memory limits, Cool-Down Assist");
         }
         catch (Exception ex) { report.AppendLine($"ABORT — {ex.Message}"); }

@@ -50,6 +50,7 @@ public partial class OverviewViewModel : ObservableObject, IDisposable
     public ObservableCollection<double> NetHistory { get; } = new();
 
     public ObservableCollection<FrameSessionVm> RecentSessions { get; } = new();
+    [ObservableProperty] private int _sessionCount;
 
     private readonly OneClickOptimizer? _oneClick;
 
@@ -110,7 +111,10 @@ public partial class OverviewViewModel : ObservableObject, IDisposable
     private void RefreshSessions()
     {
         RecentSessions.Clear();
-        foreach (var s in _frameStore.Load()) RecentSessions.Add(new FrameSessionVm(s));
+        var all = _frameStore.Load();
+        SessionCount = all.Count;
+        // The Overview is a glance: the last few runs. The Sessions tab has the full list.
+        foreach (var s in all.Take(6)) RecentSessions.Add(new FrameSessionVm(s));
     }
 
     public async Task RefreshBoostScoreAsync()

@@ -97,7 +97,8 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (_loading) return;
 
-        var s = _store.Load();
+        var saved = _store.Update(s =>
+        {
         s.RamAutoOptimizeOnInterval = RamAutoOptimizeOnInterval;
         s.RamAutoIntervalMinutes = RamAutoIntervalMinutes;
         s.RamAutoOptimizeOnThreshold = RamAutoOptimizeOnThreshold;
@@ -113,7 +114,8 @@ public partial class SettingsViewModel : ObservableObject
         s.OverlayShowCpu = OverlayShowCpu;
         s.OverlayShowGpu = OverlayShowGpu;
         s.OverlayShowRam = OverlayShowRam;
-        _store.Save(s);
+        });
+        if (saved is null) { Status = "Couldn't read the settings file — nothing saved. Try again."; return; }
 
         Status = $"Saved at {DateTime.Now:HH:mm:ss}.";
     }

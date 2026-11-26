@@ -47,9 +47,7 @@ public partial class SessionsViewModel : ObservableObject
         try
         {
             // Load-mutate-save: several owners write this file.
-            var s = _settings.Load();
-            s.SentinelEnabled = value;
-            _settings.Save(s);
+            _settings.Update(s => s.SentinelEnabled = value);
         }
         catch { }
     }

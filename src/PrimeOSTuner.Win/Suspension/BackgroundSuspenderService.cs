@@ -34,7 +34,16 @@ public sealed class BackgroundSuspenderService : IBackgroundSuspenderService
         _ownedElsewhere = ownedElsewhere ?? (() => Array.Empty<string>());
         _targetNames = targetNames ?? BackgroundSuspendList.Default;
         _processIdsByName = processIdsByName
-            ?? (name => Process.GetProcessesByName(name).Select(p => p.Id));
+            ?? PidsByName;
+    }
+
+    // Disposes what it reads: each Process holds a handle that otherwise waits for a finalizer.
+    private static IEnumerable<int> PidsByName(string name)
+    {
+        var procs = Process.GetProcessesByName(name);
+        var pids = new int[procs.Length];
+        for (var i = 0; i < procs.Length; i++) { pids[i] = procs[i].Id; procs[i].Dispose(); }
+        return pids;
     }
 
     public IReadOnlyList<SuspendedProcessInfo> SuspendBackgroundApps()

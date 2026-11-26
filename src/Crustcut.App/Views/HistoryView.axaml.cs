@@ -9,7 +9,12 @@ public partial class HistoryView : UserControl
         InitializeComponent();
         PageActivity.Track(this, active =>
         {
-            if (active) ActivityList.ItemsSource = ReadRecentActivity();
+            if (!active) return;
+            ActivityList.ItemsSource = ReadRecentActivity();
+            // Reloaded on every visit: loading once per run hid anything applied after
+            // the first look until Crustcut restarted.
+            if (DataContext is Crustcut.Presentation.HistoryViewModel vm)
+                _ = vm.LoadAsync().ContinueWith(t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
         });
     }
 
@@ -27,7 +32,8 @@ public partial class HistoryView : UserControl
             if (!File.Exists(path)) return new[] { "Nothing yet — automatic actions will show up here." };
 
             // Skip the engine's internal chatter; keep lines a person would care about.
-            string[] noise = { "engine: StartAsync", "tick: skipping", "adaptive: idle" };
+            string[] noise = { "engine: StartAsync", "tick: skipping", "adaptive: idle",
+                               "fans: auto →", "memory: " };
             return File.ReadLines(path)
                 .Where(l => l.Length > 0 && !noise.Any(l.Contains))
                 .TakeLast(60)

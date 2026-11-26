@@ -15,7 +15,7 @@
       </StackPanel>
     </StackPanel>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,18,0">
       <Grid x:Name="PanelGrid" VerticalAlignment="Top">
         <Border Classes="panel" Width="{Binding #PanelGrid.Bounds.Width}">
           <StackPanel>

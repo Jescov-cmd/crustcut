@@ -46,7 +46,7 @@
     <ItemsControl ItemsSource="{Binding Entries}">
       <ItemsControl.Template>
         <ControlTemplate>
-          <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
+          <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,18,0">
             <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}"/>
           </ScrollViewer>
         </ControlTemplate>

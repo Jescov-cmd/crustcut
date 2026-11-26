@@ -56,8 +56,7 @@ public sealed class PageFactory
 
         "Fans" => new FansView { DataContext = _app?.Fans },
 
-        "History" => Once(tabId, new HistoryView { DataContext = _app?.History },
-                          () => _app?.History?.LoadAsync()),
+        "History" => new HistoryView { DataContext = _app?.History },   // reloads itself on each visit
 
         "Games" => Once(tabId, new GamesView { DataContext = _app?.Games },
                         () => _app?.Games.LoadAsync()),

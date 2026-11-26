@@ -329,7 +329,7 @@ public partial class MemoryPriorityViewModel : ObservableObject
             "SearchHost", "StartMenuExperienceHost", "ShellExperienceHost",
             "ApplicationFrameHost", "TextInputHost", "ctfmon", "conhost",
             "svchost", "spoolsv", "WmiPrvSE", "MsMpEng", "SecurityHealthService",
-            "MoUsoCoreWorker", "PrimeOSTuner.UI"
+            "MoUsoCoreWorker", "Crustcut"   // never cap ourselves
         };
         var userInstallPrefixes = new[]
         {

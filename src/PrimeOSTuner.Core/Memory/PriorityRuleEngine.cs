@@ -32,7 +32,13 @@ public sealed class PriorityRuleEngine : IDisposable
 
     public void Start() => _watcher.Start();
 
-    private async void OnProcessStarted(object? sender, ProcessStartedEvent e)
+    // WMI raises this on its own thread. async void + an exception after the first await
+    // would take the whole app down, so the work runs as an observed task instead.
+    private void OnProcessStarted(object? sender, ProcessStartedEvent e) =>
+        _ = HandleStartedAsync(e).ContinueWith(t => _ = t.Exception,
+            TaskContinuationOptions.OnlyOnFaulted);
+
+    private async Task HandleStartedAsync(ProcessStartedEvent e)
     {
         PriorityRule? rule;
         List<string> protectExes;

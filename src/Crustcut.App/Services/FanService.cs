@@ -49,6 +49,22 @@ public sealed class FanService : IFanControlService, IDisposable
         _tuning = tuning;
         _power = power;
 
+        _timer.Elapsed += (_, _) => Tick();
+    }
+
+    private bool _started;
+
+    /// <summary>
+    /// Crash recovery, then the control loop. Separate from the constructor on purpose: a
+    /// throwaway screenshot/measuring copy builds a FanService too, and running recovery
+    /// there deleted the LIVE instance's crash marker and "restored BIOS control" under it.
+    /// Only the real engine calls this.
+    /// </summary>
+    public void Start()
+    {
+        if (_started) return;
+        _started = true;
+
         // Crash recovery FIRST: if the marker survived, the last run died while it owned
         // the fans — hand them back to the BIOS before doing anything else.
         try
@@ -73,7 +89,6 @@ public sealed class FanService : IFanControlService, IDisposable
         }
         catch { }
 
-        _timer.Elapsed += (_, _) => Tick();
         _timer.Start();
     }
 
@@ -99,9 +114,7 @@ public sealed class FanService : IFanControlService, IDisposable
         get => SafeSettings().FanControlEnabled;
         set
         {
-            var s = SafeSettings();
-            s.FanControlEnabled = value;
-            SaveSettings(s);
+            SaveSettings(s => s.FanControlEnabled = value);
             if (!value) Disengage("disabled by user");
             else Tick();   // take effect immediately, not at the next timer tick
         }
@@ -112,9 +125,7 @@ public sealed class FanService : IFanControlService, IDisposable
         get => Enum.TryParse<FanMode>(SafeSettings().FanMode, out var m) ? m : FanMode.Balanced;
         set
         {
-            var s = SafeSettings();
-            s.FanMode = value.ToString();
-            SaveSettings(s);
+            SaveSettings(s => s.FanMode = value.ToString());
             Tick();
         }
     }
@@ -124,9 +135,7 @@ public sealed class FanService : IFanControlService, IDisposable
         get => SafeSettings().ThermalGovernorEnabled;
         set
         {
-            var s = SafeSettings();
-            s.ThermalGovernorEnabled = value;
-            SaveSettings(s);
+            SaveSettings(s => s.ThermalGovernorEnabled = value);
             Tick();   // switching off restores boost on this tick, not the next
         }
     }
@@ -170,7 +179,11 @@ public sealed class FanService : IFanControlService, IDisposable
         var results = new List<string>();
         try
         {
+            _calibrating = true;
             _timer.Stop();   // the control loop must not fight the calibration
+            // Crash protection for the sweep too: fans held at 25-60% with nobody left to
+            // hand them back is exactly what the marker exists for.
+            try { File.WriteAllText(MarkerPath(), DateTime.UtcNow.ToString("O")); } catch { }
             foreach (var name in _fans.ManagedFanNames)
             {
                 ct.ThrowIfCancellationRequested();
@@ -185,10 +198,15 @@ public sealed class FanService : IFanControlService, IDisposable
         catch (Exception ex) { EngineLog.Log($"fans: calibration failed: {ex.Message}"); }
         finally
         {
-            _fans.RestoreAuto();
-            _engaged = false;
-            _timer.Start();
-            if (wasEnabled) Tick();   // resume control immediately
+            _calibrating = false;
+            if (!_disposed)
+            {
+                try { _fans.RestoreAuto(); } catch { }
+                try { File.Delete(MarkerPath()); } catch { }
+                _engaged = false;
+                if (_started) _timer.Start();
+                if (wasEnabled) Tick();   // resume control immediately
+            }
         }
         return results.Count == 0
             ? "Calibration could not measure any fan."
@@ -234,8 +252,17 @@ public sealed class FanService : IFanControlService, IDisposable
     private int _rediscoverInterval = 15;   // ticks (2 s each)
     private const int MaxRediscoverInterval = 900;   // 30 minutes
 
+    private volatile bool _calibrating;
+    private DateTime _modeChangedUtc = DateTime.MinValue;
+
+    // Auto may step UP at once but waits this long in a mode before stepping DOWN. With
+    // hysteresis alone, a desktop idling around 15-28% load flipped Silent <-> Balanced
+    // every two or three minutes all day — audible, and pointless.
+    private static readonly TimeSpan MinDwellBeforeStepDown = TimeSpan.FromMinutes(3);
+
     private void Tick()
     {
+        if (!_started || _calibrating) return;   // not the live engine, or the sweep owns the fans; setters calling Tick must not fight it
         if (!System.Threading.Monitor.TryEnter(_gate)) return;   // ticks never overlap
         using var tracked = PrimeOSTuner.Core.Diagnostics.MemoryWatch.Track("fans");
         try
@@ -290,8 +317,15 @@ public sealed class FanService : IFanControlService, IDisposable
 
             var selected = Enum.TryParse<FanMode>(s.FanMode, out var m) ? m : FanMode.Balanced;
             var mode = FanPolicy.ResolveMode(selected, _smoothedLoad, t, _resolvedMode);
-            if (selected == FanMode.Auto && mode != _resolvedMode)
-                EngineLog.Log($"fans: auto → {mode} (load {_smoothedLoad:F0}%, {t:F0}°C)");
+            if (selected == FanMode.Auto && mode < _resolvedMode
+                && DateTime.UtcNow - _modeChangedUtc < MinDwellBeforeStepDown)
+                mode = _resolvedMode;
+            if (mode != _resolvedMode)
+            {
+                if (selected == FanMode.Auto)
+                    EngineLog.Log($"fans: auto → {mode} (load {_smoothedLoad:F0}%, {t:F0}°C)");
+                _modeChangedUtc = DateTime.UtcNow;
+            }
             _resolvedMode = mode;
             var curveDuty = FanPolicy.Evaluate(mode, t);
 
@@ -443,15 +477,21 @@ public sealed class FanService : IFanControlService, IDisposable
         return _settingsCache;
     }
 
-    private void SaveSettings(AppSettings s)
+    // Fresh read-change-write (never the 5-s cache): saving the cached copy overwrote
+    // anything the Settings page or game-only list changed in those seconds.
+    private void SaveSettings(Action<AppSettings> change)
     {
-        try { _settings.Save(s); } catch { }
-        _settingsCache = s;
+        AppSettings? saved = null;
+        try { saved = _settings.Update(change); } catch { }
+        _settingsCache = saved;   // null forces a re-read on the next SafeSettings()
         _settingsReadUtc = DateTime.UtcNow;
     }
 
+    private volatile bool _disposed;
+
     public void Dispose()
     {
+        _disposed = true;
         _timer.Stop();
         _timer.Dispose();
         if (_engaged) Disengage("app closing");

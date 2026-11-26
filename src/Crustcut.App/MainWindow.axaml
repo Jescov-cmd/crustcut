@@ -103,9 +103,7 @@
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="216"/>
         <ColumnDefinition Width="1"/>
-        <!-- Pages stop growing at 1360 px. Maximized on a 3440 ultrawide they stretched to
-             ~3,200 px: a label on the left, its switch a whole monitor away on the right. -->
-        <ColumnDefinition Width="*" MaxWidth="1360"/>
+        <ColumnDefinition Width="*"/>
       </Grid.ColumnDefinitions>
 
       <!-- ===== NAV TREE ===== -->
@@ -169,7 +167,10 @@
       <Border Grid.Column="1" Background="{DynamicResource Hairline}"/>
 
       <!-- ===== CONTENT ===== -->
-      <DockPanel Grid.Column="2">
+      <!-- Pages stop growing at 1440 px and sit centred in what's left. Maximized on a 3440
+           ultrawide they stretched to ~3,200 px (a label on the left, its switch a monitor
+           away); capping the column instead left a dead slab of empty window on the right. -->
+      <DockPanel Grid.Column="2" MaxWidth="1440" HorizontalAlignment="Stretch">
         <!-- Update banner: only present when there is genuinely a newer release. -->
         <Border DockPanel.Dock="Top" x:Name="UpdateBanner"
                 Background="#1E1E1E" BorderBrush="{DynamicResource AccentWheat}"

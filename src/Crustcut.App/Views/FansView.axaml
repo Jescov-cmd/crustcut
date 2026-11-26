@@ -22,11 +22,11 @@
       <TextBlock Text="Fans" Classes="pageTitle" Margin="0,16,0,10"/>
       <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,16"
                  TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left"
-                 Text="Curve-based fan control. Auto watches load AND temperature and cools for whichever needs it more — light work stays quiet, heavy work or a hot machine ramps — while Silent, Balanced and Performance pin it manually. Calibrate once so the minimum speeds match your actual fans. Safety is built in: fans never stop, anything over 90 °C forces full speed, pumps are never slowed, and your motherboard takes back control the moment this is off or Crustcut closes. Your graphics card runs its own fans."/>
+                 Text="Auto follows load and temperature: quiet for light work, faster when the PC is busy or hot. Fans never stop, anything over 90 °C means full speed, and your motherboard takes back control when Crustcut closes. Your graphics card runs its own fans."/>
 
       <Border Classes="card" IsVisible="{Binding !IsSupported}">
         <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource Text1}" FontSize="12"
-                   Text="No controllable fans found right now — usually another program that monitors or controls hardware (lighting software, a vendor control panel, a hardware monitor) is holding the fan chip. Crustcut keeps looking: close that program and control appears here within a minute, no restart needed."/>
+                   Text="No controllable fans found. Another program is probably holding the fan chip (lighting software, a vendor control panel or a hardware monitor). Close it and control shows up here within a minute."/>
       </Border>
 
       <Border Classes="card" IsVisible="{Binding IsSupported}">

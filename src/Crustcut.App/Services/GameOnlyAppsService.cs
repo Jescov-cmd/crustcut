@@ -89,7 +89,7 @@ public sealed class GameOnlyAppsService : IGameOnlyApps, IDisposable
 
     private void SaveSettings(Action<AppSettings> change)
     {
-        try { var s = _settings.Load(); change(s); _settings.Save(s); } catch { }
+        try { _settings.Update(change); } catch { }
     }
 
     public bool Enabled
@@ -156,7 +156,7 @@ public sealed class GameOnlyAppsService : IGameOnlyApps, IDisposable
             return names.Select(name =>
             {
                 var forGames = GameOnlyPolicy.WakesForGames(name);
-                if (_frozen.ContainsValue(name))
+                if (_frozen.Values.Contains(name, StringComparer.OrdinalIgnoreCase))
                     return new GameOnlyAppStatus(name, GameOnlyState.Frozen, _freedBytes.GetValueOrDefault(name),
                         WakesForGames: forGames);
                 var running = snapshot.Where(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase)).ToList();
@@ -215,7 +215,7 @@ public sealed class GameOnlyAppsService : IGameOnlyApps, IDisposable
     {
         var name = Path.GetFileNameWithoutExtension(e.ProcessName);
         bool frozen;
-        lock (_gate) frozen = _frozen.ContainsValue(name);
+        lock (_gate) frozen = _frozen.Values.Contains(name, StringComparer.OrdinalIgnoreCase);
         if (frozen) Wake(name, "launched again");
     }
 
@@ -243,9 +243,8 @@ public sealed class GameOnlyAppsService : IGameOnlyApps, IDisposable
         lock (_gate) frozenName = _frozen.GetValueOrDefault(pid);
         if (frozenName is not null) { Wake(frozenName, "brought to the front"); return; }
 
-        string name;
-        try { using var p = System.Diagnostics.Process.GetProcessById(pid); name = p.ProcessName; }
-        catch { return; }
+        var name = PrimeOSTuner.Core.Windows.Games.ForegroundProbe.ImageNameOf(pid);   // every 2 s: keep it to one handle
+        if (name is null) return;
 
         // Paused for a game and now in front: the user wants it. Wake it for the rest of the game.
         if (_pausedForGames?.Currently.Any(s => s.Pid == pid) == true)

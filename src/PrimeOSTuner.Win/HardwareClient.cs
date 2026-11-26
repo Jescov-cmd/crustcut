@@ -105,22 +105,41 @@ public sealed class HardwareClient : IHardwareClient, IGpuUsageByProcess
         }
     }
 
+    // The adapter list, enumerated once and again only when Windows reports a network
+    // change. GetAllNetworkInterfaces() every second rebuilt objects for every Hyper-V,
+    // WSL and VPN adapter on the machine — the biggest per-tick allocation in the sampler.
+    private static System.Net.NetworkInformation.NetworkInterface[]? s_adapters;
+    private static bool s_adapterWatchHooked;
+
+    private static System.Net.NetworkInformation.NetworkInterface[] Adapters()
+    {
+        if (s_adapters is { } cached) return cached;
+        if (!s_adapterWatchHooked)
+        {
+            s_adapterWatchHooked = true;
+            System.Net.NetworkInformation.NetworkChange.NetworkAddressChanged += (_, _) => s_adapters = null;
+            System.Net.NetworkInformation.NetworkChange.NetworkAvailabilityChanged += (_, _) => s_adapters = null;
+        }
+        return s_adapters = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()
+            .Where(i => i.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up
+                     && i.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback)
+            .ToArray();
+    }
+
     private static void ReadNetworkTotals(out long downBytes, out long upBytes)
     {
         downBytes = 0;
         upBytes = 0;
         try
         {
-            foreach (var iface in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+            foreach (var iface in Adapters())
             {
-                if (iface.OperationalStatus != System.Net.NetworkInformation.OperationalStatus.Up) continue;
-                if (iface.NetworkInterfaceType == System.Net.NetworkInformation.NetworkInterfaceType.Loopback) continue;
                 var stats = iface.GetIPv4Statistics();
                 downBytes += stats.BytesReceived;
                 upBytes   += stats.BytesSent;
             }
         }
-        catch { /* counters can briefly throw during interface state changes */ }
+        catch { s_adapters = null; /* adapter went away mid-read — re-enumerate next tick */ }
     }
 
     private static double Single(IntPtr counter)

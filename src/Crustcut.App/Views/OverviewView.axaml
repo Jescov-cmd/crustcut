@@ -154,7 +154,7 @@
                 <Grid ColumnDefinitions="*,Auto">
                   <TextBlock Grid.Column="0" Text="Sessions recorded" Classes="key"/>
                   <TextBlock Grid.Column="1" Classes="value"
-                             Text="{Binding RecentSessions.Count}"/>
+                             Text="{Binding SessionCount}"/>
                 </Grid>
               </Border>
             </StackPanel>

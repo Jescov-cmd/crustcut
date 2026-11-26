@@ -245,14 +245,7 @@ public sealed class GameProcessWatcher : IGameProcessWatcher, IDisposable
     /// <summary>Every running exe name. Throws rather than answer "nothing is running"
     /// when the list can't be read — the tick is then skipped, instead of every running
     /// game being declared closed.</summary>
-    private static string[] DefaultSnapshot()
-    {
-        var names = Process.GetProcesses()
-            .Select(p => { try { return p.ProcessName + ".exe"; } catch { return ""; } finally { p.Dispose(); } })
-            .Where(s => s.Length > 4)
-            .ToArray();
-        return names.Length > 0 ? names : throw new InvalidOperationException("process list unreadable");
-    }
+    private static string[] DefaultSnapshot() => PrimeOSTuner.Core.Platform.ProcessNames.Snapshot();
 
     public void Dispose()
     {

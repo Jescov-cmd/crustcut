@@ -14,7 +14,6 @@ public sealed class OverlayService : IDisposable, Crustcut.Presentation.IOverlay
 {
     private readonly OverlayViewModel _vm;
     private readonly AppSettingsStore _store;
-    private readonly GlobalHotkey _hotkey = new();
 
     private OverlayWindow? _window;
 
@@ -40,7 +39,6 @@ public sealed class OverlayService : IDisposable, Crustcut.Presentation.IOverlay
             _window.Show();
 
             // Hotkey has to be registered after the window exists — it needs the HWND.
-            _hotkey.Register(_window);
         }
     }
 
@@ -67,10 +65,8 @@ public sealed class OverlayService : IDisposable, Crustcut.Presentation.IOverlay
 
         // Load-mutate-save: the Settings page writes this same file, so replacing the whole
         // object here would clobber whatever the user last changed there.
-        var s = _store.Load();
-        s.OverlayX = _window.Position.X;
-        s.OverlayY = _window.Position.Y;
-        _store.Save(s);
+        var (x, y) = (_window.Position.X, _window.Position.Y);
+        try { _store.Update(s => { s.OverlayX = x; s.OverlayY = y; }); } catch { }
     }
 
     void Crustcut.Presentation.IOverlayControl.Sync()
@@ -87,7 +83,6 @@ public sealed class OverlayService : IDisposable, Crustcut.Presentation.IOverlay
 
     public void Dispose()
     {
-        _hotkey.Dispose();
         _window?.Close();
         _window = null;
     }

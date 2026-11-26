@@ -51,6 +51,23 @@ public static class ForegroundProbe
         finally { CloseHandle(handle); }
     }
 
+    /// <summary>Exe name without extension ("Medal"), or null. One limited-access handle —
+    /// Process.ProcessName instead snapshots every process on the machine to answer.</summary>
+    public static string? ImageNameOf(int pid)
+    {
+        var handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+        if (handle == IntPtr.Zero) return null;
+        try
+        {
+            var chars = new char[1024];
+            var size = chars.Length;
+            return QueryFullProcessImageName(handle, 0, chars, ref size)
+                ? Path.GetFileNameWithoutExtension(new string(chars, 0, size))
+                : null;
+        }
+        finally { CloseHandle(handle); }
+    }
+
     private const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
     [DllImport("kernel32.dll", SetLastError = true)] private static extern IntPtr OpenProcess(uint access, bool inherit, int pid);
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "QueryFullProcessImageNameW")]
