@@ -99,6 +99,8 @@ public sealed class FanService : IFanControlService, IDisposable
     // workload still registers within seconds.
     private const double LoadSmoothing = 0.08;
     private double _smoothedLoad;
+    private double? _smoothedTemp;
+    private const double TempSmoothing = 0.35;   // per 2-s tick: ~6 s to settle
     private FanMode _resolvedMode = FanMode.Silent;
 
     /// <summary>Fed by the system sampler (via Composition). Load is the higher of CPU and
@@ -292,13 +294,22 @@ public sealed class FanService : IFanControlService, IDisposable
             }
 
             var temp = _fans.ReadCpuTempC();
-            _lastTemp = temp;
-            if (temp is not double t)
+            if (temp is not double rawTemp)
             {
+                _lastTemp = null;
                 // Blind = dangerous. Give the fans back and try again next tick.
                 if (_engaged) Disengage("temperature unreadable — failing safe");
                 return;
             }
+            // Ryzen reports its hottest spot the instant a core boosts, so the raw reading
+            // leaps 77 -> 83 -> 77 °C within seconds. That's real, but useless to show or to
+            // drive fans with (they'd chase every spike). Curve and display use a ~6 s
+            // average; the 90 °C failsafe below still reacts to the raw value at once.
+            _smoothedTemp = _smoothedTemp is double prev
+                ? prev + TempSmoothing * (rawTemp - prev)
+                : rawTemp;
+            var t = _smoothedTemp.Value;
+            _lastTemp = Math.Round(t);
 
             // First run on this machine: measure the fans instead of assuming. Kept to a
             // cool, idle moment so the sweep can't compound an existing thermal problem,
@@ -328,6 +339,7 @@ public sealed class FanService : IFanControlService, IDisposable
             }
             _resolvedMode = mode;
             var curveDuty = FanPolicy.Evaluate(mode, t);
+            if (rawTemp >= FanPolicy.FailsafeTempC) curveDuty = 100;
 
             // Per-fan floors: a fan that calibrated at 22% idles at 22%, one that stalls
             // at 45% never goes below 45% — same curve, hardware-appropriate minimums.

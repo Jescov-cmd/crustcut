@@ -23,6 +23,8 @@ public partial class FansViewModel : ObservableObject
     [ObservableProperty] private string _tempText = "—";
     [ObservableProperty] private string _dutyText = "—";
     [ObservableProperty] private string _statusText = "";
+    /// <summary>Shows the per-fan halve/double button. Off by default: almost nobody needs it.</summary>
+    [ObservableProperty] private bool _fixingReadings;
     [ObservableProperty] private bool _conflictSuspected;
     [ObservableProperty] private bool _isCalibrating;
     [ObservableProperty] private string _calibrationText = "";

@@ -5,18 +5,20 @@
   <UserControl.Styles>
     <Style Selector="Border.row">
       <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
-      <Setter Property="CornerRadius" Value="4"/>
-      <Setter Property="Padding" Value="14,12"/>
-      <Setter Property="Margin" Value="0,0,0,8"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Padding" Value="16,12"/>
+      <Setter Property="Margin" Value="0,0,0,4"/>
     </Style>
     </UserControl.Styles>
 
-  <DockPanel Margin="20,0,20,16">
+  <DockPanel Margin="28,0,28,16">
     <StackPanel DockPanel.Dock="Top">
-      <TextBlock Text="Diagnosis" Classes="pageTitle" Margin="0,16,0,10"/>
+      <TextBlock Text="Diagnosis" Classes="pageTitle" Margin="0,22,0,8"/>
       <TextBlock Text="{Binding Status}" FontSize="12"
                  Foreground="{DynamicResource Text2}" Margin="0,0,0,14" TextWrapping="Wrap"/>
-      <Button Content="RUN SCAN" Classes="primary" Margin="0,0,0,16" HorizontalAlignment="Left"
+      <Button Content="Run scan" Classes="primary" Margin="0,0,0,16" HorizontalAlignment="Left"
               IsEnabled="{Binding !IsScanning}"
               Click="ScanClick"/>
     </StackPanel>
@@ -31,11 +33,11 @@
                 <StackPanel Orientation="Horizontal" Spacing="8">
                   <Border CornerRadius="2" Padding="8,2" Background="#22FF6B6B"
                           IsVisible="{Binding IsProblem}">
-                    <TextBlock Text="PROBLEM" FontSize="9" Foreground="{DynamicResource Danger}"/>
+                    <TextBlock Text="Problem" FontSize="9" Foreground="{DynamicResource Danger}"/>
                   </Border>
                   <Border CornerRadius="2" Padding="8,2" Background="#22FFB84D"
                           IsVisible="{Binding IsWarning}">
-                    <TextBlock Text="WARNING" FontSize="9" Foreground="{DynamicResource Warn}"/>
+                    <TextBlock Text="Warning" FontSize="9" Foreground="{DynamicResource Warn}"/>
                   </Border>
                   <Border CornerRadius="2" Padding="8,2" Background="#223ECF8E"
                           IsVisible="{Binding IsPassed}">

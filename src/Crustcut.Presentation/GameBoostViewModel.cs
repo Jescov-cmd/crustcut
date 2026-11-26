@@ -70,7 +70,7 @@ public partial class GameBoostViewModel : ObservableObject
         while (GameOnlyApps.Count > rows.Count) GameOnlyApps.RemoveAt(GameOnlyApps.Count - 1);
         // "Nothing to put to sleep" also when everything listed is closed — a lone NOT RUNNING
         // row read as a feature that does nothing.
-        GameOnlyListEmpty = rows.All(r => r.StateText == "NOT RUNNING");
+        GameOnlyListEmpty = rows.All(r => r.StateText == "Not running");
         OnPropertyChanged(nameof(GameOnlyEnabled));
     }
 
@@ -218,9 +218,9 @@ public sealed record GameOnlyRowVm(string Name, string StateText, string Detail,
         s.Name,
         s.State switch
         {
-            GameOnlyState.Frozen => "ASLEEP",
-            GameOnlyState.Awake => "AWAKE",
-            _ => "NOT RUNNING",
+            GameOnlyState.Frozen => "Asleep",
+            GameOnlyState.Awake => "Awake",
+            _ => "Not running",
         },
         s.State switch
         {

@@ -3,55 +3,15 @@
              xmlns:c="clr-namespace:Crustcut.App.Controls"
              x:Class="Crustcut.App.Views.OverviewView">
 
-  <UserControl.Styles>
-    <!-- Dense settings-table rows separated by hairlines, the way a control panel lists
-         things. No cards, no shadows, no rounding. -->
-    <Style Selector="Border.row">
-      <Setter Property="BorderBrush" Value="{DynamicResource HairlineSoft}"/>
-      <Setter Property="BorderThickness" Value="0,0,0,1"/>
-      <Setter Property="Padding" Value="0,9"/>
-    </Style>
-    <Style Selector="Border.panel">
-      <Setter Property="Background" Value="{DynamicResource SurfacePanel}"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
-      <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="CornerRadius" Value="3"/>
-      <Setter Property="Padding" Value="14,10,14,12"/>
-    </Style>
-    <Style Selector="TextBlock.panelTitle">
-      <Setter Property="FontSize" Value="11.5"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
-      <Setter Property="Foreground" Value="{DynamicResource Text2}"/>
-      <Setter Property="Margin" Value="0,0,0,8"/>
-    </Style>
-    <Style Selector="TextBlock.key">
-      <Setter Property="FontSize" Value="12.5"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
-      <Setter Property="Foreground" Value="{DynamicResource Text1}"/>
-      <Setter Property="VerticalAlignment" Value="Center"/>
-    </Style>
-    <!-- Tabular numerals: values line up column-wise as they tick. -->
-    <Style Selector="TextBlock.value">
-      <Setter Property="FontFamily" Value="Consolas, Cascadia Mono, monospace"/>
-      <Setter Property="FontSize" Value="12.5"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
-      <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
-      <Setter Property="VerticalAlignment" Value="Center"/>
-      <Setter Property="HorizontalAlignment" Value="Right"/>
-    </Style>
-  </UserControl.Styles>
 
   <DockPanel>
 
     <!-- Page header + toolbar -->
-    <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Hairline}"
-            BorderThickness="0,0,0,1" Padding="20,14">
+    <Border DockPanel.Dock="Top" Classes="pageHeader">
       <Grid ColumnDefinitions="*,Auto">
         <StackPanel Grid.Column="0" Spacing="3">
-          <TextBlock Text="System overview" FontSize="15" FontWeight="Bold"
-                     Foreground="{DynamicResource Text0}"/>
-          <TextBlock Text="{Binding BoostScoreSubtitle}" FontSize="11.5" TextWrapping="Wrap"
-                     Foreground="{DynamicResource Text2}"/>
+          <TextBlock Text="Overview" Classes="pageTitle"/>
+          <TextBlock Text="{Binding BoostScoreSubtitle}" Classes="pageSubtitle"/>
           <TextBlock Text="{Binding OneClickStatus}" FontSize="11" TextWrapping="Wrap"
                      Foreground="{DynamicResource AccentWheat}"
                      IsVisible="{Binding OneClickStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
@@ -59,14 +19,14 @@
         <!-- No tweak surface (macOS) → no optimize/history actions to offer. -->
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
                     VerticalAlignment="Center" IsVisible="{Binding HasTweakSurface}">
-          <Button Content="SEE WHAT CHANGED" Classes="secondary" Click="HistoryClick"/>
-          <Button Content="OPTIMIZE NOW" Classes="primary"
+          <Button Content="See what changed" Classes="secondary" Click="HistoryClick"/>
+          <Button Content="Optimize now" Classes="primary"
                   IsEnabled="{Binding !IsOptimizing}" Click="OptimizeClick"/>
         </StackPanel>
       </Grid>
     </Border>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16,20,20">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="28,8,28,24">
       <StackPanel Spacing="16">
 
         <Grid ColumnDefinitions="*,16,*">
@@ -74,7 +34,7 @@
           <!-- ── Live readouts ── -->
           <Border Grid.Column="0" Classes="panel">
             <StackPanel>
-              <TextBlock Text="LIVE" Classes="panelTitle"/>
+              <TextBlock Text="Live" Classes="panelTitle"/>
 
               <Border Classes="row">
                 <Grid ColumnDefinitions="*,74,92">
@@ -120,7 +80,7 @@
           <!-- ── Status ── -->
           <Border Grid.Column="2" Classes="panel">
             <StackPanel>
-              <TextBlock Text="STATUS" Classes="panelTitle"/>
+              <TextBlock Text="Status" Classes="panelTitle"/>
 
               <!-- Score rows only exist where a tweak surface does (not on macOS). -->
               <Border Classes="row" IsVisible="{Binding HasTweakSurface}">
@@ -164,7 +124,7 @@
         <!-- ── Recent sessions table ── -->
         <Border Classes="panel">
           <StackPanel>
-            <TextBlock Text="RECENT SESSIONS" Classes="panelTitle"/>
+            <TextBlock Text="Recent sessions" Classes="panelTitle"/>
 
             <Grid ColumnDefinitions="*,110,110,150" Margin="0,0,0,2">
               <TextBlock Grid.Column="0" Text="Application" FontSize="11"

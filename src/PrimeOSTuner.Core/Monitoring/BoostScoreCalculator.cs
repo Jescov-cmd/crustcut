@@ -57,10 +57,10 @@ public static class BoostScoreCalculator
 
     public static string TierFor(int score) => score switch
     {
-        >= 90 => "EXCELLENT",
+        >= 90 => "Excellent",
         >= 75 => "GREAT",
-        >= 55 => "GOOD",
-        >= 35 => "FAIR",
-        _     => "POOR",
+        >= 55 => "Good",
+        >= 35 => "Fair",
+        _     => "Poor",
     };
 }

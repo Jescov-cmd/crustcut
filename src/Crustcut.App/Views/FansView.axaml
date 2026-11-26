@@ -1,146 +1,149 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Crustcut.Presentation;assembly=Crustcut.Presentation"
              x:Class="Crustcut.App.Views.FansView">
 
-  <UserControl.Styles>
-    <Style Selector="Border.card">
-      <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
-      <Setter Property="CornerRadius" Value="4"/>
-      <Setter Property="Padding" Value="18,16"/>
-      <Setter Property="Margin" Value="0,0,0,12"/>
-      <Setter Property="Width" Value="620"/>
-      <Setter Property="HorizontalAlignment" Value="Left"/>
-    </Style>
-    <Style Selector="TextBlock.label">
-      <Setter Property="FontSize" Value="11"/>
-      <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
-    </Style>
-  </UserControl.Styles>
-
-  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,0,20,20">
-    <StackPanel>
-      <TextBlock Text="Fans" Classes="pageTitle" Margin="0,16,0,10"/>
-      <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,16"
-                 TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left"
-                 Text="Auto follows load and temperature: quiet for light work, faster when the PC is busy or hot. Fans never stop, anything over 90 °C means full speed, and your motherboard takes back control when Crustcut closes. Your graphics card runs its own fans."/>
+  <!-- Windows Settings layout: one setting per card, icon · title + description · control. -->
+  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="28,0,28,24">
+    <!-- Grid + bound width, as on What's new: a StackPanel measured inside a ScrollViewer
+         can take its text's natural width and run past the right edge. -->
+    <Grid x:Name="PanelGrid">
+    <StackPanel Width="{Binding #PanelGrid.Bounds.Width}" MaxWidth="1000" HorizontalAlignment="Left">
+      <TextBlock Text="Fans" Classes="pageTitle" Margin="0,22,0,6"/>
+      <TextBlock Classes="pageSubtitle" Margin="0,0,0,18"
+                 Text="Fans never stop, anything over 90 °C means full speed, and your motherboard takes back control when Crustcut closes. Your graphics card runs its own fans."/>
 
       <Border Classes="card" IsVisible="{Binding !IsSupported}">
-        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource Text1}" FontSize="12"
-                   Text="No controllable fans found. Another program is probably holding the fan chip (lighting software, a vendor control panel or a hardware monitor). Close it and control shows up here within a minute."/>
+        <Grid ColumnDefinitions="Auto,*">
+          <TextBlock Classes="cardIcon" Text="&#xE7BA;"/>
+          <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+            <TextBlock Text="No controllable fans found" Classes="key"/>
+            <TextBlock Classes="sub"
+                       Text="Another program is probably holding the fan chip (lighting software, a vendor control panel or a hardware monitor). Close it and control shows up here within a minute."/>
+          </StackPanel>
+        </Grid>
       </Border>
 
-      <Border Classes="card" IsVisible="{Binding IsSupported}">
-        <StackPanel Spacing="14">
-          <Grid ColumnDefinitions="*,Auto">
-            <StackPanel Grid.Column="0" Spacing="3">
-              <TextBlock Text="FAN CONTROL" Classes="label"/>
-              <TextBlock Text="{Binding StatusText}" FontSize="12"
-                         Foreground="{DynamicResource Text1}" TextWrapping="Wrap"/>
+      <StackPanel IsVisible="{Binding IsSupported}">
+        <!-- Live temperature: the number people come here for, first and big. -->
+        <Border Classes="card">
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <TextBlock Classes="cardIcon" Text="&#xE9CA;"/>
+            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+              <TextBlock Text="CPU temperature" Classes="key"/>
+              <TextBlock Classes="sub" Text="{Binding DutyText, StringFormat='Averaged over a few seconds · fans at {0}'}"/>
             </StackPanel>
-            <ToggleSwitch Grid.Column="1" OnContent="" OffContent=""
-                          VerticalAlignment="Top"
-                          IsChecked="{Binding Enabled, Mode=OneWay}"
-                          Click="ToggleClick"/>
+            <TextBlock Grid.Column="2" Classes="big" Text="{Binding TempText}" VerticalAlignment="Center"/>
           </Grid>
+        </Border>
 
-          <Border Background="#22FFB84D" CornerRadius="2" Padding="11,8"
-                  IsVisible="{Binding ConflictSuspected}">
-            <TextBlock FontSize="11" Foreground="{DynamicResource Warn}" TextWrapping="Wrap"
-                       Text="Conflict detected: another program keeps overriding the fans. If you use lighting or vendor control software, turn off ITS fan control — the rest of it keeps working."/>
-          </Border>
+        <Border Classes="card" Margin="0,0,0,4"
+                Background="#433519" BorderBrush="#5C4A1F"
+                IsVisible="{Binding ConflictSuspected}">
+          <Grid ColumnDefinitions="Auto,*">
+            <TextBlock Classes="cardIcon" Text="&#xE7BA;" Foreground="{DynamicResource Warn}"/>
+            <TextBlock Grid.Column="1" Classes="sub" Foreground="{DynamicResource Text0}" VerticalAlignment="Center"
+                       Text="Another program keeps overriding the fans. If you use lighting or vendor software, turn off its fan control. The rest of it keeps working."/>
+          </Grid>
+        </Border>
 
-          <StackPanel Orientation="Horizontal" Spacing="9" IsEnabled="{Binding Enabled}">
-            <ToggleButton Classes="protect" Content="AUTO"
-                          ToolTip.Tip="Follows both how hard the machine is working AND how hot it is, using whichever demands more cooling. A light 2D game stays quiet; a hot machine ramps even when idle."
-                          IsChecked="{Binding IsAuto, Mode=OneWay}" Click="AutoClick"/>
-            <ToggleButton Classes="protect" Content="SILENT"
-                          IsChecked="{Binding IsSilent, Mode=OneWay}" Click="SilentClick"/>
-            <ToggleButton Classes="protect" Content="BALANCED"
-                          IsChecked="{Binding IsBalanced, Mode=OneWay}" Click="BalancedClick"/>
-            <ToggleButton Classes="protect" Content="PERFORMANCE"
-                          IsChecked="{Binding IsPerformance, Mode=OneWay}" Click="PerformanceClick"/>
-          </StackPanel>
+        <TextBlock Text="Control" Classes="section"/>
 
-          <StackPanel Orientation="Horizontal" Spacing="10">
-            <Button Content="CALIBRATE FANS" Classes="secondary" Click="CalibrateClick"
-                    IsEnabled="{Binding !IsCalibrating}"
-                    ToolTip.Tip="Measures how slowly each of YOUR fans can spin without stopping, then uses that as the minimum. Takes about a minute; fans move around during it."/>
-            <TextBlock Text="{Binding CalibrationText}" Classes="label"
-                       VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="420"/>
-          </StackPanel>
-
-          <!-- Heat-based power management: the safe version of "lower the CPU's power
-               when it's hot". Boost, not voltage — voltage needs a kernel driver and can
-               crash or corrupt; boost is Windows' own supported lever. -->
-          <Border Background="{DynamicResource SurfaceRail}" CornerRadius="4" Padding="12,10">
-            <StackPanel Spacing="8">
-              <Grid ColumnDefinitions="*,Auto">
-                <StackPanel Grid.Column="0" Spacing="3" MaxWidth="470" HorizontalAlignment="Left">
-                  <TextBlock Text="COOL-DOWN ASSIST" Classes="label"/>
-                  <TextBlock FontSize="11.5" Foreground="{DynamicResource Text2}" TextWrapping="Wrap"
-                             Text="If the CPU stays above 85 ° for 20 seconds, its turbo boost is trimmed so it actually cools instead of boosting back into the heat. Full power returns by itself after a cool minute. Costs a few percent in short bursts while active; sustained speed is unaffected."/>
-                </StackPanel>
-                <ToggleSwitch Grid.Column="1" OnContent="" OffContent=""
-                              VerticalAlignment="Top"
-                              IsChecked="{Binding GovernorEnabled, Mode=TwoWay}"/>
-              </Grid>
-              <Border Background="#2247B8FF" CornerRadius="2" Padding="11,7"
-                      IsVisible="{Binding BoostTrimmed}">
-                <TextBlock FontSize="11" Foreground="{DynamicResource Text1}" TextWrapping="Wrap"
-                           Text="Cooling down: turbo boost is trimmed right now. It comes back automatically once the CPU has been cool for a minute."/>
-              </Border>
+        <Border Classes="card">
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <TextBlock Classes="cardIcon" Text="&#xE945;"/>
+            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+              <TextBlock Text="Fan control" Classes="key"/>
+              <TextBlock Text="{Binding StatusText}" Classes="sub"/>
             </StackPanel>
-          </Border>
-        </StackPanel>
-      </Border>
+            <ToggleSwitch Grid.Column="2" OnContent="" OffContent="" VerticalAlignment="Center"
+                          IsChecked="{Binding Enabled, Mode=OneWay}" Click="ToggleClick"/>
+          </Grid>
+        </Border>
 
-      <Border Classes="card" IsVisible="{Binding IsSupported}">
-        <StackPanel Spacing="10">
-          <TextBlock Text="LIVE" Classes="label"/>
-          <Grid ColumnDefinitions="*,*">
-            <StackPanel Grid.Column="0" Spacing="2">
-              <TextBlock Text="CPU temperature" FontSize="11" Foreground="{DynamicResource Text3}"/>
-              <TextBlock Text="{Binding TempText}" FontSize="20" FontWeight="Bold"
-                         Foreground="{DynamicResource Text0}"/>
+        <Border Classes="card" IsEnabled="{Binding Enabled}">
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <TextBlock Classes="cardIcon" Text="&#xE9E9;"/>
+            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center" Margin="0,0,16,0">
+              <TextBlock Text="Mode" Classes="key"/>
+              <TextBlock Classes="sub" Text="Auto follows load and temperature: quiet for light work, faster when the PC is busy or hot."/>
             </StackPanel>
-            <StackPanel Grid.Column="1" Spacing="2">
-              <TextBlock Text="Fan duty" FontSize="11" Foreground="{DynamicResource Text3}"/>
-              <TextBlock Text="{Binding DutyText}" FontSize="20" FontWeight="Bold"
-                         Foreground="{DynamicResource Text0}"/>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+              <ToggleButton Classes="protect" Content="Auto"
+                            IsChecked="{Binding IsAuto, Mode=OneWay}" Click="AutoClick"/>
+              <ToggleButton Classes="protect" Content="Silent"
+                            IsChecked="{Binding IsSilent, Mode=OneWay}" Click="SilentClick"/>
+              <ToggleButton Classes="protect" Content="Balanced"
+                            IsChecked="{Binding IsBalanced, Mode=OneWay}" Click="BalancedClick"/>
+              <ToggleButton Classes="protect" Content="Max"
+                            ToolTip.Tip="Performance curve: loudest, coolest."
+                            IsChecked="{Binding IsPerformance, Mode=OneWay}" Click="PerformanceClick"/>
             </StackPanel>
           </Grid>
-          <ItemsControl ItemsSource="{Binding Fans}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Grid ColumnDefinitions="*,96,58,44" Margin="0,5,0,0">
-                  <StackPanel Grid.Column="0" Spacing="1">
-                    <TextBlock Text="{Binding Name}" FontSize="12.5"
-                               Foreground="{DynamicResource Text1}"/>
-                    <TextBlock Text="{Binding Note}" FontSize="10.5"
-                               Foreground="{DynamicResource Text3}"
-                               IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                  </StackPanel>
-                  <TextBlock Grid.Column="1" Text="{Binding Rpm}" FontSize="12.5"
-                             FontFamily="Consolas, Cascadia Mono, monospace"
-                             Foreground="{DynamicResource Text0}" HorizontalAlignment="Right"
-                             VerticalAlignment="Center"/>
-                  <TextBlock Grid.Column="2" Text="{Binding Duty}" FontSize="12.5"
-                             FontFamily="Consolas, Cascadia Mono, monospace"
-                             Foreground="{DynamicResource Text2}" HorizontalAlignment="Right"
-                             VerticalAlignment="Center"/>
-                  <!-- Tachometers report pulses, not revolutions, and fans differ in
-                       pulses-per-rev — no software can tell. Tap to match your BIOS. -->
-                  <Button Grid.Column="3" Content="RPM?" FontSize="9.5" MinWidth="40"
-                          Padding="0" MinHeight="20" Height="20"
-                          HorizontalAlignment="Right" VerticalAlignment="Center"
-                          ToolTip.Tip="If this RPM doesn't match what your BIOS reports, tap to halve or double the reading."
-                          Tag="{Binding Name}" Click="RpmScaleClick"/>
-                </Grid>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </StackPanel>
-      </Border>
+        </Border>
+
+        <!-- Heat-based power management: boost, not voltage. Voltage needs a kernel driver
+             and can crash or corrupt; boost is Windows' own supported lever. -->
+        <Border Classes="card">
+          <StackPanel Spacing="10">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+              <TextBlock Classes="cardIcon" Text="&#xE9F5;"/>
+              <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center" Margin="0,0,16,0">
+                <TextBlock Text="Cool-down assist" Classes="key"/>
+                <TextBlock Classes="sub"
+                           Text="If the CPU stays above 85 °C for 20 seconds, turbo boost is trimmed so it can cool. Full power returns after a cool minute."/>
+              </StackPanel>
+              <ToggleSwitch Grid.Column="2" OnContent="" OffContent="" VerticalAlignment="Center"
+                            IsChecked="{Binding GovernorEnabled, Mode=TwoWay}"/>
+            </Grid>
+            <TextBlock Classes="sub" Margin="34,0,0,0" Foreground="{DynamicResource AccentWheat}"
+                       IsVisible="{Binding BoostTrimmed}"
+                       Text="Cooling down now. Boost comes back once the CPU has been cool for a minute."/>
+          </StackPanel>
+        </Border>
+
+        <TextBlock Text="Fans" Classes="section"/>
+
+        <Border Classes="panel" Padding="16,4,16,8">
+          <StackPanel>
+            <ItemsControl ItemsSource="{Binding Fans}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Classes="row">
+                    <Grid ColumnDefinitions="*,Auto,72,Auto">
+                      <StackPanel Grid.Column="0" Spacing="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Name}" Classes="key"/>
+                        <TextBlock Text="{Binding Note}" Classes="sub"
+                                   IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                      </StackPanel>
+                      <TextBlock Grid.Column="1" Text="{Binding Rpm}" Classes="value"/>
+                      <TextBlock Grid.Column="2" Text="{Binding Duty}" Classes="value"
+                                 Foreground="{DynamicResource Text2}"/>
+                      <!-- Only while fixing readings: tachometers report pulses, and fans
+                           differ in pulses per turn, so a reading can be half or double. -->
+                      <Button Grid.Column="3" Content="Halve / double" Margin="12,0,0,0"
+                              IsVisible="{Binding $parent[ItemsControl].((vm:FansViewModel)DataContext).FixingReadings}"
+                              Tag="{Binding Name}" Click="RpmScaleClick"/>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,10,0,0">
+              <TextBlock Grid.Column="0" Classes="sub" VerticalAlignment="Center"
+                         Text="{Binding CalibrationText}"/>
+              <ToggleButton Grid.Column="1" Classes="protect" Content="Fix readings" Margin="0,0,8,0"
+                            ToolTip.Tip="Shows a button on each fan to halve or double its speed reading, for when it doesn't match your BIOS."
+                            IsChecked="{Binding FixingReadings, Mode=TwoWay}"/>
+              <Button Grid.Column="2" Content="Calibrate" Click="CalibrateClick"
+                      IsEnabled="{Binding !IsCalibrating}"
+                      ToolTip.Tip="Measures how slowly each of your fans can spin without stopping, then uses that as the minimum. Takes about a minute; fans speed up and slow down during it."/>
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
     </StackPanel>
+    </Grid>
   </ScrollViewer>
 </UserControl>

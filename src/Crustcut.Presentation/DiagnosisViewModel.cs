@@ -20,8 +20,8 @@ public sealed class FindingVm
 
     public string SeverityLabel => Finding.Severity switch
     {
-        FindingSeverity.Problem => "PROBLEM",
-        FindingSeverity.Warning => "WARNING",
+        FindingSeverity.Problem => "Problem",
+        FindingSeverity.Warning => "Warning",
         _ => "OK",
     };
 }

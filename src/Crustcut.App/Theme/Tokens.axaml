@@ -1,38 +1,57 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <!-- Utility-tool palette: neutral greys, flat panels, hairline rules. Modelled on the
-       classic control-panel look (dense, functional, no decoration) but with modern
-       typography and spacing instead of period chrome. The warm accent is used only for
-       selection, values and the primary action — never as a background wash. -->
+  <!-- Windows 11 dark: the palette of Settings, Task Manager and the other inbox apps.
+       Layers, darkest to lightest: rail/window (#202020) → content layer (#272727) →
+       cards (#2D2D2D). One accent (Windows' default dark-mode blue) for selection, the
+       primary action and switches. Key names predate this palette and are kept so every
+       view keeps resolving — AccentWheat is now the accent, whatever its name says. -->
+
+  <!-- Fluent reads these for switches, checkboxes, sliders, focus rings and combo boxes.
+       Pinned instead of following the Windows accent: his is red, which reads as "error". -->
+  <Color x:Key="SystemAccentColor">#60CDFF</Color>
+  <Color x:Key="SystemAccentColorDark1">#4CC2FF</Color>
+  <Color x:Key="SystemAccentColorDark2">#0093F9</Color>
+  <Color x:Key="SystemAccentColorDark3">#005FB8</Color>
+  <Color x:Key="SystemAccentColorLight1">#7AD5FF</Color>
+  <Color x:Key="SystemAccentColorLight2">#99EBFF</Color>
+  <Color x:Key="SystemAccentColorLight3">#C2F1FF</Color>
 
   <!-- Surfaces -->
-  <SolidColorBrush x:Key="SurfaceBase"  Color="#161616"/>  <!-- content background -->
-  <SolidColorBrush x:Key="SurfaceRail"  Color="#1B1B1B"/>  <!-- nav rail -->
-  <SolidColorBrush x:Key="SurfacePanel" Color="#1E1E1E"/>  <!-- grouped panels -->
-  <SolidColorBrush x:Key="SurfaceCard"  Color="#1E1E1E"/>  <!-- alias, same value -->
-  <SolidColorBrush x:Key="SurfaceRow"   Color="#00000000"/><!-- rows are bare by default -->
-  <SolidColorBrush x:Key="SurfaceHover" Color="#262626"/>
-  <SolidColorBrush x:Key="SurfaceSelected" Color="#2C2C2C"/>
+  <SolidColorBrush x:Key="SurfaceRail"  Color="#202020"/>  <!-- window + nav -->
+  <SolidColorBrush x:Key="SurfaceBase"  Color="#272727"/>  <!-- content layer -->
+  <SolidColorBrush x:Key="SurfacePanel" Color="#2D2D2D"/>  <!-- cards -->
+  <SolidColorBrush x:Key="SurfaceCard"  Color="#2D2D2D"/>
+  <SolidColorBrush x:Key="SurfaceRow"   Color="#00000000"/>
+  <SolidColorBrush x:Key="SurfaceHover" Color="#333333"/>
+  <SolidColorBrush x:Key="SurfaceSelected" Color="#2F2F2F"/>
+  <SolidColorBrush x:Key="SurfaceControl" Color="#373737"/> <!-- buttons, inputs -->
+  <SolidColorBrush x:Key="SurfaceControlHover" Color="#3C3C3C"/>
 
-  <!-- Rules: a real 1px line, not a translucent wash — this is what makes dense
-       information legible without boxing everything in. -->
-  <SolidColorBrush x:Key="Hairline"     Color="#2E2E2E"/>
-  <SolidColorBrush x:Key="HairlineSoft" Color="#242424"/>
+  <!-- Card stroke is DARKER than the card, as in Windows: the edge reads as depth,
+       not as a drawn outline. -->
+  <SolidColorBrush x:Key="Hairline"     Color="#1D1D1D"/>
+  <SolidColorBrush x:Key="HairlineSoft" Color="#353535"/>  <!-- dividers inside a card -->
+  <SolidColorBrush x:Key="ControlStroke" Color="#434343"/>
 
-  <!-- Text -->
-  <SolidColorBrush x:Key="Text0" Color="#F0F0F0"/>
-  <SolidColorBrush x:Key="Text1" Color="#DCDCDC"/>
-  <SolidColorBrush x:Key="Text2" Color="#9B9B9B"/>
-  <SolidColorBrush x:Key="Text3" Color="#6E6E6E"/>
+  <!-- Text: white and three steps of Windows' secondary/tertiary/disabled -->
+  <SolidColorBrush x:Key="Text0" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="Text1" Color="#F0F0F0"/>
+  <SolidColorBrush x:Key="Text2" Color="#C5C5C5"/>
+  <SolidColorBrush x:Key="Text3" Color="#9D9D9D"/>
 
-  <!-- Accent: kept, but used sparingly -->
-  <SolidColorBrush x:Key="AccentWheat" Color="#E0A860"/>
-  <SolidColorBrush x:Key="AccentCrust" Color="#B4763A"/>
-  <SolidColorBrush x:Key="AccentGradient" Color="#E0A860"/>   <!-- flat now, name kept -->
-  <SolidColorBrush x:Key="AmbientGlow" Color="Transparent"/>  <!-- no glow in this style -->
+  <!-- Accent -->
+  <SolidColorBrush x:Key="AccentWheat" Color="#60CDFF"/>
+  <SolidColorBrush x:Key="AccentCrust" Color="#4CC2FF"/>
+  <SolidColorBrush x:Key="AccentGradient" Color="#60CDFF"/>
+  <SolidColorBrush x:Key="AccentText" Color="#000000"/>    <!-- text on the accent -->
+  <SolidColorBrush x:Key="AmbientGlow" Color="Transparent"/>
 
-  <!-- Status -->
-  <SolidColorBrush x:Key="Good"   Color="#5FBF7F"/>
-  <SolidColorBrush x:Key="Warn"   Color="#D9A441"/>
-  <SolidColorBrush x:Key="Danger" Color="#D96565"/>
+  <!-- Status: Windows' own success / caution / critical -->
+  <SolidColorBrush x:Key="Good"   Color="#6CCB5F"/>
+  <SolidColorBrush x:Key="Warn"   Color="#FCE100"/>
+  <SolidColorBrush x:Key="Danger" Color="#FF99A4"/>
+
+  <FontFamily x:Key="UiFont">Segoe UI Variable Text, Segoe UI</FontFamily>
+  <FontFamily x:Key="DisplayFont">Segoe UI Variable Display, Segoe UI</FontFamily>
+  <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
 </ResourceDictionary>

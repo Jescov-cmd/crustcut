@@ -21,7 +21,7 @@ public class BoostScoreCalculatorTests
         r.Score.Should().Be(100);
         r.Applied.Should().Be(3);
         r.Total.Should().Be(3);
-        r.Tier.Should().Be("EXCELLENT");
+        r.Tier.Should().Be("Excellent");
     }
 
     [Fact]
@@ -81,11 +81,11 @@ public class BoostScoreCalculatorTests
     }
 
     [Theory]
-    [InlineData(95, "EXCELLENT")]
+    [InlineData(95, "Excellent")]
     [InlineData(80, "GREAT")]
-    [InlineData(60, "GOOD")]
-    [InlineData(40, "FAIR")]
-    [InlineData(10, "POOR")]
+    [InlineData(60, "Good")]
+    [InlineData(40, "Fair")]
+    [InlineData(10, "Poor")]
     public void TierFor_buckets_correctly(int score, string expected)
         => BoostScoreCalculator.TierFor(score).Should().Be(expected);
 

@@ -1,43 +1,68 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <!-- Shared control-panel styling. Every page uses these classes so the look is defined
-       once; per-view style blocks are how the pages drifted apart in the first place. -->
+  <!-- Shared Windows 11 styling. Every page uses these classes so the look is defined
+       once; per-view style blocks are how the pages drifted apart in the first place.
+       Conventions copied from the inbox apps: sentence-case labels, 4 px control corners,
+       8 px card corners, 32 px buttons, cards on a slightly lighter layer. -->
 
   <!-- ── Page header: title, subtitle, right-aligned actions ── -->
   <Style Selector="Border.pageHeader">
-    <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
-    <Setter Property="BorderThickness" Value="0,0,0,1"/>
-    <Setter Property="Padding" Value="20,14"/>
+    <Setter Property="Padding" Value="28,22,28,10"/>
   </Style>
   <Style Selector="TextBlock.pageTitle">
-    <Setter Property="FontSize" Value="15"/>
-    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="FontFamily" Value="{DynamicResource DisplayFont}"/>
+    <Setter Property="FontSize" Value="26"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
   </Style>
   <Style Selector="TextBlock.pageSubtitle">
-    <Setter Property="FontSize" Value="11.5"/>
+    <Setter Property="FontSize" Value="13"/>
     <Setter Property="Foreground" Value="{DynamicResource Text2}"/>
     <Setter Property="TextWrapping" Value="Wrap"/>
   </Style>
+  <!-- Section heading above a group of cards ("Live", "Recent sessions"). -->
+  <Style Selector="TextBlock.section">
+    <Setter Property="FontSize" Value="14"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
+    <Setter Property="Margin" Value="0,10,0,8"/>
+  </Style>
 
-  <!-- ── Panels and rows ── -->
+  <!-- ── Cards and rows ── -->
   <Style Selector="Border.panel">
     <Setter Property="Background" Value="{DynamicResource SurfacePanel}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
     <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="CornerRadius" Value="3"/>
-    <Setter Property="Padding" Value="14,10,14,12"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="Padding" Value="16,12,16,14"/>
+  </Style>
+  <!-- One setting per card, Windows Settings style: icon, title + description, control. -->
+  <Style Selector="Border.card">
+    <Setter Property="Background" Value="{DynamicResource SurfacePanel}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="Padding" Value="16,13"/>
+    <Setter Property="Margin" Value="0,0,0,4"/>
+    <Setter Property="MinHeight" Value="64"/>
   </Style>
   <Style Selector="TextBlock.panelTitle">
-    <Setter Property="FontSize" Value="11.5"/>
-    <Setter Property="FontWeight" Value="Bold"/>
-    <Setter Property="Foreground" Value="{DynamicResource Text2}"/>
+    <Setter Property="FontSize" Value="14"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
     <Setter Property="Margin" Value="0,0,0,8"/>
+  </Style>
+  <Style Selector="TextBlock.cardIcon">
+    <Setter Property="FontFamily" Value="{DynamicResource IconFont}"/>
+    <Setter Property="FontSize" Value="18"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="Margin" Value="0,0,16,0"/>
   </Style>
   <Style Selector="Border.row">
     <Setter Property="BorderBrush" Value="{DynamicResource HairlineSoft}"/>
     <Setter Property="BorderThickness" Value="0,0,0,1"/>
-    <Setter Property="Padding" Value="0,9"/>
+    <Setter Property="Padding" Value="0,10"/>
   </Style>
   <Style Selector="Border.row.last">
     <Setter Property="BorderThickness" Value="0"/>
@@ -45,123 +70,128 @@
 
   <!-- ── Text roles ── -->
   <Style Selector="TextBlock.key">
-    <Setter Property="FontSize" Value="12.5"/>
-    <Setter Property="FontWeight" Value="SemiBold"/>
-    <Setter Property="Foreground" Value="{DynamicResource Text1}"/>
+    <Setter Property="FontSize" Value="14"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
     <Setter Property="VerticalAlignment" Value="Center"/>
-    <!-- Without wrap, the longest title dictates a MINIMUM row width — at narrow window
-         sizes every row then overflowed the panel and shoved the switch column past the
-         border. (Diagnosed from the layout dump: row grid 653 wide inside a 607 panel.) -->
+    <!-- Without wrap, the longest title dictates a MINIMUM row width and rows overflow
+         their card at narrow window sizes. -->
     <Setter Property="TextWrapping" Value="Wrap"/>
   </Style>
   <Style Selector="TextBlock.sub">
-    <Setter Property="FontSize" Value="11.5"/>
+    <Setter Property="FontSize" Value="12"/>
     <Setter Property="Foreground" Value="{DynamicResource Text2}"/>
     <Setter Property="TextWrapping" Value="Wrap"/>
   </Style>
   <Style Selector="TextBlock.colHead">
-    <Setter Property="FontSize" Value="11"/>
-    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="FontSize" Value="12"/>
     <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
   </Style>
-  <!-- Monospace so values stay column-aligned while they tick. -->
+  <!-- Tabular figures keep ticking numbers from jittering sideways, without a
+       typewriter font. -->
   <Style Selector="TextBlock.value">
-    <Setter Property="FontFamily" Value="Consolas, Cascadia Mono, monospace"/>
-    <Setter Property="FontSize" Value="12.5"/>
-    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="FontFeatures" Value="+tnum"/>
+    <Setter Property="FontSize" Value="14"/>
     <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
     <Setter Property="VerticalAlignment" Value="Center"/>
     <Setter Property="HorizontalAlignment" Value="Right"/>
   </Style>
+  <Style Selector="TextBlock.big">
+    <Setter Property="FontFamily" Value="{DynamicResource DisplayFont}"/>
+    <Setter Property="FontFeatures" Value="+tnum"/>
+    <Setter Property="FontSize" Value="28"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
+  </Style>
 
   <!-- ── Buttons ──
-       Base style targets EVERY Button, not an opt-in class. Class-based styling meant any
-       button that forgot the class fell through to Fluent's defaults, which is why buttons
-       looked inconsistent and their labels sat off-centre across the app. -->
+       Base style targets EVERY Button, so a button that forgets a class still matches. -->
   <Style Selector="Button">
     <Setter Property="HorizontalContentAlignment" Value="Center"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
-    <Setter Property="MinHeight" Value="26"/>
+    <Setter Property="MinHeight" Value="32"/>
     <Setter Property="Padding" Value="14,0"/>
-    <!-- Square, not pill. The brand is 8-bit — hard pixels, hard shadows — and rounded
-         capsules fought that. Square also matches the nav rail and the wordmark. -->
-    <Setter Property="CornerRadius" Value="0"/>
-    <Setter Property="FontSize" Value="10.5"/>
-    <Setter Property="FontWeight" Value="Bold"/>
-    <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="Foreground" Value="{DynamicResource Text2}"/>
-    <Setter Property="BorderBrush" Value="#4A4A4A"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="FontWeight" Value="Normal"/>
+    <Setter Property="Background" Value="{DynamicResource SurfaceControl}"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource ControlStroke}"/>
     <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="Cursor" Value="Hand"/>
   </Style>
-  <!-- The whole button shifts a pixel on press — the same hard-shadow language as the
-       8-bit wordmark, and reads as a physical push. -->
-  <Style Selector="Button:pressed">
-    <Setter Property="RenderTransform" Value="translate(1px,1px)"/>
-  </Style>
-  <!-- Fluent's template drives the visual state from the ContentPresenter, so hover and
-       pressed have to be repainted there or they revert to its own accent. -->
   <Style Selector="Button:pointerover /template/ ContentPresenter">
-    <Setter Property="Background" Value="#2A2A2A"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource AccentWheat}"/>
+    <Setter Property="Background" Value="{DynamicResource SurfaceControlHover}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource ControlStroke}"/>
     <Setter Property="TextElement.Foreground" Value="{DynamicResource Text0}"/>
   </Style>
   <Style Selector="Button:pressed /template/ ContentPresenter">
-    <Setter Property="Background" Value="#242424"/>
+    <Setter Property="Background" Value="#303030"/>
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource Text2}"/>
+  </Style>
+  <Style Selector="Button:disabled /template/ ContentPresenter">
+    <Setter Property="Background" Value="#2A2A2A"/>
+    <Setter Property="TextElement.Foreground" Value="#5D5D5D"/>
   </Style>
 
   <Style Selector="Button.primary">
     <Setter Property="Background" Value="{DynamicResource AccentWheat}"/>
-    <Setter Property="Foreground" Value="#1A1206"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource AccentWheat}"/>
+    <Setter Property="Foreground" Value="{DynamicResource AccentText}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentCrust}"/>
   </Style>
   <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
-    <Setter Property="Background" Value="#F0BC74"/>
-    <Setter Property="TextElement.Foreground" Value="#1A1206"/>
+    <Setter Property="Background" Value="#5BBFEF"/>
+    <Setter Property="BorderBrush" Value="#5BBFEF"/>
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource AccentText}"/>
   </Style>
-  <Style Selector="Button.secondary">
+  <Style Selector="Button.primary:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="#56B0DB"/>
+    <Setter Property="TextElement.Foreground" Value="#1C3A48"/>
+  </Style>
+  <Style Selector="Button.secondary"/>
+  <!-- Borderless, for "more" menus and icon-only actions inside cards. -->
+  <Style Selector="Button.subtle">
     <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+  <Style Selector="Button.subtle:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#383838"/>
   </Style>
   <Style Selector="Button.danger">
-    <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="BorderBrush" Value="#4D3030"/>
     <Setter Property="Foreground" Value="{DynamicResource Danger}"/>
   </Style>
   <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
-    <Setter Property="Background" Value="#2A1818"/>
     <Setter Property="TextElement.Foreground" Value="{DynamicResource Danger}"/>
   </Style>
 
-  <!-- ── Protect toggle (Memory rows): labelled toggle, wheat when active ── -->
+  <!-- ── Protect toggle (Memory rows) ── -->
   <Style Selector="ToggleButton.protect">
-    <Setter Property="MinHeight" Value="26"/>
+    <Setter Property="MinHeight" Value="32"/>
     <Setter Property="Padding" Value="12,0"/>
-    <Setter Property="CornerRadius" Value="0"/>
-    <Setter Property="FontSize" Value="10.5"/>
-    <Setter Property="FontWeight" Value="Bold"/>
-    <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
-    <Setter Property="BorderBrush" Value="#4A4A4A"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Background" Value="{DynamicResource SurfaceControl}"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource ControlStroke}"/>
     <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="Cursor" Value="Hand"/>
     <Setter Property="HorizontalContentAlignment" Value="Center"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
   </Style>
   <Style Selector="ToggleButton.protect:checked /template/ ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource AccentWheat}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource AccentWheat}"/>
-    <Setter Property="TextElement.Foreground" Value="#1A1206"/>
-  </Style>
-  <Style Selector="ToggleButton.protect:pointerover /template/ ContentPresenter">
-    <Setter Property="BorderBrush" Value="{DynamicResource AccentWheat}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentCrust}"/>
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource AccentText}"/>
   </Style>
 
-  <!-- ── Toggle: Fluent's default is a bright red/blue accent that clashes with the
-       palette. Repainted to the wheat accent. ── -->
-  <!-- Fluent's ToggleSwitch reserves width for an On/Off content label even when the
-       content is empty, so the control is ~12px wider than it looks and overflowed its
-       column, bleeding over the panel border at narrow window sizes. Strip the
-       reservation so the switch is exactly the knob. -->
+  <!-- A row of these (Memory's Protect) as solid accent became a wall of blue. "soft"
+       marks the on state with an accent outline and text instead. -->
+  <Style Selector="ToggleButton.protect.soft:checked /template/ ContentPresenter">
+    <Setter Property="Background" Value="#1F3540"/>
+    <Setter Property="BorderBrush" Value="#3A6F86"/>
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource AccentWheat}"/>
+  </Style>
+
+  <!-- ── Toggle switch: Fluent's own Windows 11 switch, recoloured through
+       SystemAccentColor. Only the empty On/Off label reservation is stripped, which
+       otherwise made the switch ~12 px wider than it looks and overflow its column. ── -->
   <Style Selector="ToggleSwitch">
     <Setter Property="MinWidth" Value="0"/>
     <Setter Property="Padding" Value="0"/>
@@ -170,40 +200,35 @@
     <Setter Property="IsVisible" Value="False"/>
     <Setter Property="Margin" Value="0"/>
   </Style>
-  <Style Selector="ToggleSwitch:checked /template/ Border#SwitchKnobBounds">
-    <Setter Property="Background" Value="{DynamicResource AccentWheat}"/>
-  </Style>
-  <Style Selector="ToggleSwitch:unchecked /template/ Border#SwitchKnobBounds">
-    <Setter Property="Background" Value="#3A3A3A"/>
-  </Style>
-  <Style Selector="ToggleSwitch:checked /template/ Ellipse#SwitchKnobOn">
-    <Setter Property="Fill" Value="#1A1206"/>
-  </Style>
 
   <!-- ── Inputs ── -->
   <Style Selector="TextBox">
-    <Setter Property="CornerRadius" Value="3"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="MinHeight" Value="32"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
-    <Setter Property="Background" Value="#141414"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
-    <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
-    <Setter Property="FontSize" Value="12.5"/>
+    <Setter Property="FontSize" Value="13"/>
+  </Style>
+  <Style Selector="ComboBox">
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="MinHeight" Value="32"/>
+    <Setter Property="FontSize" Value="13"/>
+  </Style>
+  <Style Selector="NumericUpDown">
+    <Setter Property="CornerRadius" Value="4"/>
   </Style>
   <Style Selector="CheckBox">
-    <Setter Property="FontSize" Value="12.5"/>
-    <Setter Property="FontWeight" Value="SemiBold"/>
-    <Setter Property="Foreground" Value="{DynamicResource Text1}"/>
+    <Setter Property="FontSize" Value="14"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
   </Style>
-  <!-- Fluent paints the checked box with its own accent (bright red here). Repaint it. -->
-  <Style Selector="CheckBox:checked /template/ Border#NormalRectangle">
-    <Setter Property="Background" Value="{DynamicResource AccentWheat}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource AccentWheat}"/>
+
+  <!-- Thin, Windows-style scrollbars. -->
+  <Style Selector="ScrollBar:vertical">
+    <Setter Property="Width" Value="12"/>
   </Style>
-  <Style Selector="CheckBox:checked /template/ Path#CheckGlyph">
-    <Setter Property="Fill" Value="#1A1206"/>
-    <Setter Property="Stroke" Value="#1A1206"/>
-  </Style>
-  <Style Selector="CheckBox:unchecked /template/ Border#NormalRectangle">
-    <Setter Property="BorderBrush" Value="#4A4A4A"/>
+
+  <Style Selector="ToolTip">
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="MaxWidth" Value="360"/>
   </Style>
 </Styles>

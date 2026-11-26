@@ -2,9 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Crustcut.App.Views.GameBoostView">
 
-  <DockPanel Margin="20,0,20,16">
+  <DockPanel Margin="28,0,28,16">
     <StackPanel DockPanel.Dock="Top">
-      <TextBlock Text="Game Boost" Classes="pageTitle" Margin="0,16,0,10"/>
+      <TextBlock Text="Game boost" Classes="pageTitle" Margin="0,22,0,8"/>
       <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,14"
                  TextWrapping="Wrap"
                  Text="Applies a bundle of optimizations in one go. Everything is reversible from the Optimize page or History."/>
@@ -21,7 +21,7 @@
                 <TextBlock Classes="sub" Margin="0,3,0,0"
                            Text="The safe everyday set — Game Mode, mouse precision, a faster power plan, snappier UI."/>
               </StackPanel>
-              <Button Grid.Column="1" Content="APPLY" Classes="primary" VerticalAlignment="Center"
+              <Button Grid.Column="1" Content="Apply" Classes="secondary" VerticalAlignment="Center"
                       IsEnabled="{Binding !IsWorking}" Click="BasicClick"/>
             </Grid>
           </Border>
@@ -33,7 +33,7 @@
                 <TextBlock Classes="sub" Margin="0,3,0,0"
                            Text="Basic plus the fastest power plan and network latency tweaks. Runs the system a little hotter."/>
               </StackPanel>
-              <Button Grid.Column="1" Content="APPLY" Classes="primary" VerticalAlignment="Center"
+              <Button Grid.Column="1" Content="Apply" Classes="secondary" VerticalAlignment="Center"
                       IsEnabled="{Binding !IsWorking}" Click="PerformanceClick"/>
             </Grid>
           </Border>
@@ -45,7 +45,7 @@
                 <TextBlock Classes="sub" Margin="0,3,0,0"
                            Text="Everything, plus Cortana, Modern Standby and hibernation off. For squeezing out the last few frames; may affect sleep on laptops."/>
               </StackPanel>
-              <Button Grid.Column="1" Content="APPLY" Classes="primary" VerticalAlignment="Center"
+              <Button Grid.Column="1" Content="Apply" Classes="secondary" VerticalAlignment="Center"
                       IsEnabled="{Binding !IsWorking}" Click="AggressiveClick"/>
             </Grid>
           </Border>
@@ -56,7 +56,7 @@
           <Border Classes="panel">
             <Grid ColumnDefinitions="*,Auto">
               <StackPanel Grid.Column="0" Spacing="3" MaxWidth="560" HorizontalAlignment="Left">
-                <TextBlock Text="PAUSE BACKGROUND APPS WHILE GAMING" Classes="panelTitle" Margin="0"/>
+                <TextBlock Text="Pause background apps while gaming" Classes="panelTitle" Margin="0"/>
                 <TextBlock Classes="sub"
                            Text="While you play, background apps like OneDrive, iCloud, Dropbox, Wallpaper Engine and Phone Link are paused so the game gets their memory. They wake when you quit or switch to one. Mouse, keyboard, headset, lighting, voice chat, music, capture tools and launchers are never paused."/>
               </StackPanel>
@@ -71,7 +71,7 @@
             <StackPanel Spacing="10">
               <Grid ColumnDefinitions="*,Auto">
                 <StackPanel Grid.Column="0" Spacing="3" MaxWidth="560" HorizontalAlignment="Left">
-                  <TextBlock Text="SLEEP APPS YOU'RE NOT USING" Classes="panelTitle" Margin="0"/>
+                  <TextBlock Text="Sleep apps you're not using" Classes="panelTitle" Margin="0"/>
                   <TextBlock Classes="sub"
                              Text="Game apps like Medal, overlays and crosshairs sleep when you are not playing and wake the moment a game starts. Crustcut finds them on its own. Anything else you add sleeps after a few minutes unused and wakes when you open it. Mouse, keyboard, headset and lighting software is never put to sleep."/>
                 </StackPanel>
@@ -90,7 +90,7 @@
                       <TextBlock Grid.Column="1" Text="{Binding StateText}" FontSize="10.5" FontWeight="SemiBold"
                                  Foreground="{DynamicResource AccentWheat}" VerticalAlignment="Center"
                                  Margin="0,0,12,0"/>
-                      <Button Grid.Column="2" Content="WAKE" Classes="secondary" Margin="0,0,8,0"
+                      <Button Grid.Column="2" Content="Wake" Classes="secondary" Margin="0,0,8,0"
                               IsVisible="{Binding IsFrozen}" Tag="{Binding Name}" Click="WakeClick"
                               ToolTip.Tip="Wake it now. It won't go back to sleep for a few minutes."/>
                       <Button Grid.Column="3" Content="✕" MinHeight="26" Height="26" MinWidth="32" Padding="0"
@@ -107,14 +107,14 @@
                          Text="Nothing on the list is running, so there's nothing to put to sleep. Medal, Overwolf, Outplayed, Lossless Scaling, Crosshair X and Blitz are added automatically whenever they run — anything else, add below."/>
 
               <!-- Anything not on the automatic list is one tap away, but out of the way. -->
-              <Button Content="+ ADD ANOTHER APP" Classes="secondary" HorizontalAlignment="Left"
+              <Button Content="Add another app" Classes="secondary" HorizontalAlignment="Left"
                       IsVisible="{Binding !ShowAddPicker}" Click="ShowPickerClick"/>
               <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding ShowAddPicker}">
                 <ComboBox Width="240" Height="28" FontSize="12"
                           ItemsSource="{Binding GameOnlyCandidates}"
                           SelectedItem="{Binding SelectedCandidate, Mode=TwoWay}"
                           PlaceholderText="Pick a running app…"/>
-                <Button Content="ADD" Classes="secondary" Click="AddGameOnlyClick"/>
+                <Button Content="Add" Classes="secondary" Click="AddGameOnlyClick"/>
               </StackPanel>
             </StackPanel>
           </Border>
@@ -124,7 +124,7 @@
 
           <Border Classes="panel" IsVisible="{Binding SuspendedApps.Count}">
             <StackPanel>
-              <TextBlock Text="SUSPENDED WHILE GAMING" Classes="panelTitle"/>
+              <TextBlock Text="Suspended while gaming" Classes="panelTitle"/>
               <ItemsControl ItemsSource="{Binding SuspendedApps}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>

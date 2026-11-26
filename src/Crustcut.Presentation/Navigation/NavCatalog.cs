@@ -8,34 +8,34 @@ namespace Crustcut.Presentation.Navigation;
 /// </summary>
 public static class NavCatalog
 {
-    public const string Performance = "PERFORMANCE";
-    public const string Gaming      = "GAMING";
-    public const string Learn       = "LEARN";
+    public const string Performance = "Performance";
+    public const string Gaming      = "Gaming";
+    public const string Learn       = "Learn";
 
     private static readonly IReadOnlyList<NavItem> PrimaryAll = new[]
     {
-        new NavItem("Overview",  "OVERVIEW",   ""),
+        new NavItem("Overview", "Overview", "", Icon: "\uE80F"),
 
-        new NavItem("Optimize",  "OPTIMIZE",   Performance, WindowsOnly: true),
-        new NavItem("Diagnosis", "DIAGNOSIS",  Performance, WindowsOnly: true),
-        new NavItem("Cleanup",   "CLEANUP",    Performance, WindowsOnly: true),   // was "Bloatware"
-        new NavItem("Memory",    "MEMORY",     Performance, WindowsOnly: true),
-        new NavItem("Fans",      "FANS",       Performance, WindowsOnly: true),
+        new NavItem("Optimize", "Optimize", Performance, WindowsOnly: true, Icon: "\uEC4A"),
+        new NavItem("Diagnosis", "Diagnosis", Performance, WindowsOnly: true, Icon: "\uE9D9"),
+        new NavItem("Cleanup", "Cleanup", Performance, WindowsOnly: true, Icon: "\uEA99"),   // was "Bloatware"
+        new NavItem("Memory", "Memory", Performance, WindowsOnly: true, Icon: "\uEEA0"),
+        new NavItem("Fans", "Fans", Performance, WindowsOnly: true, Icon: "\uE9CA"),
 
-        new NavItem("Games",     "GAMES",      Gaming),        // was "Library"
-        new NavItem("Sessions",  "SESSIONS",   Gaming, WindowsOnly: true),        // was "Sentinel"
-        new NavItem("GameBoost", "GAME BOOST", Gaming, WindowsOnly: true),
+        new NavItem("Games", "Games", Gaming, Icon: "\uE7FC"),        // was "Library"
+        new NavItem("Sessions", "Sessions", Gaming, WindowsOnly: true, Icon: "\uE9D2"),        // was "Sentinel"
+        new NavItem("GameBoost", "Game boost", Gaming, WindowsOnly: true, Icon: "\uE945"),
 
         // Every current guide is PC-hardware/Windows content (BIOS, NVIDIA panel, XMP…).
         // Windows-only until mac guides are written.
-        new NavItem("Guides",    "GUIDES",     Learn, WindowsOnly: true),
-        new NavItem("WhatsNew",  "WHAT'S NEW", Learn),
+        new NavItem("Guides", "Guides", Learn, WindowsOnly: true, Icon: "\uE8F1"),
+        new NavItem("WhatsNew", "What's new", Learn, Icon: "\uE734"),
     };
 
     private static readonly IReadOnlyList<NavItem> BottomAll = new[]
     {
-        new NavItem("History",  "HISTORY",  "", WindowsOnly: true),
-        new NavItem("Settings", "SETTINGS", ""),
+        new NavItem("History", "History", "", WindowsOnly: true, Icon: "\uE81C"),
+        new NavItem("Settings", "Settings", "", Icon: "\uE713"),
     };
 
     public static readonly IReadOnlyList<NavItem> Primary = Filter(PrimaryAll);

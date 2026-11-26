@@ -15,7 +15,7 @@
       </Grid>
     </Border>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16,26,20">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="28,8,34,24">
       <Border Classes="panel">
         <!-- Grid, NOT StackPanel: Avalonia StackPanel measures children with unconstrained
              width, so the ItemsControl took its natural width and rows overflowed the
@@ -85,7 +85,7 @@
                                   IsEnabled="{Binding !IsBusy}"
                                   IsVisible="{Binding IsToggle}"
                                   Tag="{Binding}" Click="ToggleClick"/>
-                    <Button Grid.Column="2" Content="RUN" Classes="secondary"
+                    <Button Grid.Column="2" Content="Run" Classes="secondary"
                             HorizontalAlignment="Right" VerticalAlignment="Top"
                             IsEnabled="{Binding !IsBusy}"
                             IsVisible="{Binding IsOneShot}"

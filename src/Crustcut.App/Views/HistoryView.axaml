@@ -5,15 +5,17 @@
   <UserControl.Styles>
     <Style Selector="Border.row">
       <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
-      <Setter Property="CornerRadius" Value="4"/>
-      <Setter Property="Padding" Value="14,11"/>
-      <Setter Property="Margin" Value="0,0,0,7"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Padding" Value="16,12"/>
+      <Setter Property="Margin" Value="0,0,0,4"/>
     </Style>
     </UserControl.Styles>
 
-  <DockPanel Margin="20,0,20,16">
+  <DockPanel Margin="28,0,28,16">
     <StackPanel DockPanel.Dock="Top">
-      <TextBlock Text="History" Classes="pageTitle" Margin="0,16,0,10"/>
+      <TextBlock Text="History" Classes="pageTitle" Margin="0,22,0,8"/>
       <TextBlock Text="{Binding Status}" FontSize="12"
                  Foreground="{DynamicResource Text2}" Margin="0,0,0,14"/>
 

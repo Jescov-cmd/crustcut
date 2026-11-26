@@ -5,15 +5,17 @@
   <UserControl.Styles>
     <Style Selector="Border.row">
       <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
-      <Setter Property="CornerRadius" Value="4"/>
-      <Setter Property="Padding" Value="14,11"/>
-      <Setter Property="Margin" Value="0,0,0,8"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Padding" Value="16,12"/>
+      <Setter Property="Margin" Value="0,0,0,4"/>
     </Style>
     </UserControl.Styles>
 
-  <DockPanel Margin="20,0,20,16">
+  <DockPanel Margin="28,0,28,16">
     <StackPanel DockPanel.Dock="Top">
-      <TextBlock Text="Memory" Classes="pageTitle" Margin="0,16,0,10"/>
+      <TextBlock Text="Memory" Classes="pageTitle" Margin="0,22,0,8"/>
       <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,14"
                  TextWrapping="Wrap"
                  Text="Give the apps you care about more CPU priority, cap how much memory an app may keep, and protect favourites from cleanups. Anything with an open window is protected automatically."/>
@@ -24,14 +26,14 @@
         <WrapPanel.Styles>
           <Style Selector="Button"><Setter Property="Margin" Value="0,0,9,8"/></Style>
         </WrapPanel.Styles>
-        <Button x:Name="CleanNowButton" Content="FREE UP RAM" Classes="primary" Click="CleanNowClick"
+        <Button x:Name="CleanNowButton" Content="Free up RAM" Classes="primary" Click="CleanNowClick"
                 ToolTip.Tip="Releases memory held by idle background programs. Apps you're using are left alone."/>
-        <Button x:Name="DeepCleanButton" Content="DEEP CLEAN" Classes="secondary" Click="DeepCleanClick"
+        <Button x:Name="DeepCleanButton" Content="Deep clean" Classes="secondary" Click="DeepCleanClick"
                 ToolTip.Tip="Bigger cleanup: minimised apps and small background programs included, plus Windows' own caches. Minimised apps wake a moment slower afterwards. On-screen, focused and PROTECT-ed apps are never touched."/>
-        <Button Content="RECOMMENDED LIMITS" Classes="secondary" Click="RecommendedLimitsClick"
+        <Button Content="Recommended limits" Classes="secondary" Click="RecommendedLimitsClick"
                 ToolTip.Tip="Measures what each running BACKGROUND app uses and caps it with 50% headroom. Apps with a window are skipped — capping one can make it render badly. Games are never capped."/>
-        <Button Content="SCAN RUNNING APPS" Classes="secondary" Click="RescanClick"/>
-        <Button Content="RECOMMENDED FOR MY GAMES" Classes="secondary" Click="RecommendedClick"/>
+        <Button Content="Scan running apps" Classes="secondary" Click="RescanClick"/>
+        <Button Content="Recommended for my games" Classes="secondary" Click="RecommendedClick"/>
       </WrapPanel>
 
 
@@ -46,7 +48,7 @@
               BorderThickness="1" CornerRadius="3" Padding="14,10" Margin="0,0,0,14"
               MaxWidth="560" HorizontalAlignment="Left">
         <StackPanel Spacing="6">
-          <TextBlock Text="USING THE MOST MEMORY RIGHT NOW" FontSize="10.5" FontWeight="SemiBold"
+          <TextBlock Text="Using the most memory right now" FontSize="10.5" FontWeight="SemiBold"
                      Foreground="{DynamicResource Text3}"/>
           <ItemsControl ItemsSource="{Binding TopMemory}">
             <ItemsControl.ItemTemplate>
@@ -58,7 +60,7 @@
                              Foreground="{DynamicResource Text3}" VerticalAlignment="Center"
                              HorizontalAlignment="Right"/>
                   <TextBlock Grid.Column="2" Text="{Binding UsageMb}" FontSize="12"
-                             FontFamily="Consolas, Cascadia Mono, monospace"
+                             FontFeatures="+tnum"
                              Foreground="{DynamicResource Text0}" HorizontalAlignment="Right"
                              VerticalAlignment="Center"/>
                 </Grid>
@@ -124,7 +126,7 @@
 
                 <!-- Click handler persists — a checkbox that only flips the in-memory
                      property forgets itself on the next visit. -->
-                <ToggleButton Grid.Column="3" Classes="protect" Content="PROTECT"
+                <ToggleButton Grid.Column="3" Classes="protect soft" Content="Protect"
                           Margin="0,0,10,0" VerticalAlignment="Center"
                           IsChecked="{Binding ProtectFromRamCleanup, Mode=TwoWay}"
                           ToolTip.Tip="Never trim this app's memory"

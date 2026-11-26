@@ -3,9 +3,9 @@
              xmlns:conv="clr-namespace:Crustcut.App"
              x:Class="Crustcut.App.Views.GamesView">
 
-  <DockPanel Margin="20,0,20,16">
+  <DockPanel Margin="28,0,28,16">
     <StackPanel DockPanel.Dock="Top">
-      <TextBlock Text="Games" Classes="pageTitle" Margin="0,16,0,10"/>
+      <TextBlock Text="Games" Classes="pageTitle" Margin="0,22,0,8"/>
       <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,16"
                  TextWrapping="Wrap"
                  Text="{Binding DetectionSourcesText}"/>

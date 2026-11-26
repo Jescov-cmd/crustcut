@@ -5,32 +5,38 @@
   <UserControl.Styles>
     <Style Selector="Border.card">
       <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
-      <Setter Property="CornerRadius" Value="4"/>
-      <Setter Property="Padding" Value="18,16"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Hairline}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="20,16"/>
       <Setter Property="Margin" Value="0,0,0,12"/>
-      <Setter Property="Width" Value="620"/>
-      <Setter Property="HorizontalAlignment" Value="Left"/>
+      <Setter Property="MaxWidth" Value="1000"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
     </Style>
     <Style Selector="TextBlock.label">
-      <Setter Property="FontSize" Value="11"/>
-      <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
     </Style>
     <Style Selector="TextBlock.hint">
-      <Setter Property="FontSize" Value="11"/>
-      <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text2}"/>
       <Setter Property="TextWrapping" Value="Wrap"/>
       <Setter Property="Margin" Value="0,3,0,0"/>
     </Style>
   </UserControl.Styles>
 
-  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,0,20,20">
-    <StackPanel>
-      <TextBlock Text="Settings" Classes="pageTitle" Margin="0,16,0,12"/>
+  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="28,0,28,24">
+    <!-- Grid + bound width, as on What's new: a StackPanel measured inside a ScrollViewer
+         can take its text's natural width and run past the right edge. -->
+    <Grid x:Name="PanelGrid">
+    <StackPanel Width="{Binding #PanelGrid.Bounds.Width}" MaxWidth="1000" HorizontalAlignment="Left">
+      <TextBlock Text="Settings" Classes="pageTitle" Margin="0,22,0,10"/>
 
       <!-- ── Memory cleanup ── -->
       <Border Classes="card" IsVisible="{Binding IsWindows}">
         <StackPanel Spacing="12">
-          <TextBlock Text="MEMORY CLEANUP" Classes="label"/>
+          <TextBlock Text="Memory cleanup" Classes="label"/>
 
           <StackPanel>
             <CheckBox IsChecked="{Binding RamAdaptiveEnabled, Mode=TwoWay}"
@@ -88,7 +94,7 @@
       <!-- ── Startup ── -->
       <Border Classes="card" IsVisible="{Binding IsWindows}">
         <StackPanel Spacing="12">
-          <TextBlock Text="STARTUP" Classes="label"/>
+          <TextBlock Text="Startup" Classes="label"/>
 
           <StackPanel>
             <CheckBox IsChecked="{Binding StartAtBoot, Mode=TwoWay}"
@@ -113,7 +119,7 @@
       <!-- ── Performance overlay ── -->
       <Border Classes="card" IsVisible="{Binding IsWindows}">
         <StackPanel Spacing="12">
-          <TextBlock Text="IN-GAME OVERLAY" Classes="label"/>
+          <TextBlock Text="In-game overlay" Classes="label"/>
           <CheckBox IsChecked="{Binding OverlayEnabled, Mode=TwoWay}"
                     Content="Show the performance overlay"
                     Foreground="{DynamicResource Text1}"/>
@@ -131,7 +137,7 @@
                       Foreground="{DynamicResource Text1}"/>
           </StackPanel>
           <StackPanel Orientation="Horizontal" Spacing="10">
-            <Button Content="REPOSITION" Classes="secondary" Click="RepositionClick"/>
+            <Button Content="Reposition" Classes="secondary" Click="RepositionClick"/>
             <TextBlock Text="or press Ctrl+Shift+O in game" Classes="hint" VerticalAlignment="Center"/>
           </StackPanel>
         </StackPanel>
@@ -140,7 +146,7 @@
       <!-- ── Monitoring ── -->
       <Border Classes="card" IsVisible="{Binding IsWindows}">
         <StackPanel Spacing="12">
-          <TextBlock Text="MONITORING" Classes="label"/>
+          <TextBlock Text="Monitoring" Classes="label"/>
           <StackPanel>
             <CheckBox IsChecked="{Binding SentinelEnabled, Mode=TwoWay}"
                       Content="Watch performance while apps run"
@@ -155,7 +161,7 @@
            an empty page (on macOS all four cards above are hidden). ── -->
       <Border Classes="card">
         <StackPanel Spacing="6">
-          <TextBlock Text="ABOUT" Classes="label"/>
+          <TextBlock Text="About" Classes="label"/>
           <TextBlock Text="{Binding AboutText}" FontSize="12"
                      Foreground="{DynamicResource Text1}"/>
           <TextBlock Classes="hint" IsVisible="{Binding !IsWindows}"
@@ -165,5 +171,6 @@
 
       <TextBlock Text="{Binding Status}" Classes="hint" Margin="2,0,0,24"/>
     </StackPanel>
+    </Grid>
   </ScrollViewer>
 </UserControl>

@@ -50,9 +50,9 @@ public sealed class ScoreArc : Control
             EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
             GradientStops =
             {
-                new GradientStop(Color.Parse("#F2D6A8"), 0),
-                new GradientStop(Color.Parse("#E8C088"), 0.55),
-                new GradientStop(Color.Parse("#B4763A"), 1),
+                new GradientStop(Color.Parse("#99EBFF"), 0),
+                new GradientStop(Color.Parse("#60CDFF"), 0.55),
+                new GradientStop(Color.Parse("#0093F9"), 1),
             }
         };
 

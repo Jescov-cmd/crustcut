@@ -15,6 +15,8 @@ public partial class NavItemVm : ObservableObject
     public string Id => Model.Id;
     public string Label => Model.Label;
     public string Group => Model.Group;
+    /// <summary>Segoe Fluent Icons glyph (ships with Windows 11).</summary>
+    public string Icon => Model.Icon;
 
     /// <summary>
     /// True only for the first item of a group, so the section heading is drawn once above
