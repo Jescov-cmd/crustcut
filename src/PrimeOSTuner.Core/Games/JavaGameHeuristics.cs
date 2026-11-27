@@ -26,9 +26,32 @@ public static class JavaGameHeuristics
         "curseforge",               // CurseForge instance paths
     };
 
+    // Build tools and mod-development runs carry the same library names on their command
+    // line (a NeoForge/Fabric mod's Gradle daemon has net.minecraft and neoforged all over
+    // its classpath) but aren't someone playing. Counted as Minecraft, every mod build
+    // became a 50-second "game": a session with 0 frames, background apps paused and —
+    // with Game mode on — the power plan switched, all for a compiler.
+    private static readonly string[] NotPlaying =
+    {
+        "org.gradle",               // Gradle wrapper, daemon and workers
+        "gradlewrapper",
+        "gradle-wrapper",
+        "gradledaemon",
+        "gradleworkermain",
+        "kotlin.daemon",            // Kotlin compile daemon
+        "kotlincompiledaemon",
+        "devlaunch",                // NeoForge/Fabric dev runs (net.neoforged.devlaunch, devlaunchinjector)
+        "fabric.development=true",
+        "gametest",                 // automated game-test servers
+        "--nogui",                  // dedicated servers
+        "net.minecraft.server.main",
+    };
+
     public static bool IsMinecraft(string? commandLine)
     {
         if (string.IsNullOrEmpty(commandLine)) return false;
+        foreach (var n in NotPlaying)
+            if (commandLine.Contains(n, StringComparison.OrdinalIgnoreCase)) return false;
         foreach (var m in Markers)
             if (commandLine.Contains(m, StringComparison.OrdinalIgnoreCase)) return true;
         return false;

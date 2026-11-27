@@ -23,6 +23,15 @@ public class JavaGameHeuristicsTests
     [InlineData(@"javaw.exe -jar C:\tools\jenkins-agent.jar")]
     [InlineData(@"java -cp gradle-launcher.jar org.gradle.launcher.daemon.bootstrap.GradleDaemon")]
     [InlineData(@"javaw.exe -Xmx512m -jar C:\Program Files\Apps\pdf-tool.jar")]
+    // Minecraft MOD builds: the real command lines from his machine carry net.minecraft /
+    // neoforged on the classpath but are Gradle, not a game (each became a 0-frame session).
+    [InlineData(@"""C:\Program Files\Eclipse Adoptium\jdk-17\bin\java.exe"" -Xmx64m -Dorg.gradle.appname=gradlew -jar ""C:/Users/x/projects/Minecraft Mods/B.A.G/gradle/wrapper/gradle-wrapper.jar"" build")]
+    [InlineData(@"java.exe --add-opens=java.base/java.lang=ALL-UNNAMED -cp C:\Users\x\.gradle\caches\neoforged\neoform\net.minecraft\client.jar;C:\Users\x\.gradle\wrapper\dists\gradle-9\lib\gradle-launcher.jar org.gradle.launcher.daemon.bootstrap.GradleDaemon 9.1")]
+    [InlineData(@"java.exe -cp C:\Users\x\.gradle\caches\net.fabricmc\fabric-loader.jar worker.org.gradle.process.internal.worker.GradleWorkerMain 'Gradle Worker Daemon 3'")]
+    [InlineData(@"java.exe -cp C:\mods\build\libs net.neoforged.devlaunch.Main --launchTarget forgeclientdev")]
+    [InlineData(@"java.exe -Dfabric.development=true -cp x net.fabricmc.devlaunchinjector.Main")]
+    [InlineData(@"java.exe -Dneoforge.enableGameTest=true -cp x net.neoforged.devlaunch.Main --launchTarget forgegametestserverdev")]
+    [InlineData(@"java -Xmx4G -jar server.jar net.minecraft.server.Main --nogui")]
     [InlineData("")]
     [InlineData(null)]
     public void Ignores_non_game_java(string? cmd)
