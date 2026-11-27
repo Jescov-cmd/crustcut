@@ -122,7 +122,9 @@ public partial class HomeViewModel : ObservableObject
                 "Turn them on in one go. Every change can be undone in History.",
                 "optimize"));
 
-        if (last is { HasVerdict: true })
+        // Only a real stutter with a cause is worth a line — not "Smooth" or "Too short to judge".
+        if (last is { HasVerdict: true } && !last.Verdict.StartsWith("Smooth", StringComparison.Ordinal)
+            && !last.Verdict.StartsWith("Too short", StringComparison.Ordinal))
             items.Add(new HomeItemVm($"{last.GameName} stuttered last time", last.Verdict, "Sessions"));
 
         // Replace only when something changed, so the list doesn't flicker every 3 s.

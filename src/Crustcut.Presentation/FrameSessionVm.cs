@@ -34,7 +34,7 @@ public sealed class FrameSessionVm
 
     /// <summary>The line under the numbers: why it stuttered, or why not to trust it.</summary>
     public string Verdict => IsUnreliable
-        ? "Recorded before the capture fix — these numbers aren't from the game. New sessions are accurate."
+        ? "Too few frames were captured to trust these numbers."
         : _model.Stutter?.Verdict ?? "";
 
     public bool HasVerdict => Verdict.Length > 0;

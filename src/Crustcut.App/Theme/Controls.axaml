@@ -288,4 +288,17 @@
     <Setter Property="BorderThickness" Value="0,0,0,1"/>
     <Setter Property="Padding" Value="4,16"/>
   </Style>
+  <!-- Selected rows in lists and dropdowns: grey fill, white text (the accent is white). -->
+  <Style Selector="ListBoxItem:selected /template/ ContentPresenter, ComboBoxItem:selected /template/ ContentPresenter">
+    <Setter Property="Background" Value="#262626"/>
+    <Setter Property="Foreground" Value="#FFFFFF"/>
+  </Style>
+  <Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter, ComboBoxItem:selected:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#2E2E2E"/>
+    <Setter Property="Foreground" Value="#FFFFFF"/>
+  </Style>
+  <Style Selector="ListBoxItem:selected:pressed /template/ ContentPresenter, ComboBoxItem:selected:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="#333333"/>
+    <Setter Property="Foreground" Value="#FFFFFF"/>
+  </Style>
 </Styles>

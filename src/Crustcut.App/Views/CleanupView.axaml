@@ -43,7 +43,7 @@
             <ItemsControl ItemsSource="{Binding StartupApps}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                  <Grid ColumnDefinitions="*,90,Auto" Margin="0,4,0,0">
+                  <Grid ColumnDefinitions="*,120,Auto" Margin="0,4,0,0">
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
                       <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
                                  Foreground="{DynamicResource Text1}"/>
@@ -51,12 +51,13 @@
                                  Foreground="{DynamicResource Text3}"
                                  TextTrimming="CharacterEllipsis" Margin="0,1,12,0"/>
                     </StackPanel>
-                    <TextBlock Grid.Column="1" Text="{Binding SourceLabel}" FontSize="10.5"
+                    <TextBlock Grid.Column="1" Text="{Binding StatusLabel}" FontSize="10.5"
                                Foreground="{DynamicResource Text3}" VerticalAlignment="Center"
                                HorizontalAlignment="Right" Margin="0,0,12,0"/>
                     <ToggleSwitch Grid.Column="2" OnContent="" OffContent="" MinWidth="0"
                                   VerticalAlignment="Center"
                                   IsChecked="{Binding Enabled, Mode=OneWay}"
+                                  IsEnabled="{Binding CanToggle}"
                                   Click="StartupToggleClick"
                                   Tag="{Binding}"/>
                   </Grid>

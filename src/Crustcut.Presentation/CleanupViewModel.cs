@@ -91,8 +91,25 @@ public partial class CleanupViewModel : ObservableObject
             _ => "this user",
         };
         private bool _enabled;
-        public bool Enabled { get => _enabled; set => SetProperty(ref _enabled, value); }
+        public bool Enabled { get => _enabled; set { if (SetProperty(ref _enabled, value)) OnPropertyChanged(nameof(CanToggle)); } }
         public StartupRowVm(PrimeOSTuner.Core.Platform.StartupApp app) { App = app; _enabled = app.Enabled; }
+
+        /// <summary>Software that runs a mouse, keyboard, headset, lights or a Stream Deck.
+        /// Switching it off at startup means the device doesn't work after the next boot,
+        /// so the switch is locked on (it can still be turned ON if it was off).</summary>
+        public bool IsDevice => IsDeviceStartup(App);
+        public bool CanToggle => !(IsDevice && Enabled);
+        public string StatusLabel => IsDevice ? "runs your devices" : SourceLabel;
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex ExeName =
+        new(@"([^\\/""]+?)\.exe", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+    public static bool IsDeviceStartup(PrimeOSTuner.Core.Platform.StartupApp app)
+    {
+        if (PrimeOSTuner.Core.Safety.DeviceSoftware.IsProtected(app.Name)) return true;
+        var m = ExeName.Match(app.Command ?? "");
+        return m.Success && PrimeOSTuner.Core.Safety.DeviceSoftware.IsProtected(m.Groups[1].Value);
     }
 
     public ObservableCollection<StartupRowVm> StartupApps { get; } = new();
@@ -116,6 +133,7 @@ public partial class CleanupViewModel : ObservableObject
     public async Task<bool> SetStartupEnabledAsync(StartupRowVm row, bool enabled)
     {
         if (_startup is null) return false;
+        if (!enabled && row.IsDevice) { row.Enabled = true; return false; }   // never switch off device software
         var ok = await Task.Run(() => _startup.TrySetEnabled(row.App, enabled));
         if (ok)
         {
