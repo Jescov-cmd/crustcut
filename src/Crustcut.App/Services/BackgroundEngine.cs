@@ -5,6 +5,7 @@ using PrimeOSTuner.Core.Memory;
 using PrimeOSTuner.Core.Monitoring;
 using PrimeOSTuner.Core.Performance;
 using PrimeOSTuner.Core.Profiles;
+using PrimeOSTuner.Core.Safety;
 using PrimeOSTuner.Core.Sentinel;
 using PrimeOSTuner.Core.Settings;
 using PrimeOSTuner.Core.Tweaks;
@@ -397,15 +398,29 @@ public sealed class BackgroundEngine : IDisposable
         if (_ruleStore is null || _priorityClient is null) return;
         try
         {
-            var limited = (await _ruleStore.LoadAsync())
+            var stored = await _ruleStore.LoadAsync();
+            // Device software is never capped or lowered, even by a rule saved before that
+            // rule existed: such a rule is enforced in its safe form, and any cap an older
+            // build left on the running process is lifted.
+            var unsafeDevice = stored.Where(r => DeviceSoftware.Sanitize(r) != r).ToList();
+            var limited = stored
+                .Select(DeviceSoftware.Sanitize)
                 .Where(r => r.MemoryLimitMb is not null)
                 .ToList();
-            if (limited.Count == 0) return;
+            if (limited.Count == 0 && unsafeDevice.Count == 0) return;
 
             var applied = 0;
             await Task.Run(() =>
             {
                 using var batch = _priorityClient.BeginBatch();
+                foreach (var rule in unsafeDevice.Select(DeviceSoftware.Sanitize))
+                {
+                    foreach (var pid in _priorityClient.FindPidsForExe(rule.ExePath))
+                    {
+                        _priorityClient.TryClearMemoryLimit(pid);
+                        _priorityClient.TrySetPriority(pid, rule.Priority);
+                    }
+                }
                 foreach (var rule in limited)
                 {
                     foreach (var pid in _priorityClient.FindPidsForExe(rule.ExePath))

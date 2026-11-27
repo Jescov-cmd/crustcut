@@ -1,3 +1,5 @@
+using PrimeOSTuner.Core.Safety;
+
 namespace PrimeOSTuner.Core.Memory;
 
 /// <summary>What one cleanup pass actually did. TrimmedPids lets Deep clean follow up
@@ -115,6 +117,10 @@ public sealed class SafeRamCleaner
             var windowProtects = mode == RamCleanMode.Deep ? s.HasRestoredWindow : s.HasVisibleWindow;
             if (windowProtects) Seed(s.Pid);
             if (SystemProcessNames.Contains(s.Name)) Seed(s.Pid);
+            // Device software (G HUB, Stream Deck, SignalRGB, audio drivers...): a trimmed
+            // one pages back in on the next key press or mouse move, and the input hitches.
+            // Normal, deep, adaptive and game-boost cleans all run through here.
+            if (DeviceSoftware.IsProtected(s.Name)) Seed(s.Pid);
         }
 
         // ── Rule: anything sharing an executable name with a seed is the same app ────────

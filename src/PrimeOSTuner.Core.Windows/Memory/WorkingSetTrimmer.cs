@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using PrimeOSTuner.Core.Safety;
 
 namespace PrimeOSTuner.Core.Memory;
 
@@ -98,6 +99,8 @@ public sealed class WorkingSetTrimmer : IWorkingSetTrimmer
         try
         {
             using var p = Process.GetProcessById(pid);
+            // Last line of defence: a trimmed device app pages back in on the next input.
+            if (DeviceSoftware.IsProtected(p.ProcessName)) return;
             EmptyWorkingSet(p.Handle);
         }
         catch { /* swallow — process may have exited, or refuses access */ }

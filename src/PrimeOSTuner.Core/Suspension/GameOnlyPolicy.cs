@@ -1,3 +1,5 @@
+using PrimeOSTuner.Core.Safety;
+
 namespace PrimeOSTuner.Core.Suspension;
 
 /// <summary>One app on the sleep list, as the UI shows it. <paramref name="Reason"/> says
@@ -42,7 +44,7 @@ public static class GameOnlyPolicy
         foreach (var n in userAdded)
             if (!skip.Contains(n) && CanFreeze(n) && seen.Add(n)) result.Add(n);
         foreach (var n in Recommended)
-            if (running.Contains(n) && !skip.Contains(n) && seen.Add(n)) result.Add(n);
+            if (running.Contains(n) && !skip.Contains(n) && CanFreeze(n) && seen.Add(n)) result.Add(n);
         return result;
     }
 
@@ -68,33 +70,13 @@ public static class GameOnlyPolicy
         "sihost", "taskhostw", "RuntimeBroker", "ShellExperienceHost", "StartMenuExperienceHost",
         "SearchHost", "TextInputHost", "ctfmon", "audiodg", "fontdrvhost", "System", "Registry",
         "Memory Compression", "smss", "conhost", "dllhost",
-        // Things the user is plugged into all day, game or not. Freezing these doesn't
-        // save memory, it breaks the PC: a frozen audio server is a dead microphone, a
-        // frozen G HUB agent loses mouse buttons and DPI, a frozen Stream Deck stops
-        // every key. Learned the hard way — the first live test froze exactly these.
-        "ElgatoAudioControlServer", "WaveLink", "WaveLinkSE", "Elgato Wave Link", "Camera Hub",
-        "voicemeeter", "voicemeeterpro", "voicemeeter8", "voicemeeter8x64", "audiorelay",
+        // Voice and chat: a frozen one is a dead microphone mid-call.
         "Discord", "TeamSpeak", "ts3client_win64", "Mumble", "Teams", "ms-teams", "Zoom",
-        // Hardware companion software: mice, keyboards, headsets, lighting, cooling. These
-        // drive physical devices — frozen, a mouse loses its DPI and buttons, RGB stops,
-        // an AIO's pump curve stalls. (The user, 2026-10-01: "very important for physical
-        // items".) Never frozen by any feature.
-        "StreamDeck", "lghub", "lghub_agent", "lghub_updater", "lghub_system_tray",
-        "logioptionsplus_agent", "logioptionsplus_appbroker", "LogiOptionsPlus", "LogiOptions",
-        "RazerAppEngine", "Razer Synapse", "Razer Synapse 3", "RazerCentralService",
-        "iCUE", "Corsair.Service", "SteelSeriesEngine", "SteelSeriesGG", "SteelSeriesGGClient",
-        "SteelSeriesPrism", "WootilityV5", "Wootility", "NGenuity2", "HyperX NGENUITY",
-        "GloriousCore", "ROCCAT_Swarm", "SignalRgb", "SignalRgbLauncher", "OpenRGB",
-        "ArmouryCrate", "ArmouryCrate.Service", "ArmouryCrateControlInterface", "LightingService",
-        "MSI.CentralServer", "MSI Center", "MysticLight", "MSI_Central_Service", "NZXT CAM", "CAM",
-        "RtkAudUService64", "RtkNGUI64", "NahimicService", "Nahimic3", "MaxxAudioPro",
-        "MSIAfterburner",   // runs the graphics card's fan curve and clocks
-        // Tools that act on key presses or mouse buttons system-wide. Frozen, a
-        // keyboard/mouse hook stalls every key and click until Windows drops it — and
-        // then the tool silently stops working until it restarts.
-        "FluentFlyout", "XMouseButtonControl", "QuickLook",
-        "windhawk", "AutoHotkey", "AutoHotkey64", "AutoHotkeyU64", "PowerToys",
-        "PowerToys.KeyboardManagerEngine", "PowerToys.FancyZones", "obs64", "obs32",
+        // Recording, and tools that act on a key press system-wide.
+        "QuickLook", "obs64", "obs32",
+        // Hardware companion software (mice, keyboards, lighting, controllers, audio
+        // drivers, GPU panels) is NOT listed here: it lives in DeviceSoftware, the one list
+        // every feature that freezes, trims, caps or deprioritises asks. CanFreeze checks it.
         // ourselves
         "Crustcut",
     };
@@ -106,7 +88,8 @@ public static class GameOnlyPolicy
         "LosslessScaling", "CrosshairX", "RTSS", "RazerCortex", "Blitz",
     };
 
-    public static bool CanFreeze(string name) => !Never.Contains(name);
+    public static bool CanFreeze(string name) =>
+        !Never.Contains(DeviceSoftware.Normalize(name)) && !DeviceSoftware.IsProtected(name);
 
     /// <summary>A game companion wakes for games; anything else stays asleep through them.</summary>
     public static bool WakesForGames(string name) =>

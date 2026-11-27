@@ -1,3 +1,5 @@
+using PrimeOSTuner.Core.Safety;
+
 namespace PrimeOSTuner.Core.Memory;
 
 public sealed class PriorityRuleEngine : IDisposable
@@ -21,7 +23,9 @@ public sealed class PriorityRuleEngine : IDisposable
     {
         lock (_lock)
         {
-            _allRules = rules.ToList();
+            // Device software is never deprioritised or capped, whatever a rule says — a
+            // rule file from an older build, or a hand edit, must not get past this.
+            _allRules = rules.Select(DeviceSoftware.Sanitize).ToList();
             // Index by EXE filename (lowercased) for fast lookup on process-start events.
             _rulesByExeName = _allRules
                 .GroupBy(r => Path.GetFileName(r.ExePath), StringComparer.OrdinalIgnoreCase)
@@ -60,6 +64,10 @@ public sealed class PriorityRuleEngine : IDisposable
             ? path.Equals(rule.ExePath, StringComparison.OrdinalIgnoreCase)
             : _priority.FindPidsForExe(rule.ExePath).Contains(e.Pid);
         if (!matches) return;
+
+        // Rules were sanitised on load; check the running image's own name as well.
+        if (DeviceSoftware.IsProtected(e.ProcessName))
+            rule = DeviceSoftware.Sanitize(rule with { ExePath = e.ProcessName });
 
         _priority.TrySetPriority(e.Pid, rule.Priority);
         // Working-set caps die with the process, so every fresh launch gets re-capped here.

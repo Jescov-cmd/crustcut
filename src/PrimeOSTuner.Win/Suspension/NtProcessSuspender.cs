@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using PrimeOSTuner.Core.Safety;
 
 namespace PrimeOSTuner.Win.Suspension;
 
@@ -24,7 +26,18 @@ public sealed class NtProcessSuspender : IProcessSuspender
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool CloseHandle(IntPtr hObject);
 
-    public void Suspend(int processId) => InvokeOnHandle(processId, NtSuspendProcess);
+    public void Suspend(int processId)
+    {
+        // Last line of defence, whichever feature asked: device software is never frozen.
+        if (IsDeviceSoftware(processId)) return;
+        InvokeOnHandle(processId, NtSuspendProcess);
+    }
+
+    private static bool IsDeviceSoftware(int pid)
+    {
+        try { using var p = Process.GetProcessById(pid); return DeviceSoftware.IsProtected(p.ProcessName); }
+        catch { return false; }   // gone: suspending it is a no-op anyway
+    }
 
     public void Resume(int processId) => InvokeOnHandle(processId, NtResumeProcess);
 

@@ -1,6 +1,7 @@
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PrimeOSTuner.Core.Memory;
+using PrimeOSTuner.Core.Safety;
 
 namespace Crustcut.Presentation;
 
@@ -37,7 +38,13 @@ public partial class PriorityRuleVm : ObservableObject
     public MemoryLimitOption? MemoryLimit
     {
         get => _memoryLimit;
-        set { if (value is not null) SetProperty(ref _memoryLimit, value); }
+        set
+        {
+            if (value is null) return;
+            // Device software (G HUB, Stream Deck, SignalRGB...) is never capped.
+            if (value.Mb is not null && IsDeviceSoftware) value = MemoryLimitOptions[0];
+            SetProperty(ref _memoryLimit, value);
+        }
     }
     [ObservableProperty] private string _statusText = "Idle";
     [ObservableProperty] private string _statusColor = "#888";
@@ -46,6 +53,14 @@ public partial class PriorityRuleVm : ObservableObject
     [ObservableProperty] private bool _isSelected;
 
     public string ExeName => Path.GetFileName(ExePath);
+
+    /// <summary>Software that drives a device: it can be raised, never lowered or capped.</summary>
+    public bool IsDeviceSoftware => DeviceSoftware.IsProtected(ExePath);
+
+    partial void OnPriorityChanged(PriorityLevel value)
+    {
+        if (value == PriorityLevel.BelowNormal && IsDeviceSoftware) Priority = PriorityLevel.Normal;
+    }
 
     /// <summary>
     /// The rule as last persisted. Lets UpdateRuleAsync tell a REAL user edit apart from
@@ -57,6 +72,7 @@ public partial class PriorityRuleVm : ObservableObject
 
     public PriorityRuleVm(PriorityRule rule)
     {
+        rule = DeviceSoftware.Sanitize(rule);
         _displayName = rule.DisplayName;
         _exePath = rule.ExePath;
         _priority = rule.Priority;
@@ -71,9 +87,9 @@ public partial class PriorityRuleVm : ObservableObject
         LastSaved = rule;
     }
 
-    public PriorityRule ToRule() => new(
+    public PriorityRule ToRule() => DeviceSoftware.Sanitize(new(
         ExePath, DisplayName, Priority, ProtectFromRamCleanup, GameBooster, IsGame,
-        MemoryLimit?.Mb, LimitAutoAssigned);
+        MemoryLimit?.Mb, LimitAutoAssigned));
 
     /// <summary>Carried through edits so the engine can tell a cap it chose from one the
     /// user picked; only its own are revised automatically.</summary>

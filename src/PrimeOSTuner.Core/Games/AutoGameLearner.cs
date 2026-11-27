@@ -1,3 +1,4 @@
+using PrimeOSTuner.Core.Safety;
 using PrimeOSTuner.Win;
 
 namespace PrimeOSTuner.Core.Games;
@@ -79,7 +80,11 @@ public sealed class AutoGameLearner
         _windowsDir = windowsDir ?? Environment.GetFolderPath(Environment.SpecialFolder.Windows);
     }
 
-    public static bool CouldBeAGame(string exeNameWithoutExtension) => !NotGames.Contains(exeNameWithoutExtension);
+    /// <summary>Device software (SignalRGB's full-screen effects editor, a GPU control panel)
+    /// can fill the screen and load the GPU; it is never learned as a game, so Game mode
+    /// never treats it as one.</summary>
+    public static bool CouldBeAGame(string exeNameWithoutExtension) =>
+        !NotGames.Contains(exeNameWithoutExtension) && !DeviceSoftware.IsProtected(exeNameWithoutExtension);
 
     /// <summary>Called once per system sample (about every second).</summary>
     public void OnSample(DateTime nowUtc)

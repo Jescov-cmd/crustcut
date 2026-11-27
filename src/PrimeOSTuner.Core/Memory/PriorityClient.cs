@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using PrimeOSTuner.Core.Safety;
 
 namespace PrimeOSTuner.Core.Memory;
 
@@ -23,6 +24,7 @@ public sealed class PriorityClient : IPriorityClient
         try
         {
             using var p = Process.GetProcessById(pid);
+            if (DeviceSoftware.IsProtected(p.ProcessName)) return false;   // never cap device software
             var ceiling = hard ? QUOTA_LIMITS_HARDWS_MAX_ENABLE : QUOTA_LIMITS_HARDWS_MAX_DISABLE;
             return SetProcessWorkingSetSizeEx(
                 p.Handle,
@@ -58,6 +60,7 @@ public sealed class PriorityClient : IPriorityClient
         try
         {
             using var p = Process.GetProcessById(pid);
+            if (on && DeviceSoftware.IsProtected(p.ProcessName)) return false;   // never throttle device software
             var state = new PROCESS_POWER_THROTTLING_STATE
             {
                 Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION,
@@ -102,6 +105,8 @@ public sealed class PriorityClient : IPriorityClient
         try
         {
             using var p = Process.GetProcessById(pid);
+            // Device software can be raised, never lowered.
+            if (level == PriorityLevel.BelowNormal && DeviceSoftware.IsProtected(p.ProcessName)) return false;
             p.PriorityClass = level switch
             {
                 PriorityLevel.High => ProcessPriorityClass.High,

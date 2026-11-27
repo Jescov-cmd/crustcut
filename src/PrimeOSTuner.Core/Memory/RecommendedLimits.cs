@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using PrimeOSTuner.Core.Safety;
 
 namespace PrimeOSTuner.Core.Memory;
 
@@ -24,7 +25,7 @@ public static class RecommendedLimits
             ["EpicGamesLauncher"] = 512, ["upc"] = 512, ["EADesktop"] = 512, ["GalaxyClient"] = 512,
             ["Slack"] = 1024, ["Teams"] = 1024, ["ms-teams"] = 1024,
             ["Telegram"] = 512, ["WhatsApp"] = 512,
-            ["SignalRgb"] = 512, ["wallpaper32"] = 512, ["wallpaper64"] = 512,
+            ["wallpaper32"] = 512, ["wallpaper64"] = 512,
             ["Overwolf"] = 512, ["CurseForge"] = 512,
         };
 
@@ -108,6 +109,7 @@ public static class RecommendedLimits
     public static int? RecommendMb(string exePath, IPriorityClient priority)
     {
         if (IsOurselves(exePath)) return null;
+        if (DeviceSoftware.IsProtected(exePath)) return null;   // never cap device software
         if (HasVisibleWindow(exePath, priority)) return null;
 
         long largest = 0;

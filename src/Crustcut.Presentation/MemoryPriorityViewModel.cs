@@ -4,6 +4,7 @@ using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PrimeOSTuner.Core.Games;
 using PrimeOSTuner.Core.Memory;
+using PrimeOSTuner.Core.Safety;
 using PrimeOSTuner.Core.Settings;
 using PrimeOSTuner.Core.Tweaks;
 
@@ -419,6 +420,12 @@ public partial class MemoryPriorityViewModel : ObservableObject
     private void ApplyToRunningProcesses(string exePath, PriorityLevel level, int? memoryLimitMb)
     {
         if (_priority is null) return;
+        // Device software: never lowered, never capped — whatever the row says.
+        if (DeviceSoftware.IsProtected(exePath))
+        {
+            if (level == PriorityLevel.BelowNormal) level = PriorityLevel.Normal;
+            memoryLimitMb = null;
+        }
         try
         {
             foreach (var pid in _priority.FindPidsForExe(exePath))
