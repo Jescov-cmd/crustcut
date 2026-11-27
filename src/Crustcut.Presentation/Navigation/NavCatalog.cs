@@ -1,46 +1,55 @@
 namespace Crustcut.Presentation.Navigation;
 
 /// <summary>
-/// The repositioned information architecture. Gaming is one section of a performance tool
-/// rather than the frame of the whole product. Tabs whose feature surface only exists on
-/// Windows (registry tweaks, WMI diagnosis, Appx cleanup, PresentMon sessions…) carry
-/// WindowsOnly and disappear from the rail on other platforms instead of rendering broken.
+/// Four pages in the rail — Home, Boost, Games, Settings. The thirteen-page rail made
+/// people hunt; every older page still exists but is reached from inside one of the four
+/// (a "Show all settings" row on Boost, a "Back to Boost" bar at the top), so nothing was
+/// removed, it moved one level down. Tabs whose feature surface only exists on Windows
+/// carry WindowsOnly and disappear on other platforms instead of rendering broken.
 /// </summary>
 public static class NavCatalog
 {
-    public const string Performance = "Performance";
-    public const string Gaming      = "Gaming";
-    public const string Learn       = "Learn";
-
     private static readonly IReadOnlyList<NavItem> PrimaryAll = new[]
     {
-        new NavItem("Overview", "Overview", "", Icon: "\uE80F"),
-
-        new NavItem("Optimize", "Optimize", Performance, WindowsOnly: true, Icon: "\uEC4A"),
-        new NavItem("Diagnosis", "Diagnosis", Performance, WindowsOnly: true, Icon: "\uE9D9"),
-        new NavItem("Cleanup", "Cleanup", Performance, WindowsOnly: true, Icon: "\uEA99"),   // was "Bloatware"
-        new NavItem("Memory", "Memory", Performance, WindowsOnly: true, Icon: "\uEEA0"),
-        new NavItem("Fans", "Fans", Performance, WindowsOnly: true, Icon: "\uE9CA"),
-
-        new NavItem("Games", "Games", Gaming, Icon: "\uE7FC"),        // was "Library"
-        new NavItem("Sessions", "Sessions", Gaming, WindowsOnly: true, Icon: "\uE9D2"),        // was "Sentinel"
-        new NavItem("GameBoost", "Game boost", Gaming, WindowsOnly: true, Icon: "\uE945"),
-
-        // Every current guide is PC-hardware/Windows content (BIOS, NVIDIA panel, XMP…).
-        // Windows-only until mac guides are written.
-        new NavItem("Guides", "Guides", Learn, WindowsOnly: true, Icon: "\uE8F1"),
-        new NavItem("WhatsNew", "What's new", Learn, Icon: "\uE734"),
+        new NavItem("Home", "Home", "", Icon: ""),
+        new NavItem("Boost", "Boost", "", WindowsOnly: true, Icon: ""),
+        new NavItem("Games", "Games", "", Icon: ""),
+        new NavItem("Settings", "Settings", "", Icon: ""),
     };
 
-    private static readonly IReadOnlyList<NavItem> BottomAll = new[]
+    /// <summary>Pages reached from inside a rail page. Parent = the rail page that stays
+    /// highlighted while one is open, and where its back bar returns to.</summary>
+    private static readonly IReadOnlyList<SubPage> SubPagesAll = new[]
     {
-        new NavItem("History", "History", "", WindowsOnly: true, Icon: "\uE81C"),
-        new NavItem("Settings", "Settings", "", Icon: "\uE713"),
+        new SubPage("Optimize", "All settings", "Boost", WindowsOnly: true),
+        new SubPage("Fans", "Fans", "Boost", WindowsOnly: true),
+        new SubPage("GameBoost", "Game presets and sleeping apps", "Boost", WindowsOnly: true),
+        new SubPage("Memory", "Memory", "Home", WindowsOnly: true),
+        new SubPage("Cleanup", "Clean up apps", "Home", WindowsOnly: true),
+        new SubPage("Diagnosis", "Diagnosis", "Home", WindowsOnly: true),
+        new SubPage("Overview", "Live details", "Home"),
+        new SubPage("Sessions", "Game sessions", "Games", WindowsOnly: true),
+        new SubPage("History", "History", "Settings", WindowsOnly: true),
+        new SubPage("Guides", "Guides", "Settings", WindowsOnly: true),
+        new SubPage("WhatsNew", "What's new", "Settings"),
     };
 
     public static readonly IReadOnlyList<NavItem> Primary = Filter(PrimaryAll);
-    public static readonly IReadOnlyList<NavItem> Bottom = Filter(BottomAll);
+    public static readonly IReadOnlyList<NavItem> Bottom = Array.Empty<NavItem>();
+    public static readonly IReadOnlyList<SubPage> SubPages =
+        OperatingSystem.IsWindows() ? SubPagesAll : SubPagesAll.Where(p => !p.WindowsOnly).ToList();
+
+    public static SubPage? SubPageFor(string id) => SubPages.FirstOrDefault(p => p.Id == id);
+
+    public static bool IsKnown(string id) =>
+        Primary.Any(i => i.Id == id) || SubPages.Any(p => p.Id == id);
+
+    public static string LabelFor(string id) =>
+        Primary.FirstOrDefault(i => i.Id == id)?.Label ?? SubPageFor(id)?.Label ?? id;
 
     private static IReadOnlyList<NavItem> Filter(IReadOnlyList<NavItem> items) =>
         OperatingSystem.IsWindows() ? items : items.Where(i => !i.WindowsOnly).ToList();
 }
+
+/// <summary>A page that isn't in the rail; opened from inside <paramref name="Parent"/>.</summary>
+public sealed record SubPage(string Id, string Label, string Parent, bool WindowsOnly = false);

@@ -23,7 +23,7 @@ public sealed class AvaloniaDialogService : IDialogService
             {
                 DialogKind.Error => Color.Parse("#FF6B6B"),
                 DialogKind.Warning => Color.Parse("#FFB84D"),
-                _ => Color.Parse("#E8C088"),
+                _ => Color.Parse("#FFFFFF"),
             };
 
             var ok = new Button
@@ -34,7 +34,7 @@ public sealed class AvaloniaDialogService : IDialogService
                 CornerRadius = new Avalonia.CornerRadius(16),
                 HorizontalAlignment = HorizontalAlignment.Right,
                 Background = new SolidColorBrush(accent),
-                Foreground = new SolidColorBrush(Color.Parse("#26190A")),
+                Foreground = new SolidColorBrush(Color.Parse("#000000")),
                 FontWeight = FontWeight.SemiBold,
                 Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
             };
@@ -48,7 +48,7 @@ public sealed class AvaloniaDialogService : IDialogService
                 WindowStartupLocation = owner is null
                     ? WindowStartupLocation.CenterScreen
                     : WindowStartupLocation.CenterOwner,
-                Background = new SolidColorBrush(Color.Parse("#141312")),
+                Background = new SolidColorBrush(Color.Parse("#0A0A0A")),
                 Content = new StackPanel
                 {
                     Margin = new Avalonia.Thickness(24),
@@ -67,7 +67,7 @@ public sealed class AvaloniaDialogService : IDialogService
                         {
                             Text = message,
                             FontSize = 12.5,
-                            Foreground = new SolidColorBrush(Color.Parse("#C9C3BA")),
+                            Foreground = new SolidColorBrush(Color.Parse("#A3A3A3")),
                             TextWrapping = TextWrapping.Wrap,
                         },
                         ok,
@@ -98,7 +98,7 @@ public sealed class AvaloniaDialogService : IDialogService
                 Background = Brushes.Transparent,
                 BorderBrush = new SolidColorBrush(Color.Parse("#22FFFFFF")),
                 BorderThickness = new Avalonia.Thickness(1),
-                Foreground = new SolidColorBrush(Color.Parse("#9A948C")),
+                Foreground = new SolidColorBrush(Color.Parse("#A3A3A3")),
                 Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
             };
 
@@ -123,7 +123,7 @@ public sealed class AvaloniaDialogService : IDialogService
                 WindowStartupLocation = owner is null
                     ? WindowStartupLocation.CenterScreen
                     : WindowStartupLocation.CenterOwner,
-                Background = new SolidColorBrush(Color.Parse("#141312")),
+                Background = new SolidColorBrush(Color.Parse("#0A0A0A")),
                 Content = new StackPanel
                 {
                     Margin = new Avalonia.Thickness(24),
@@ -135,14 +135,14 @@ public sealed class AvaloniaDialogService : IDialogService
                             Text = title,
                             FontSize = 15,
                             FontWeight = FontWeight.SemiBold,
-                            Foreground = new SolidColorBrush(Color.Parse("#F9F0E1")),
+                            Foreground = new SolidColorBrush(Color.Parse("#FFFFFF")),
                             TextWrapping = TextWrapping.Wrap,
                         },
                         new TextBlock
                         {
                             Text = message,
                             FontSize = 12.5,
-                            Foreground = new SolidColorBrush(Color.Parse("#C9C3BA")),
+                            Foreground = new SolidColorBrush(Color.Parse("#A3A3A3")),
                             TextWrapping = TextWrapping.Wrap,
                         },
                         new StackPanel

@@ -116,4 +116,83 @@ public class ProfileLifecycleServiceTests : IDisposable
         tweak.Verify(t => t.RevertAsync("undo-game.game-mode", default), Times.Once);
         (await activeStore.LoadAsync()).Should().BeNull();
     }
+    // ── Automatic Game mode ──────────────────────────────────────────────────────
+
+    private (ProfileLifecycleService Service, ActiveTweaksStore Active, Dictionary<string, Mock<ITweak>> Tweaks)
+        BuildGameMode(bool gameModeOn, string? assignedProfile = null)
+    {
+        var ids = BuiltInProfiles.GameSession.TweakIds.Append("game.game-mode").ToArray();
+        var tweaks = ids.ToDictionary(id => id, StubTweak);
+        var applier = new ProfileApplier(tweaks.Values.Select(m => m.Object), new TweakHistory(_historyPath));
+        var profileStore = new GameProfileStore(_gameProfilesPath);
+        if (assignedProfile is not null)
+            profileStore.SetProfileForAsync(Game.Id, assignedProfile).GetAwaiter().GetResult();
+        var activeStore = new ActiveTweaksStore(_activePath);
+
+        var service = new ProfileLifecycleService(
+            new Mock<IGameProcessWatcher>().Object,
+            profileStore,
+            activeStore,
+            new Dictionary<string, ModeProfile>
+            {
+                ["basic"] = new ModeProfile("basic", "Basic", "", new[] { "game.game-mode" })
+            },
+            applier,
+            gameModeForEveryGame: () => gameModeOn);
+        return (service, activeStore, tweaks);
+    }
+
+    [Fact]
+    public async Task GameMode_on_applies_game_session_for_a_game_with_no_profile()
+    {
+        var (service, active, tweaks) = BuildGameMode(gameModeOn: true);
+
+        await service.HandleGameStartedAsync(Game);
+
+        var record = await active.LoadAsync();
+        record.Should().NotBeNull();
+        record!.ProfileId.Should().Be("game-session");
+        record.Outcomes.Select(o => o.TweakId).Should().BeEquivalentTo(BuiltInProfiles.GameSession.TweakIds);
+        foreach (var id in BuiltInProfiles.GameSession.TweakIds)
+            tweaks[id].Verify(t => t.ApplyAsync(It.IsAny<IProgress<int>?>(), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task GameMode_off_applies_nothing_for_a_game_with_no_profile()
+    {
+        var (service, active, tweaks) = BuildGameMode(gameModeOn: false);
+
+        await service.HandleGameStartedAsync(Game);
+
+        (await active.LoadAsync()).Should().BeNull();
+        foreach (var m in tweaks.Values)
+            m.Verify(t => t.ApplyAsync(It.IsAny<IProgress<int>?>(), default), Times.Never);
+    }
+
+    [Fact]
+    public async Task GameMode_per_game_profile_wins()
+    {
+        var (service, active, tweaks) = BuildGameMode(gameModeOn: true, assignedProfile: "basic");
+
+        await service.HandleGameStartedAsync(Game);
+
+        var record = await active.LoadAsync();
+        record!.ProfileId.Should().Be("basic");
+        tweaks["game.game-mode"].Verify(t => t.ApplyAsync(It.IsAny<IProgress<int>?>(), default), Times.Once);
+        foreach (var id in BuiltInProfiles.GameSession.TweakIds)
+            tweaks[id].Verify(t => t.ApplyAsync(It.IsAny<IProgress<int>?>(), default), Times.Never);
+    }
+
+    [Fact]
+    public async Task GameMode_reverts_on_stop()
+    {
+        var (service, active, tweaks) = BuildGameMode(gameModeOn: true);
+
+        await service.HandleGameStartedAsync(Game);
+        await service.HandleGameStoppedAsync(new GameStoppedArgs(Game, "exit"));
+
+        foreach (var id in BuiltInProfiles.GameSession.TweakIds)
+            tweaks[id].Verify(t => t.RevertAsync("undo-" + id, default), Times.Once);
+        (await active.LoadAsync()).Should().BeNull();
+    }
 }

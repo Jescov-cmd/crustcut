@@ -1,0 +1,111 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Crustcut.App.Views.BoostView">
+
+  <!-- Five switches instead of forty. Each one is a promise in plain words; the settings
+       behind it are one click away ("All settings"). -->
+  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="40,0,40,32">
+    <Grid x:Name="PanelGrid">
+    <StackPanel Width="{Binding #PanelGrid.Bounds.Width}" MaxWidth="900" HorizontalAlignment="Left">
+      <TextBlock Classes="hero" Text="Boost" Margin="0,40,0,4"/>
+      <TextBlock Classes="pageSubtitle" FontSize="14" Margin="0,0,0,24"
+                 Text="Each switch turns on a group of settings. Everything can be undone."/>
+
+      <Border Classes="switchRow">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="3" Margin="0,0,24,0">
+            <TextBlock Classes="key" Text="Game mode" FontSize="15"/>
+            <TextBlock Classes="sub"
+                       Text="When any game starts: the fastest power plan, a sharper system timer, the game first in line for the CPU, and background apps paused. All of it goes back to normal when you quit."/>
+          </StackPanel>
+          <ToggleSwitch Grid.Column="1" OnContent="" OffContent="" VerticalAlignment="Center"
+                        IsChecked="{Binding GameMode, Mode=TwoWay}"/>
+        </Grid>
+      </Border>
+
+      <Border Classes="switchRow" IsVisible="{Binding LowLag.IsAvailable}">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="3" Margin="0,0,24,0">
+            <TextBlock Classes="key" Text="{Binding LowLag.Title}" FontSize="15"/>
+            <TextBlock Classes="sub" Text="{Binding LowLag.Description}"/>
+            <TextBlock Classes="sub" Foreground="{DynamicResource Text3}" Text="{Binding LowLag.State}"
+                       IsVisible="{Binding LowLag.State, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+          </StackPanel>
+          <ToggleSwitch Grid.Column="1" OnContent="" OffContent="" VerticalAlignment="Center"
+                        IsChecked="{Binding LowLag.IsOn, Mode=OneWay}"
+                        IsEnabled="{Binding !LowLag.IsBusy}"
+                        Tag="lowlag" Click="GroupClick"/>
+        </Grid>
+      </Border>
+
+      <Border Classes="switchRow" IsVisible="{Binding Online.IsAvailable}">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="3" Margin="0,0,24,0">
+            <TextBlock Classes="key" Text="{Binding Online.Title}" FontSize="15"/>
+            <TextBlock Classes="sub" Text="{Binding Online.Description}"/>
+            <TextBlock Classes="sub" Foreground="{DynamicResource Text3}" Text="{Binding Online.State}"
+                       IsVisible="{Binding Online.State, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+          </StackPanel>
+          <ToggleSwitch Grid.Column="1" OnContent="" OffContent="" VerticalAlignment="Center"
+                        IsChecked="{Binding Online.IsOn, Mode=OneWay}"
+                        IsEnabled="{Binding !Online.IsBusy}"
+                        Tag="online" Click="GroupClick"/>
+        </Grid>
+      </Border>
+
+      <Border Classes="switchRow" IsVisible="{Binding FansAvailable}">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="3" Margin="0,0,24,0">
+            <TextBlock Classes="key" Text="Smart fans" FontSize="15"/>
+            <TextBlock Classes="sub"
+                       Text="Quiet when the PC is idle, faster when it's busy or hot. Off hands the fans back to your motherboard."/>
+          </StackPanel>
+          <ToggleSwitch Grid.Column="1" OnContent="" OffContent="" VerticalAlignment="Center"
+                        IsChecked="{Binding SmartFans, Mode=TwoWay}"/>
+        </Grid>
+      </Border>
+
+      <Border Classes="switchRow" IsVisible="{Binding SleepAvailable}" BorderThickness="0">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="3" Margin="0,0,24,0">
+            <TextBlock Classes="key" Text="Sleep unused apps" FontSize="15"/>
+            <TextBlock Classes="sub"
+                       Text="Medal, overlays and crosshair apps sleep until a game starts. Mouse, keyboard, headset and lighting software never sleeps."/>
+          </StackPanel>
+          <ToggleSwitch Grid.Column="1" OnContent="" OffContent="" VerticalAlignment="Center"
+                        IsChecked="{Binding SleepApps, Mode=TwoWay}"/>
+        </Grid>
+      </Border>
+
+      <TextBlock Classes="statLabel" Text="More" Margin="0,36,0,4"/>
+      <Button Classes="rowLink" Click="GoClick" Tag="Optimize">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="2">
+            <TextBlock Classes="key" Text="{Binding AllSettingsText}"/>
+            <TextBlock Classes="sub" Text="Every setting on its own, with search."/>
+          </StackPanel>
+          <TextBlock Grid.Column="1" Classes="chevron"/>
+        </Grid>
+      </Button>
+      <Button Classes="rowLink" Click="GoClick" Tag="Fans" IsVisible="{Binding FansAvailable}">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="2">
+            <TextBlock Classes="key" Text="Fans"/>
+            <TextBlock Classes="sub" Text="Temperature, fan speeds, modes and calibration."/>
+          </StackPanel>
+          <TextBlock Grid.Column="1" Classes="chevron"/>
+        </Grid>
+      </Button>
+      <Button Classes="rowLink" Click="GoClick" Tag="GameBoost" BorderThickness="0">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="2">
+            <TextBlock Classes="key" Text="Presets and sleeping apps"/>
+            <TextBlock Classes="sub" Text="Basic, Performance and Aggressive bundles, and the list of apps that sleep."/>
+          </StackPanel>
+          <TextBlock Grid.Column="1" Classes="chevron"/>
+        </Grid>
+      </Button>
+    </StackPanel>
+    </Grid>
+  </ScrollViewer>
+</UserControl>

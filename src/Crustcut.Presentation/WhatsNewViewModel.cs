@@ -17,6 +17,26 @@ public static class WhatsNewCatalog
 
     public static readonly IReadOnlyList<WhatsNewRelease> Releases = new[]
     {
+        new WhatsNewRelease("0.9.5", "Simpler, lighter, and a real Game mode", "November 26, 2026",
+            new[]
+            {
+                I("A simpler Crustcut: four pages instead of thirteen. Home tells you in one sentence how your PC is doing and lists anything worth fixing. Boost has five switches instead of forty. Games and Settings hold the rest, and every older page is still one click away."),
+                I("A new look: true black and white, easy on the eyes and on OLED screens."),
+                I("Game mode (Boost page): when any game starts, Crustcut switches to the fastest power plan, sharpens the system timer, puts the game first in line for the CPU and pauses background apps. Everything goes back the moment you quit. Settings you had already turned on yourself are left alone."),
+                I("A new tray popup: click the tray icon for temperature, memory, the Game mode switch and Free up memory without opening the window."),
+                I("Much lighter: Crustcut now runs on .NET 10, and closing it to the tray releases the window entirely. Sitting in the tray it uses a fraction of the memory it did before, and long lists no longer freeze the window for a second when you open a tab."),
+                I("Finds more games, faster: games are spotted the moment they start, and Crustcut now recognises games it has never heard of — anything that fills the screen and keeps the graphics card busy is added to your Games list on its own."),
+                I("Sleep apps you're not using (Game boost page): game helpers like Medal, overlays and crosshair apps sleep when you're not playing and wake the moment a game starts. Mouse, keyboard, headset and lighting software is never put to sleep."),
+                I("Game sessions now say why a game stuttered — for example Windows pulling memory back off the disk while another app held gigabytes — not just that it did."),
+                I("Less lag online (Optimize page, opt-in): a network card fix for drivers that ship with tiny buffers. It undoes exactly, and puts itself back if a driver update resets it. Diagnosis also now spots when a driver is causing lag."),
+                I("Steadier fans: the CPU temperature is averaged over a few seconds, so short boost spikes no longer make the reading or the fans jump around. The 90 °C safety limit still reacts instantly. Auto also waits 3 minutes before stepping the fans down, so they stop speeding up and slowing down every couple of minutes."),
+                I("One \"Fix readings\" button on the Fans page replaces the row of per-fan RPM buttons, for when a fan's speed doesn't match your BIOS."),
+                I("Automatic cache purging removed: it made the memory number in Task Manager look better but freed nothing real, and made recently used files load slower afterwards. Clearing the cache is now only ever a button you press."),
+                I("Fixed: settings could be lost if two parts of the app saved at once, or if the settings file couldn't be read. Saves now take turns, and Crustcut never writes defaults over your settings."),
+                I("Crustcut now writes a crash log instead of silently disappearing from the tray, and one bad click can no longer take the whole app down."),
+                I("Fixed: on narrow windows, cards on the Fans, Settings and What's new pages could run past the right edge. Pages now fit the window, and content stays centred on wide screens."),
+            }),
+
         new WhatsNewRelease("0.9.4", "Cooler, quieter, more honest", "August 14, 2026",
             new[]
             {

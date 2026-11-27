@@ -206,6 +206,7 @@ public sealed class FanService : IFanControlService, IDisposable
                 try { _fans.RestoreAuto(); } catch { }
                 try { File.Delete(MarkerPath()); } catch { }
                 _engaged = false;
+                _smoothedTemp = null;
                 if (_started) _timer.Start();
                 if (wasEnabled) Tick();   // resume control immediately
             }
@@ -297,6 +298,7 @@ public sealed class FanService : IFanControlService, IDisposable
             if (temp is not double rawTemp)
             {
                 _lastTemp = null;
+                _smoothedTemp = null;   // don't seed the average from before the outage
                 // Blind = dangerous. Give the fans back and try again next tick.
                 if (_engaged) Disengage("temperature unreadable — failing safe");
                 return;
@@ -466,6 +468,7 @@ public sealed class FanService : IFanControlService, IDisposable
     {
         _fans.RestoreAuto();
         _engaged = false;
+        _smoothedTemp = null;   // re-engaging later starts from the real temperature
         _conflictStrikes = 0;
         _conflictSuspected = false;
         try { File.Delete(MarkerPath()); } catch { }

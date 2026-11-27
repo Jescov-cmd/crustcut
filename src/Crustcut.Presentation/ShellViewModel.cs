@@ -9,7 +9,20 @@ public partial class ShellViewModel : ObservableObject
     public IReadOnlyList<NavItemVm> Primary { get; }
     public IReadOnlyList<NavItemVm> Bottom { get; }
 
-    [ObservableProperty] private string _activeTab = "Overview";
+    [ObservableProperty] private string _activeTab = "Home";
+
+    /// <summary>True when the open page is reached from inside a rail page (shows the back bar).</summary>
+    public bool IsSubPage => NavCatalog.SubPageFor(ActiveTab) is not null;
+
+    /// <summary>"Back to Boost" — where the back bar goes.</summary>
+    public string BackLabel => NavCatalog.SubPageFor(ActiveTab) is { } p
+        ? $"Back to {NavCatalog.LabelFor(p.Parent)}" : "";
+
+    [RelayCommand]
+    private void Back()
+    {
+        if (NavCatalog.SubPageFor(ActiveTab) is { } p) ActiveTab = p.Parent;
+    }
 
     public ShellViewModel()
     {
@@ -25,12 +38,16 @@ public partial class ShellViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(tab)) return;
         // Ignore ids that aren't in the catalog, so a typo in markup can't blank the page.
-        var known = NavCatalog.Primary.Concat(NavCatalog.Bottom).Any(i => i.Id == tab);
-        if (!known) return;
+        if (!NavCatalog.IsKnown(tab)) return;
         ActiveTab = tab;
     }
 
-    partial void OnActiveTabChanged(string value) => SyncActiveFlags();
+    partial void OnActiveTabChanged(string value)
+    {
+        SyncActiveFlags();
+        OnPropertyChanged(nameof(IsSubPage));
+        OnPropertyChanged(nameof(BackLabel));
+    }
 
     /// <summary>Flags the first row of each group so its heading is drawn only once.</summary>
     private static IReadOnlyList<NavItemVm> WithGroupHeaders(IReadOnlyList<NavItem> items)
@@ -50,7 +67,9 @@ public partial class ShellViewModel : ObservableObject
 
     private void SyncActiveFlags()
     {
-        foreach (var i in Primary) i.IsActive = i.Id == ActiveTab;
-        foreach (var i in Bottom) i.IsActive = i.Id == ActiveTab;
+        // A sub-page keeps its parent highlighted in the rail: you're still "in" Boost.
+        var railId = NavCatalog.SubPageFor(ActiveTab)?.Parent ?? ActiveTab;
+        foreach (var i in Primary) i.IsActive = i.Id == railId;
+        foreach (var i in Bottom) i.IsActive = i.Id == railId;
     }
 }

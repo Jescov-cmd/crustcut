@@ -47,6 +47,21 @@ public sealed class ProfileApplier
 
             try
             {
+                // Already on before we got here (the user turned it on by hand, or another
+                // feature did): count it as success but record NO undo data, so RevertAsync
+                // leaves it alone. Otherwise a game closing would undo the user's own choice —
+                // e.g. UltimatePerformanceTweak's revert deletes every Ultimate plan and steps
+                // the PC back to Balanced. Unknown / probe failure falls through to a normal apply.
+                TweakState before;
+                try { before = await tweak.ProbeAsync(ct); }
+                catch { before = TweakState.Unknown; }
+                if (before == TweakState.Applied)
+                {
+                    success++;
+                    outcomes.Add(new ProfileTweakOutcome(id, true, null, null));
+                    continue;
+                }
+
                 var r = await tweak.ApplyAsync(null, ct);
                 if (r.Succeeded)
                 {

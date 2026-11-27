@@ -39,6 +39,8 @@ public partial class OverviewViewModel : ObservableObject, IDisposable
     [ObservableProperty] private int _boostScore;
     [ObservableProperty] private string _boostScoreTier = "—";
     [ObservableProperty] private string _boostScoreSubtitle = "Computing…";
+    /// <summary>Recommended settings that are currently off (Home's "needs a look" list).</summary>
+    [ObservableProperty] private int _recommendedOff;
 
     /// <summary>False on platforms with no tweaks (macOS) — hides optimize actions
     /// and stops the score card claiming a "POOR" rating over an empty set.</summary>
@@ -127,6 +129,7 @@ public partial class OverviewViewModel : ObservableObject, IDisposable
             _ui.Post(() =>
             {
                 BoostScore = result.Score;
+                RecommendedOff = Math.Max(0, result.Total - result.Applied);
                 // An empty tweak set is "nothing to rate", not a 0/100 "POOR" system.
                 BoostScoreTier = result.Total == 0 ? "—" : result.Tier;
                 // Honest framing: we PROBE the system state, so a tweak whose value

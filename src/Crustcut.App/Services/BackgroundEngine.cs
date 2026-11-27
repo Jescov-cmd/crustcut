@@ -82,7 +82,7 @@ public sealed class BackgroundEngine : IDisposable
         EngineLog.Log($"engine: StartAsync entered — v{ver} at {Environment.ProcessPath} " +
             $"[adaptive={s0.RamAdaptiveEnabled} interval={s0.RamAutoOptimizeOnInterval} " +
             $"threshold={s0.RamAutoOptimizeOnThreshold} " +
-            $"autoLimits={s0.AutoMemoryLimitsEnabled} suspend={s0.SuspendBackgroundAppsInGame}]");
+            $"autoLimits={s0.AutoMemoryLimitsEnabled} suspend={s0.SuspendBackgroundAppsInGame} gameMode={s0.GameModeAuto}]");
         var s = s0;
 
         // ── Sentinel on/off follows the saved setting ────────────────────────────────
@@ -105,7 +105,9 @@ public sealed class BackgroundEngine : IDisposable
                 _watcher, _profileStore, _activeStore, profiles, _applier,
                 _suspender,
                 _sentinel, _frames,
-                suspendForEveryGame: () => SafeSettings().SuspendBackgroundAppsInGame);
+                suspendForEveryGame: () => { var st = SafeSettings(); return st.SuspendBackgroundAppsInGame || st.GameModeAuto; },
+                gameModeForEveryGame: () => SafeSettings().GameModeAuto,
+                log: EngineLog.Log);
 
             await _lifecycle.RecoverFromCrashAsync();
             _lifecycle.Start();

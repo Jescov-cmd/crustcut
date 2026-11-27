@@ -26,12 +26,12 @@
     </Style>
   </UserControl.Styles>
 
-  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="28,0,28,24">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="40,0,40,24">
     <!-- Grid + bound width, as on What's new: a StackPanel measured inside a ScrollViewer
          can take its text's natural width and run past the right edge. -->
     <Grid x:Name="PanelGrid">
     <StackPanel Width="{Binding #PanelGrid.Bounds.Width}" MaxWidth="1000" HorizontalAlignment="Left">
-      <TextBlock Text="Settings" Classes="pageTitle" Margin="0,22,0,10"/>
+      <TextBlock Text="Settings" Classes="hero" Margin="0,40,0,20"/>
 
       <!-- ── Memory cleanup ── -->
       <Border Classes="card" IsVisible="{Binding IsWindows}">
@@ -169,7 +169,37 @@
         </StackPanel>
       </Border>
 
-      <TextBlock Text="{Binding Status}" Classes="hint" Margin="2,0,0,24"/>
+      <!-- History, Guides and What's new used to be rail pages; they live here now. -->
+      <TextBlock Classes="statLabel" Text="More" Margin="0,12,0,4"/>
+      <Button Classes="rowLink" Click="GoClick" Tag="History" x:Name="HistoryLink">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="2">
+            <TextBlock Classes="key" Text="History"/>
+            <TextBlock Classes="sub" Text="Every change Crustcut made, with undo."/>
+          </StackPanel>
+          <TextBlock Grid.Column="1" Classes="chevron"/>
+        </Grid>
+      </Button>
+      <Button Classes="rowLink" Click="GoClick" Tag="Guides" x:Name="GuidesLink">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="2">
+            <TextBlock Classes="key" Text="Guides"/>
+            <TextBlock Classes="sub" Text="BIOS, graphics driver and memory speed, step by step."/>
+          </StackPanel>
+          <TextBlock Grid.Column="1" Classes="chevron"/>
+        </Grid>
+      </Button>
+      <Button Classes="rowLink" Click="GoClick" Tag="WhatsNew" BorderThickness="0">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="2">
+            <TextBlock Classes="key" Text="What's new"/>
+            <TextBlock Classes="sub" Text="What changed in each version."/>
+          </StackPanel>
+          <TextBlock Grid.Column="1" Classes="chevron"/>
+        </Grid>
+      </Button>
+
+      <TextBlock Text="{Binding Status}" Classes="hint" Margin="2,16,0,24"/>
     </StackPanel>
     </Grid>
   </ScrollViewer>

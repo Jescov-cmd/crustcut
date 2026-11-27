@@ -86,4 +86,24 @@ public class ProfileApplierTests
 
         File.Delete(historyPath);
     }
+    [Fact]
+    public async Task Tweak_already_applied_before_the_profile_is_not_reverted()
+    {
+        var pre = StubTweak("pre");
+        pre.Setup(t => t.ProbeAsync(It.IsAny<CancellationToken>())).ReturnsAsync(TweakState.Applied);
+        var fresh = StubTweak("fresh");
+        fresh.Setup(t => t.ProbeAsync(It.IsAny<CancellationToken>())).ReturnsAsync(TweakState.NotApplied);
+        var historyPath = Path.Combine(Path.GetTempPath(), $"hist-{Guid.NewGuid()}.json");
+        var applier = new ProfileApplier(new[] { pre.Object, fresh.Object }, new TweakHistory(historyPath));
+
+        var result = await applier.ApplyAsync(new ModeProfile("p", "P", "P", new[] { "pre", "fresh" }));
+        await applier.RevertAsync(result.Outcomes);
+
+        result.SuccessCount.Should().Be(2);
+        pre.Verify(t => t.ApplyAsync(It.IsAny<IProgress<int>?>(), It.IsAny<CancellationToken>()), Times.Never);
+        pre.Verify(t => t.RevertAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        fresh.Verify(t => t.RevertAsync("undo-fresh", default), Times.Once);
+
+        if (File.Exists(historyPath)) File.Delete(historyPath);
+    }
 }

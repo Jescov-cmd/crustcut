@@ -38,7 +38,7 @@
         </Border>
 
         <Border Classes="card" Margin="0,0,0,4"
-                Background="#433519" BorderBrush="#5C4A1F"
+                Background="#1A1600" BorderBrush="#4D4200"
                 IsVisible="{Binding ConflictSuspected}">
           <Grid ColumnDefinitions="Auto,*">
             <TextBlock Classes="cardIcon" Text="&#xE7BA;" Foreground="{DynamicResource Warn}"/>

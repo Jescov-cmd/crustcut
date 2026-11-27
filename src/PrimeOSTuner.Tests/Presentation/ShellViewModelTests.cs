@@ -8,9 +8,17 @@ namespace PrimeOSTuner.Tests.Presentation;
 public class ShellViewModelTests
 {
     [Fact]
-    public void Starts_on_Overview()
+    public void Starts_on_Home()
     {
-        new ShellViewModel().ActiveTab.Should().Be("Overview");
+        new ShellViewModel().ActiveTab.Should().Be("Home");
+    }
+
+    [Fact]
+    public void The_rail_has_four_pages()
+    {
+        // Simplicity guard: the thirteen-page rail is what made people hunt.
+        NavCatalog.Primary.Select(i => i.Id).Should().BeSubsetOf(new[] { "Home", "Boost", "Games", "Settings" });
+        NavCatalog.Primary.Count.Should().BeLessThanOrEqualTo(4);
     }
 
     [Fact]
@@ -18,11 +26,11 @@ public class ShellViewModelTests
     {
         var vm = new ShellViewModel();
 
-        vm.NavigateCommand.Execute("Cleanup");
+        vm.NavigateCommand.Execute("Games");
 
-        vm.ActiveTab.Should().Be("Cleanup");
-        vm.IsActive("Cleanup").Should().BeTrue();
-        vm.IsActive("Overview").Should().BeFalse();
+        vm.ActiveTab.Should().Be("Games");
+        vm.IsActive("Games").Should().BeTrue();
+        vm.IsActive("Home").Should().BeFalse();
     }
 
     [Fact]
@@ -32,74 +40,55 @@ public class ShellViewModelTests
 
         vm.NavigateCommand.Execute("NotARealTab");
 
-        vm.ActiveTab.Should().Be("Overview");
+        vm.ActiveTab.Should().Be("Home");
     }
 
     [Fact]
-    public void Overview_starts_flagged_active()
+    public void A_sub_page_keeps_its_parent_highlighted_and_offers_a_way_back()
     {
         var vm = new ShellViewModel();
 
-        vm.Primary.Single(i => i.Id == "Overview").IsActive.Should().BeTrue();
-        vm.Primary.Where(i => i.Id != "Overview").Should().OnlyContain(i => !i.IsActive);
+        vm.NavigateCommand.Execute("WhatsNew");   // exists on every platform
+
+        vm.ActiveTab.Should().Be("WhatsNew");
+        vm.IsSubPage.Should().BeTrue();
+        vm.BackLabel.Should().Be("Back to Settings");
+        vm.Primary.Single(i => i.Id == "Settings").IsActive.Should().BeTrue();
+
+        vm.BackCommand.Execute(null);
+
+        vm.ActiveTab.Should().Be("Settings");
+        vm.IsSubPage.Should().BeFalse();
     }
 
     [Fact]
-    public void Navigating_moves_the_active_flag_and_clears_the_previous_one()
+    public void Exactly_one_rail_item_is_ever_active()
     {
         var vm = new ShellViewModel();
 
-        vm.NavigateCommand.Execute("Games");
-
-        vm.Primary.Single(i => i.Id == "Games").IsActive.Should().BeTrue();
-        vm.Primary.Single(i => i.Id == "Overview").IsActive.Should().BeFalse();
-    }
-
-    [Fact]
-    public void Navigating_to_a_bottom_item_clears_primary_selection()
-    {
-        var vm = new ShellViewModel();
-
-        vm.NavigateCommand.Execute("Settings");
-
-        vm.Bottom.Single(i => i.Id == "Settings").IsActive.Should().BeTrue();
-        vm.Primary.Should().OnlyContain(i => !i.IsActive);
-    }
-
-    [Fact]
-    public void Exactly_one_item_is_ever_active()
-    {
-        var vm = new ShellViewModel();
-
-        foreach (var id in new[] { "Optimize", "Sessions", "History", "Memory" })
+        foreach (var id in NavCatalog.SubPages.Select(p => p.Id).Concat(NavCatalog.Primary.Select(i => i.Id)))
         {
             vm.NavigateCommand.Execute(id);
-            vm.Primary.Concat(vm.Bottom).Count(i => i.IsActive).Should().Be(1);
+            vm.Primary.Count(i => i.IsActive).Should().Be(1, $"after opening {id}");
         }
     }
 
     [Fact]
-    public void Every_nav_id_is_unique()
+    public void Every_page_id_is_unique_and_every_parent_is_in_the_rail()
     {
-        var ids = NavCatalog.Primary.Concat(NavCatalog.Bottom).Select(i => i.Id).ToList();
-
+        var ids = NavCatalog.Primary.Select(i => i.Id).Concat(NavCatalog.SubPages.Select(p => p.Id)).ToList();
         ids.Should().OnlyHaveUniqueItems();
-    }
 
-    [Fact]
-    public void Gaming_is_a_section_rather_than_the_frame()
-    {
-        // Repositioning guard: gaming must not be the only or dominant grouping.
-        var performance = NavCatalog.Primary.Count(i => i.Group == NavCatalog.Performance);
-        var gaming      = NavCatalog.Primary.Count(i => i.Group == NavCatalog.Gaming);
-
-        performance.Should().BeGreaterThanOrEqualTo(gaming);
+        var rail = NavCatalog.Primary.Select(i => i.Id).ToHashSet();
+        if (OperatingSystem.IsWindows())
+            NavCatalog.SubPages.Should().OnlyContain(p => rail.Contains(p.Parent));
     }
 
     [Fact]
     public void Retired_gaming_first_labels_are_gone()
     {
-        var labels = NavCatalog.Primary.Concat(NavCatalog.Bottom).Select(i => i.Label).ToList();
+        var labels = NavCatalog.Primary.Select(i => i.Label)
+            .Concat(NavCatalog.SubPages.Select(p => p.Label)).ToList();
 
         labels.Should().NotContain("Bloatware");
         labels.Should().NotContain("Library");

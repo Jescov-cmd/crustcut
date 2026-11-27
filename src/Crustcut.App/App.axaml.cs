@@ -30,6 +30,8 @@ public partial class App : Application
             var (shotPath, shotTab, shotW, shotH) = SelfScreenshot.Parse(Program.Args);
             var overlayShotPath = SelfScreenshot.ParseOverlayShot(Program.Args);
             var navStressPath = NavStress.Parse(Program.Args);
+            var trayIdx = Array.IndexOf(Program.Args, "--screenshot-tray");
+            var trayShotPath = trayIdx >= 0 && trayIdx + 1 < Program.Args.Length ? Program.Args[trayIdx + 1] : null;
 
             // The panic button: revert every applied optimization and disable every
             // automatic behaviour, then exit. For "is Crustcut causing my problem?"
@@ -45,7 +47,7 @@ public partial class App : Application
             // it can run while the real app is open.
             _guard = new SingleInstanceGuard();
             var isDebugCapture = shotPath is not null || navStressPath is not null
-                              || overlayShotPath is not null;
+                              || overlayShotPath is not null || trayShotPath is not null;
             if (!isDebugCapture && !_guard.TryAcquire())
             {
                 // Another copy is already running and has been asked to surface. Exit
@@ -88,7 +90,16 @@ public partial class App : Application
             // NOTE: assigning desktop.MainWindow makes Avalonia SHOW that window when the
             // lifetime starts. When starting minimised we therefore create nothing and leave
             // MainWindow unset; the first tray click builds and adopts the window.
-            if (shotPath is not null)
+            if (trayShotPath is not null)
+            {
+                // Design-review path for the tray popup: placed and captured as it would
+                // open from the tray, but kept open when it never gets focus.
+                var popup = new TrayPopup(_composition, () => { }, () => { }, closeOnDeactivate: false);
+                desktop.MainWindow = popup;
+                popup.Show();
+                _ = SelfScreenshot.CaptureThenExitAsync(popup, trayShotPath);
+            }
+            else if (shotPath is not null)
             {
                 var w = EnsureWindow();
                 desktop.MainWindow = w;
@@ -378,15 +389,30 @@ public partial class App : Application
         ShowWindow();   // the banner in the shell is where the UPDATE button lives
     }
 
-    private void TrayClicked(object? sender, EventArgs e) => ShowWindow();
+    // The tray popup exists only while it's on screen, like the main window.
+    private TrayPopup? _trayPopup;
+    private long _trayPopupClosedAt;
+
+    /// <summary>Left click on the tray icon: opens the popup, or closes it if it's open.</summary>
+    private void TrayClicked(object? sender, EventArgs e)
+    {
+        if (_composition is null || _exiting) return;
+        if (_trayPopup is not null) { _trayPopup.Close(); return; }
+        // Clicking the icon while the popup is open first takes focus away from it, which
+        // closes it; this click is that same one and means "close", not "open again".
+        if (Environment.TickCount64 - _trayPopupClosedAt < 400) return;
+
+        var popup = new TrayPopup(_composition, ShowWindow, Shutdown);
+        popup.Closed += (_, _) =>
+        {
+            _trayPopup = null;
+            _trayPopupClosedAt = Environment.TickCount64;
+        };
+        _trayPopup = popup;
+        popup.Show();
+    }
 
     private void TrayOpenClick(object? sender, EventArgs e) => ShowWindow();
-
-    private async void TrayOptimizeClick(object? sender, EventArgs e)
-    {
-        try { if (_composition is not null) await _composition.Overview.RunOneClickAsync(); }
-        catch { /* tray action must never crash the app */ }
-    }
 
     private void TrayExitClick(object? sender, EventArgs e) => Shutdown();
 }

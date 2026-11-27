@@ -1,0 +1,96 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Crustcut.App.Views.HomeView">
+
+  <!-- One sentence, four numbers, one button, a short to-do list. Everything else is a
+       click deeper ("Live details", Memory, Clean up apps, Diagnosis). -->
+  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="40,0,40,32">
+    <Grid x:Name="PanelGrid">
+    <StackPanel Width="{Binding #PanelGrid.Bounds.Width}" MaxWidth="900" HorizontalAlignment="Left">
+      <TextBlock Classes="hero" Text="{Binding Headline}" Margin="0,40,0,4"/>
+      <TextBlock Classes="pageSubtitle" Text="{Binding Subline}" FontSize="14" Margin="0,0,0,32"/>
+
+      <Grid ColumnDefinitions="*,*,*,*" Margin="0,0,0,32">
+        <StackPanel Grid.Column="0" Spacing="2">
+          <TextBlock Classes="statLabel" Text="CPU"/>
+          <TextBlock Classes="stat" Text="{Binding CpuText}"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Spacing="2">
+          <TextBlock Classes="statLabel" Text="Memory"/>
+          <TextBlock Classes="stat" Text="{Binding RamText}"/>
+        </StackPanel>
+        <StackPanel Grid.Column="2" Spacing="2">
+          <TextBlock Classes="statLabel" Text="{Binding TempLabel}"/>
+          <TextBlock Classes="stat" Text="{Binding TempText}"/>
+        </StackPanel>
+        <StackPanel Grid.Column="3" Spacing="2">
+          <TextBlock Classes="statLabel" Text="{Binding LastGameLabel}"/>
+          <TextBlock Classes="stat" Text="{Binding LastGameText}"/>
+        </StackPanel>
+      </Grid>
+
+      <StackPanel Orientation="Horizontal" Spacing="16">
+        <Button Classes="primary big" Content="Free up memory" Click="FreeClick"
+                IsVisible="{Binding CanFreeMemory}" IsEnabled="{Binding !IsFreeing}"
+                ToolTip.Tip="Trims memory from apps you aren't using right now. Games and the app in front are left alone."/>
+        <TextBlock Classes="sub" Text="{Binding FreeStatus}" VerticalAlignment="Center" MaxWidth="460"/>
+      </StackPanel>
+
+      <TextBlock Classes="statLabel" Text="Needs a look" Margin="0,40,0,4" IsVisible="{Binding HasItems}"/>
+      <ItemsControl ItemsSource="{Binding Items}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Button Classes="rowLink" Click="ItemClick" Tag="{Binding Action}">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Spacing="2">
+                  <TextBlock Classes="key" Text="{Binding Title}"/>
+                  <TextBlock Classes="sub" Text="{Binding Detail}"/>
+                </StackPanel>
+                <TextBlock Grid.Column="1" Classes="chevron" Margin="16,0,0,0"/>
+              </Grid>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <TextBlock Classes="statLabel" Text="More" Margin="0,40,0,4"/>
+      <Button Classes="rowLink" Click="GoClick" Tag="Overview">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="2">
+            <TextBlock Classes="key" Text="Live details"/>
+            <TextBlock Classes="sub" Text="Graphs, network and your optimization score."/>
+          </StackPanel>
+          <TextBlock Grid.Column="1" Classes="chevron"/>
+        </Grid>
+      </Button>
+      <Button Classes="rowLink" Click="GoClick" Tag="Memory" x:Name="MemoryLink">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="2">
+            <TextBlock Classes="key" Text="Memory"/>
+            <TextBlock Classes="sub" Text="What's using it, and which apps to keep or limit."/>
+          </StackPanel>
+          <TextBlock Grid.Column="1" Classes="chevron"/>
+        </Grid>
+      </Button>
+      <Button Classes="rowLink" Click="GoClick" Tag="Cleanup" x:Name="CleanupLink">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="2">
+            <TextBlock Classes="key" Text="Clean up apps"/>
+            <TextBlock Classes="sub" Text="Remove or turn off apps that came with Windows."/>
+          </StackPanel>
+          <TextBlock Grid.Column="1" Classes="chevron"/>
+        </Grid>
+      </Button>
+      <Button Classes="rowLink" Click="GoClick" Tag="Diagnosis" x:Name="DiagnosisLink" BorderThickness="0">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="2">
+            <TextBlock Classes="key" Text="Find problems"/>
+            <TextBlock Classes="sub" Text="Checks drivers, memory speed, lag and more."/>
+          </StackPanel>
+          <TextBlock Grid.Column="1" Classes="chevron"/>
+        </Grid>
+      </Button>
+    </StackPanel>
+    </Grid>
+  </ScrollViewer>
+</UserControl>

@@ -47,7 +47,9 @@ public sealed class ProfileLifecycleService
         IBackgroundSuspenderService? suspender = null,
         ISentinelService? sentinel = null,
         FrameRecordingService? recorder = null,
-        Func<bool>? suspendForEveryGame = null)
+        Func<bool>? suspendForEveryGame = null,
+        Func<bool>? gameModeForEveryGame = null,
+        Action<string>? log = null)
     {
         _watcher = watcher;
         _profiles = profiles;
@@ -58,7 +60,15 @@ public sealed class ProfileLifecycleService
         _sentinel = sentinel;
         _recorder = recorder;
         _suspendForEveryGame = suspendForEveryGame;
+        _gameModeForEveryGame = gameModeForEveryGame;
+        _log = log;
     }
+
+    // When true, every detected game WITHOUT a per-game profile gets BuiltInProfiles.GameSession
+    // for as long as it runs, recorded like a profile so the stop path and crash recovery put
+    // it back. A per-game profile always wins over this.
+    private readonly Func<bool>? _gameModeForEveryGame;
+    private readonly Action<string>? _log;
 
     // When true, background apps are frozen for EVERY detected game, no profile needed —
     // "pause the RGB and sync apps while I play, wake them after" as a standing rule
@@ -125,15 +135,31 @@ public sealed class ProfileLifecycleService
             // The optimization profile (and profile-driven suspension) only apply if the
             // user assigned one to this game.
             var modeName = await _profiles.GetProfileForAsync(game.Id);
-            if (modeName is null) return;
-            if (!_profileLookup.TryGetValue(modeName, out var profile)) return;
+            ModeProfile? profile = null;
+            if (modeName is not null) _profileLookup.TryGetValue(modeName, out profile);
 
-            var result = await _applier.ApplyAsync(profile);
+            var isGameMode = false;
+            if (profile is null)
+            {
+                if (_gameModeForEveryGame?.Invoke() != true) return;
+                profile = BuiltInProfiles.GameSession;
+                isGameMode = true;
+            }
+
+            var result = await _applier.ApplyAsync(profile, ct: ct);
             await _active.SaveAsync(new ActiveTweaksRecord(
                 game.Id, profile.Id, DateTime.UtcNow, result.Outcomes));
 
             try { _suspender?.SuspendBackgroundApps(); }
             catch { /* freezing optional apps must never break a game launch */ }
+
+            if (isGameMode)
+            {
+                RaisePriority(pid);
+                var changed = result.Outcomes.Count(o => o.Succeeded && o.UndoData is not null);
+                _log?.Invoke($"game mode: on for {game.DisplayName} — {changed} settings " +
+                    $"({result.SuccessCount - changed} already on, {result.FailureCount} failed)");
+            }
         }
         catch
         {
@@ -167,11 +193,29 @@ public sealed class ProfileLifecycleService
 
             await _applier.RevertAsync(record.Outcomes);
             await _active.ClearAsync();
+
+            if (record.ProfileId == BuiltInProfiles.GameSession.Id)
+                _log?.Invoke($"game mode: off for {e.Game.DisplayName} — settings put back");
         }
         catch
         {
         }
     }
+
+    // AboveNormal only — never High: High can starve input/audio threads and the shell.
+    // The process exits with the game, so there's nothing to put back.
+    private static void RaisePriority(int pid)
+    {
+        if (pid <= 0) return;
+        try
+        {
+            using var p = System.Diagnostics.Process.GetProcessById(pid);
+            if (p.PriorityClass == System.Diagnostics.ProcessPriorityClass.Normal)
+                p.PriorityClass = System.Diagnostics.ProcessPriorityClass.AboveNormal;
+        }
+        catch { /* access denied (anti-cheat, elevated game) or already gone */ }
+    }
+
 
     /// <summary>
     /// The process that is actually the game. "First process with this name" was wrong

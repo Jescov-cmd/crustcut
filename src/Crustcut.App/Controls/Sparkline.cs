@@ -128,12 +128,12 @@ public sealed class Sparkline : Control
             EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
             GradientStops =
             {
-                new GradientStop(Color.Parse("#4060CDFF"), 0),
-                new GradientStop(Color.Parse("#0060CDFF"), 1),
+                new GradientStop(Color.Parse("#30FFFFFF"), 0),
+                new GradientStop(Color.Parse("#00FFFFFF"), 1),
             }
         };
 
         ctx.DrawGeometry(area, null, fill);
-        ctx.DrawGeometry(null, new Pen(new SolidColorBrush(Color.Parse("#60CDFF")), 1.4), line);
+        ctx.DrawGeometry(null, new Pen(new SolidColorBrush(Color.Parse("#FFFFFF")), 1.4), line);
     }
 }

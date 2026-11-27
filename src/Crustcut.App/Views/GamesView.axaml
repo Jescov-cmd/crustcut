@@ -3,9 +3,14 @@
              xmlns:conv="clr-namespace:Crustcut.App"
              x:Class="Crustcut.App.Views.GamesView">
 
-  <DockPanel Margin="28,0,28,16">
+  <DockPanel Margin="40,0,40,16">
     <StackPanel DockPanel.Dock="Top">
-      <TextBlock Text="Games" Classes="pageTitle" Margin="0,22,0,8"/>
+      <Grid ColumnDefinitions="*,Auto" Margin="0,40,0,4">
+        <TextBlock Text="Games" Classes="hero"/>
+        <!-- FPS history used to be its own rail page; it belongs with the games. -->
+        <Button Grid.Column="1" Content="Sessions and FPS" Click="SessionsClick"
+                VerticalAlignment="Center" x:Name="SessionsButton"/>
+      </Grid>
       <TextBlock FontSize="12" Foreground="{DynamicResource Text2}" Margin="0,0,0,16"
                  TextWrapping="Wrap"
                  Text="{Binding DetectionSourcesText}"/>

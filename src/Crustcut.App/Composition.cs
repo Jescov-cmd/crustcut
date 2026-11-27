@@ -39,6 +39,8 @@ public sealed class Composition
 {
     public IReadOnlyList<ITweak> Tweaks { get; }
     public OverviewViewModel Overview { get; }
+    /// <summary>The one live sampler (always running) — the tray popup listens to it while open.</summary>
+    public SystemSampler? Sampler { get; }
 
     /// <summary>Tabs whose first-visit load has run this session (shared by every window).</summary>
     public HashSet<string> LoadedTabs { get; } = new(StringComparer.Ordinal);
@@ -55,6 +57,8 @@ public sealed class Composition
     public OverlayService? Overlay { get; }
     public BackgroundEngine? Engine { get; }
     public FansViewModel Fans { get; }
+    public HomeViewModel Home { get; }
+    public BoostViewModel? Boost { get; }
     public UpdateViewModel? Updates { get; }
     public FanService? FanService { get; }
     public GameOnlyAppsService? GameOnlyApps { get; }
@@ -177,6 +181,7 @@ public sealed class Composition
         // every consumer must share the instance that the recorder saves through.
         var hardware = new HardwareClient();
         var sampler = new SystemSampler(hardware);
+        Sampler = sampler;
         var frameStore = new FrameSessionStore(FrameSessionStore.DefaultPath());
 
         var presentMonPath = Path.Combine(
@@ -325,6 +330,9 @@ public sealed class Composition
         // Auto mode follows real system load, so a light 2D game stays quiet and a heavy
         // workload ramps — whether or not it is a "game" at all.
         sampler.Sampled += (_, sample) => FanService?.ReportLoad(sample.CpuPercent, sample.GpuPercent);
+
+        Home = new HomeViewModel(Overview, Fans, Memory, ui);
+        Boost = new BoostViewModel(Optimize!, Fans, GameBoost, settingsStore);
     }
 #else
     /// <summary>
@@ -347,6 +355,7 @@ public sealed class Composition
         Tweaks = Array.Empty<ITweak>();
 
         var sampler = new SystemSampler(new MacHardwareClient());
+        Sampler = sampler;
         var frameStore = new FrameSessionStore(FrameSessionStore.DefaultPath());
 
         Overview = new OverviewViewModel(
@@ -369,6 +378,7 @@ public sealed class Composition
 
         Guides = new GuidesViewModel();
         Fans = new FansViewModel();   // reports unsupported; tab is hidden on mac anyway
+        Home = new HomeViewModel(Overview, Fans, null, ui);
     }
 #endif
 }

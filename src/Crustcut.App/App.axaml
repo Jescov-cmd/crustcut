@@ -22,9 +22,8 @@
                 Clicked="TrayClicked">
         <TrayIcon.Menu>
           <NativeMenu>
+            <!-- Fallback only: left click opens the custom popup (TrayPopup). -->
             <NativeMenuItem Header="Open Crustcut" Click="TrayOpenClick"/>
-            <NativeMenuItem Header="Optimize now" Click="TrayOptimizeClick"/>
-            <NativeMenuItemSeparator/>
             <NativeMenuItem Header="Exit" Click="TrayExitClick"/>
           </NativeMenu>
         </TrayIcon.Menu>

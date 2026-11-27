@@ -124,12 +124,12 @@
     <Setter Property="TextElement.Foreground" Value="{DynamicResource Text0}"/>
   </Style>
   <Style Selector="Button:pressed /template/ ContentPresenter">
-    <Setter Property="Background" Value="#303030"/>
+    <Setter Property="Background" Value="#0F0F0F"/>
     <Setter Property="TextElement.Foreground" Value="{DynamicResource Text2}"/>
   </Style>
   <Style Selector="Button:disabled /template/ ContentPresenter">
-    <Setter Property="Background" Value="#2A2A2A"/>
-    <Setter Property="TextElement.Foreground" Value="#5D5D5D"/>
+    <Setter Property="Background" Value="#0A0A0A"/>
+    <Setter Property="TextElement.Foreground" Value="#4A4A4A"/>
   </Style>
 
   <Style Selector="Button.primary">
@@ -138,13 +138,13 @@
     <Setter Property="BorderBrush" Value="{DynamicResource AccentCrust}"/>
   </Style>
   <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
-    <Setter Property="Background" Value="#5BBFEF"/>
-    <Setter Property="BorderBrush" Value="#5BBFEF"/>
+    <Setter Property="Background" Value="#E6E6E6"/>
+    <Setter Property="BorderBrush" Value="#E6E6E6"/>
     <Setter Property="TextElement.Foreground" Value="{DynamicResource AccentText}"/>
   </Style>
   <Style Selector="Button.primary:pressed /template/ ContentPresenter">
-    <Setter Property="Background" Value="#56B0DB"/>
-    <Setter Property="TextElement.Foreground" Value="#1C3A48"/>
+    <Setter Property="Background" Value="#CCCCCC"/>
+    <Setter Property="TextElement.Foreground" Value="#333333"/>
   </Style>
   <Style Selector="Button.secondary"/>
   <!-- Borderless, for "more" menus and icon-only actions inside cards. -->
@@ -153,7 +153,7 @@
     <Setter Property="BorderThickness" Value="0"/>
   </Style>
   <Style Selector="Button.subtle:pointerover /template/ ContentPresenter">
-    <Setter Property="Background" Value="#383838"/>
+    <Setter Property="Background" Value="#1A1A1A"/>
   </Style>
   <Style Selector="Button.danger">
     <Setter Property="Foreground" Value="{DynamicResource Danger}"/>
@@ -181,11 +181,11 @@
     <Setter Property="TextElement.Foreground" Value="{DynamicResource AccentText}"/>
   </Style>
 
-  <!-- A row of these (Memory's Protect) as solid accent became a wall of blue. "soft"
-       marks the on state with an accent outline and text instead. -->
+  <!-- A row of these (Memory's Protect) as solid accent became a wall of white. "soft"
+       marks the on state with a grey fill and outline instead. -->
   <Style Selector="ToggleButton.protect.soft:checked /template/ ContentPresenter">
-    <Setter Property="Background" Value="#1F3540"/>
-    <Setter Property="BorderBrush" Value="#3A6F86"/>
+    <Setter Property="Background" Value="#1A1A1A"/>
+    <Setter Property="BorderBrush" Value="#808080"/>
     <Setter Property="TextElement.Foreground" Value="{DynamicResource AccentWheat}"/>
   </Style>
 
@@ -230,5 +230,62 @@
     <Setter Property="FontSize" Value="12"/>
     <Setter Property="CornerRadius" Value="4"/>
     <Setter Property="MaxWidth" Value="360"/>
+  </Style>
+
+  <!-- ── Simple pages (Home, Boost, Games, Settings) ── -->
+  <Style Selector="TextBlock.hero">
+    <Setter Property="FontFamily" Value="{DynamicResource DisplayFont}"/>
+    <Setter Property="FontSize" Value="32"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+  <Style Selector="TextBlock.statLabel">
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
+    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+  </Style>
+  <Style Selector="TextBlock.stat">
+    <Setter Property="FontFamily" Value="{DynamicResource DisplayFont}"/>
+    <Setter Property="FontFeatures" Value="+tnum"/>
+    <Setter Property="FontSize" Value="26"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text0}"/>
+  </Style>
+  <Style Selector="Button.big">
+    <Setter Property="MinHeight" Value="44"/>
+    <Setter Property="Padding" Value="24,0"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="FontSize" Value="15"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+  </Style>
+  <!-- A whole row you click: title + detail on the left, a chevron on the right. -->
+  <Style Selector="Button.rowLink">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairlineSoft}"/>
+    <Setter Property="CornerRadius" Value="0"/>
+    <Setter Property="Padding" Value="4,14"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+  </Style>
+  <Style Selector="Button.rowLink:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#0D0D0D"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairlineSoft}"/>
+  </Style>
+  <Style Selector="Button.rowLink:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="#141414"/>
+  </Style>
+  <Style Selector="TextBlock.chevron">
+    <Setter Property="FontFamily" Value="{DynamicResource IconFont}"/>
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="Foreground" Value="{DynamicResource Text3}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="Text" Value="&#xE76C;"/>
+  </Style>
+  <!-- A switch row: title + description, switch on the right. -->
+  <Style Selector="Border.switchRow">
+    <Setter Property="BorderBrush" Value="{DynamicResource HairlineSoft}"/>
+    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    <Setter Property="Padding" Value="4,16"/>
   </Style>
 </Styles>

@@ -33,6 +33,11 @@ public sealed class AppSettings
     /// pausing other software is the user's call.</summary>
     public bool SuspendBackgroundAppsInGame { get; set; } = false;
 
+    /// <summary>Automatic Game mode: every detected game without its own profile gets a
+    /// temporary performance set (and paused background apps) while it runs; all of it is
+    /// put back when the game closes. Off by default.</summary>
+    public bool GameModeAuto { get; set; } = false;
+
     /// <summary>The mirror image: apps only useful IN games (clip recorders, overlays)
     /// are frozen whenever no game runs, and woken the moment one starts. Off by default,
     /// like every other behaviour that touches other software.</summary>

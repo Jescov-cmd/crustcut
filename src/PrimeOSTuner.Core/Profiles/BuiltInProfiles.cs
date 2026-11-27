@@ -66,5 +66,22 @@ public static class BuiltInProfiles
             "core.hibernation-disable",
         });
 
+    // Automatic "Game mode": applied to every detected game without a per-game profile and
+    // reverted when it closes. Temporary, safe tweaks only. Deliberately NOT in All — All
+    // feeds the Game boost preset list and the opt-in safety test, and that list stays fixed.
+    // ("core.power-throttling-disable" and "game.system-responsiveness" were wanted here but
+    // have no ITweak implementation yet, so they're left out rather than failing every launch.)
+    public static readonly ModeProfile GameSession = new(
+        Id: "game-session",
+        DisplayName: "Game mode",
+        Description: "Temporary performance set applied while any game runs, put back when it closes.",
+        TweakIds: new[]
+        {
+            "core.ultimate-performance",   // makes sure the plan exists
+            "core.power-plan",             // switches to it (put back on exit unless it was already on)
+            "game.timer-resolution",
+            "game.mmcss-games-priority",
+        });
+
     public static readonly IReadOnlyList<ModeProfile> All = new[] { Basic, Performance, Aggressive };
 }

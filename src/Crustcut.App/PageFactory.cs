@@ -40,6 +40,11 @@ public sealed class PageFactory
 
     private Control Build(string tabId) => tabId switch
     {
+        "Home" => new HomeView { DataContext = _app?.Home },
+
+        // Boost reads the same probe as All settings; whichever opens first runs it once.
+        "Boost" => BoostPage(),
+
         "Overview" => new OverviewView { DataContext = _app?.Overview },
 
         // Probing every tweak is slow, so it runs on first visit rather than at startup.
@@ -74,6 +79,19 @@ public sealed class PageFactory
         _ => new PlaceholderView(LabelFor(tabId)),
     };
 
+    private Control BoostPage()
+    {
+        var view = new BoostView { DataContext = _app?.Boost };
+        if (_app?.Optimize is { } optimize && _app.Boost is { } boost)
+        {
+            if (_loaded.Add("Optimize"))
+                _ = optimize.InitializeAppliedStatesAsync().ContinueWith(
+                    _ => Avalonia.Threading.Dispatcher.UIThread.Post(boost.Sync));
+            else boost.Sync();
+        }
+        return view;
+    }
+
     /// <summary>Runs <paramref name="load"/> the first time a tab is opened, never again.</summary>
     private Control Once(string tabId, Control view, Func<Task?> load)
     {
@@ -81,7 +99,5 @@ public sealed class PageFactory
         return view;
     }
 
-    private static string LabelFor(string tabId) =>
-        NavCatalog.Primary.Concat(NavCatalog.Bottom)
-            .FirstOrDefault(i => i.Id == tabId)?.Label ?? tabId;
+    private static string LabelFor(string tabId) => NavCatalog.LabelFor(tabId);
 }
