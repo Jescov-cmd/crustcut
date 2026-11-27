@@ -27,6 +27,6 @@ public partial class BoostView : UserControl
 
     private void GoClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is Control { Tag: string id } && VisualRoot is MainWindow shell) shell.NavigateTo(id);
+        if (sender is Control { Tag: string id } && TopLevel.GetTopLevel(this) is MainWindow shell) shell.NavigateTo(id);
     }
 }

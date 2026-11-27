@@ -46,8 +46,11 @@ public partial class App : Application
             // The screenshot run is a throwaway process: skip the single-instance guard so
             // it can run while the real app is open.
             _guard = new SingleInstanceGuard();
+            // --try: an ordinary, clickable window for checking the UI by hand while the
+            // real Crustcut keeps running — no single-instance guard, no engine.
+            var tryMode = Array.IndexOf(Program.Args, "--try") >= 0;
             var isDebugCapture = shotPath is not null || navStressPath is not null
-                              || overlayShotPath is not null || trayShotPath is not null;
+                              || overlayShotPath is not null || trayShotPath is not null || tryMode;
             if (!isDebugCapture && !_guard.TryAcquire())
             {
                 // Another copy is already running and has been asked to surface. Exit
@@ -115,6 +118,12 @@ public partial class App : Application
                 desktop.MainWindow = w;
                 w.Show();
                 _ = NavStress.RunThenExitAsync(w, navStressPath, () => Shutdown());
+            }
+            else if (tryMode)
+            {
+                var w = EnsureWindow();
+                desktop.MainWindow = w;
+                if (Array.IndexOf(Program.Args, "--max") >= 0) w.WindowState = WindowState.Maximized;
             }
             else if (!settings.StartMinimized)
             {

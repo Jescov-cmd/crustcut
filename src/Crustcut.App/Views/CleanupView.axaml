@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cc="clr-namespace:Crustcut.App.Controls"
              x:Class="Crustcut.App.Views.CleanupView">
 
   <UserControl.Styles>
@@ -23,7 +24,8 @@
               Click="ScanClick"/>
     </StackPanel>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,18,0">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <cc:FitWidth Padding="0,0,18,0">
       <Grid x:Name="PanelGrid">
       <StackPanel>
 
@@ -67,7 +69,7 @@
         <ItemsControl ItemsSource="{Binding Items}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Border Classes="row" Width="{Binding #PanelGrid.Bounds.Width}">
+              <Border Classes="row">
                 <Grid ColumnDefinitions="*,Auto,Auto">
                   <StackPanel Grid.Column="0" VerticalAlignment="Center">
                     <TextBlock Text="{Binding DisplayName}" FontSize="13" FontWeight="SemiBold"
@@ -92,7 +94,7 @@
         <ItemsControl ItemsSource="{Binding DesktopItems}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Border Classes="row" Width="{Binding #PanelGrid.Bounds.Width}">
+              <Border Classes="row">
                 <StackPanel>
                   <TextBlock Text="{Binding ProgramName}" FontSize="13" FontWeight="SemiBold"
                              Foreground="{DynamicResource Text0}"/>
@@ -106,6 +108,7 @@
 
       </StackPanel>
     </Grid>
-    </ScrollViewer>
+      </cc:FitWidth>
+  </ScrollViewer>
   </DockPanel>
 </UserControl>

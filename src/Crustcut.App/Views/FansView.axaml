@@ -1,14 +1,16 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cc="clr-namespace:Crustcut.App.Controls"
              xmlns:vm="clr-namespace:Crustcut.Presentation;assembly=Crustcut.Presentation"
              x:Class="Crustcut.App.Views.FansView">
 
   <!-- Windows Settings layout: one setting per card, icon · title + description · control. -->
-  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="28,0,28,24">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <cc:FitWidth Padding="28,0,28,24">
     <!-- Grid + bound width, as on What's new: a StackPanel measured inside a ScrollViewer
          can take its text's natural width and run past the right edge. -->
-    <Grid x:Name="PanelGrid">
-    <StackPanel Width="{Binding #PanelGrid.Bounds.Width}" MaxWidth="1000" HorizontalAlignment="Left">
+    <Grid x:Name="PanelGrid" MaxWidth="1000">
+    <StackPanel>
       <TextBlock Text="Fans" Classes="pageTitle" Margin="0,22,0,6"/>
       <TextBlock Classes="pageSubtitle" Margin="0,0,0,18"
                  Text="Fans never stop, anything over 90 °C means full speed, and your motherboard takes back control when Crustcut closes. Your graphics card runs its own fans."/>
@@ -145,5 +147,6 @@
       </StackPanel>
     </StackPanel>
     </Grid>
+    </cc:FitWidth>
   </ScrollViewer>
 </UserControl>

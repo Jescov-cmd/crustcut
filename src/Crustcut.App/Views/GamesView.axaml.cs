@@ -14,6 +14,6 @@ public partial class GamesView : UserControl
 
     private void SessionsClick(object? sender, RoutedEventArgs e)
     {
-        if (VisualRoot is MainWindow shell) shell.NavigateTo("Sessions");
+        if (TopLevel.GetTopLevel(this) is MainWindow shell) shell.NavigateTo("Sessions");
     }
 }

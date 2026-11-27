@@ -19,7 +19,7 @@
                  Text="No games found yet. Install a game and reopen this tab."/>
     </StackPanel>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
       <ItemsControl ItemsSource="{Binding Tiles}">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>

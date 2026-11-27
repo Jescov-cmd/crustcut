@@ -13,7 +13,7 @@
 
       <!-- Guide list -->
       <Border Grid.Column="0" Classes="panel" Padding="6" VerticalAlignment="Stretch">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
           <ListBox ItemsSource="{Binding Guides}" SelectedItem="{Binding Selected, Mode=TwoWay}"
                    Background="Transparent">
             <ListBox.ItemTemplate>
@@ -37,9 +37,9 @@
                      Foreground="{DynamicResource Text3}"
                      HorizontalAlignment="Center" VerticalAlignment="Center"
                      IsVisible="{Binding !HasSelection}"/>
-          <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding HasSelection}">
+          <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" IsVisible="{Binding HasSelection}">
             <Grid x:Name="BodyGrid" VerticalAlignment="Top">
-              <ItemsControl ItemsSource="{Binding Blocks}" Width="{Binding #BodyGrid.Bounds.Width}">
+              <ItemsControl ItemsSource="{Binding Blocks}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
                     <StackPanel>

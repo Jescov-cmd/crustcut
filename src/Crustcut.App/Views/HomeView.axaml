@@ -1,12 +1,14 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cc="clr-namespace:Crustcut.App.Controls"
              x:Class="Crustcut.App.Views.HomeView">
 
   <!-- One sentence, four numbers, one button, a short to-do list. Everything else is a
        click deeper ("Live details", Memory, Clean up apps, Diagnosis). -->
-  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="40,0,40,32">
-    <Grid x:Name="PanelGrid">
-    <StackPanel Width="{Binding #PanelGrid.Bounds.Width}" MaxWidth="900" HorizontalAlignment="Left">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <cc:FitWidth Padding="40,0,40,32">
+    <Grid x:Name="PanelGrid" MaxWidth="900">
+    <StackPanel>
       <TextBlock Classes="hero" Text="{Binding Headline}" Margin="0,40,0,4"/>
       <TextBlock Classes="pageSubtitle" Text="{Binding Subline}" FontSize="14" Margin="0,0,0,32"/>
 
@@ -92,5 +94,6 @@
       </Button>
     </StackPanel>
     </Grid>
+    </cc:FitWidth>
   </ScrollViewer>
 </UserControl>

@@ -95,7 +95,7 @@
   <!-- Custom chrome: the window is borderless, so the top strip is ours — wordmark on
        the left, square minimize/close on the right, the whole strip draggable. The
        invisible edge borders named Resize* are the window's resize grips. -->
-  <Panel>
+  <Panel x:Name="RootPanel">
   <Grid RowDefinitions="32,*">
 
     <Border Grid.Row="0" Background="{DynamicResource SurfaceRail}"

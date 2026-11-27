@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cc="clr-namespace:Crustcut.App.Controls"
              xmlns:c="clr-namespace:Crustcut.App.Controls"
              x:Class="Crustcut.App.Views.OverviewView">
 
@@ -26,7 +27,8 @@
       </Grid>
     </Border>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="28,8,28,24">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <cc:FitWidth Padding="28,8,28,24">
       <StackPanel Spacing="16">
 
         <Grid ColumnDefinitions="*,16,*">
@@ -162,6 +164,7 @@
         </Border>
 
       </StackPanel>
-    </ScrollViewer>
+      </cc:FitWidth>
+  </ScrollViewer>
   </DockPanel>
 </UserControl>

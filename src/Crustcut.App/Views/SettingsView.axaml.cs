@@ -13,7 +13,7 @@ public partial class SettingsView : UserControl
 
     private void GoClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        if (sender is Control { Tag: string id } && VisualRoot is MainWindow shell) shell.NavigateTo(id);
+        if (sender is Control { Tag: string id } && TopLevel.GetTopLevel(this) is MainWindow shell) shell.NavigateTo(id);
     }
 
     private void RepositionClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

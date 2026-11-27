@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cc="clr-namespace:Crustcut.App.Controls"
              x:Class="Crustcut.App.Views.GameBoostView">
 
   <DockPanel Margin="28,0,28,16">
@@ -10,9 +11,10 @@
                  Text="Applies a bundle of optimizations in one go. Everything is reversible from the Optimize page or History."/>
     </StackPanel>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,18,0">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <cc:FitWidth Padding="0,0,18,0">
       <Grid x:Name="PanelGrid" VerticalAlignment="Top">
-        <StackPanel Width="{Binding #PanelGrid.Bounds.Width}" Spacing="12">
+        <StackPanel Spacing="12">
 
           <Border Classes="panel">
             <Grid ColumnDefinitions="*,Auto">
@@ -137,6 +139,7 @@
 
         </StackPanel>
       </Grid>
-    </ScrollViewer>
+      </cc:FitWidth>
+  </ScrollViewer>
   </DockPanel>
 </UserControl>

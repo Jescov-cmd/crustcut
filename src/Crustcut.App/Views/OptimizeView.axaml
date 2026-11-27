@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cc="clr-namespace:Crustcut.App.Controls"
              x:Class="Crustcut.App.Views.OptimizeView">
 
   <DockPanel>
@@ -15,7 +16,8 @@
       </Grid>
     </Border>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="28,8,34,24">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <cc:FitWidth Padding="28,8,34,24">
       <Border Classes="panel">
         <!-- Grid, NOT StackPanel: Avalonia StackPanel measures children with unconstrained
              width, so the ItemsControl took its natural width and rows overflowed the
@@ -43,7 +45,7 @@
                      dump), so wrapping never engages and rows take natural width —
                      overflowing the panel at narrow sizes. Binding the row to a
                      width-constrained ancestor is what restores a finite measure. -->
-                <Border Classes="row" Width="{Binding #PanelGrid.Bounds.Width}">
+                <Border Classes="row">
                   <Grid ColumnDefinitions="*,120,72">
 
                     <StackPanel Grid.Column="0" Spacing="3" Margin="0,0,16,0">
@@ -98,6 +100,7 @@
 
         </Grid>
       </Border>
-    </ScrollViewer>
+      </cc:FitWidth>
+  </ScrollViewer>
   </DockPanel>
 </UserControl>

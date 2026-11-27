@@ -40,6 +40,6 @@ public partial class HomeView : UserControl
 
     private void Go(string id)
     {
-        if (VisualRoot is MainWindow shell) shell.NavigateTo(id);
+        if (TopLevel.GetTopLevel(this) is MainWindow shell) shell.NavigateTo(id);
     }
 }

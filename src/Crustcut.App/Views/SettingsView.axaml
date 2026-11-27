@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cc="clr-namespace:Crustcut.App.Controls"
              x:Class="Crustcut.App.Views.SettingsView">
 
   <UserControl.Styles>
@@ -26,11 +27,12 @@
     </Style>
   </UserControl.Styles>
 
-  <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="40,0,40,24">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <cc:FitWidth Padding="40,0,40,24">
     <!-- Grid + bound width, as on What's new: a StackPanel measured inside a ScrollViewer
          can take its text's natural width and run past the right edge. -->
-    <Grid x:Name="PanelGrid">
-    <StackPanel Width="{Binding #PanelGrid.Bounds.Width}" MaxWidth="1000" HorizontalAlignment="Left">
+    <Grid x:Name="PanelGrid" MaxWidth="1000">
+    <StackPanel>
       <TextBlock Text="Settings" Classes="hero" Margin="0,40,0,20"/>
 
       <!-- ── Memory cleanup ── -->
@@ -202,5 +204,6 @@
       <TextBlock Text="{Binding Status}" Classes="hint" Margin="2,16,0,24"/>
     </StackPanel>
     </Grid>
+    </cc:FitWidth>
   </ScrollViewer>
 </UserControl>

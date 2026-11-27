@@ -31,6 +31,41 @@ public partial class MainWindow : Window
 
         _shell.PropertyChanged += OnShellPropertyChanged;
         ShowActivePage();
+
+        // Keep content inside the visible screen when maximized (see FitToWorkingArea).
+        PropertyChanged += (_, e) =>
+        {
+            if (e.Property == WindowStateProperty || e.Property == ClientSizeProperty) FitToWorkingArea();
+        };
+        PositionChanged += (_, _) => FitToWorkingArea();
+    }
+
+    /// <summary>
+    /// A borderless window that Windows maximizes is sized to the whole monitor plus its
+    /// invisible frame — so the bottom of every page sat behind the taskbar and the last
+    /// rows could never be scrolled into view. When maximized, pad the content back
+    /// inside the monitor's working area (the screen minus the taskbar).
+    /// </summary>
+    private void FitToWorkingArea()
+    {
+        if (WindowState != WindowState.Maximized)
+        {
+            RootPanel.Margin = default;
+            return;
+        }
+        var screen = Screens.ScreenFromWindow(this);
+        if (screen is null) return;
+        var scale = screen.Scaling;
+        var wa = screen.WorkingArea;
+        var x = Position.X;
+        var y = Position.Y;
+        var right = x + ClientSize.Width * scale;
+        var bottom = y + ClientSize.Height * scale;
+        RootPanel.Margin = new Avalonia.Thickness(
+            Math.Max(0, (wa.X - x) / scale),
+            Math.Max(0, (wa.Y - y) / scale),
+            Math.Max(0, (right - wa.Right) / scale),
+            Math.Max(0, (bottom - wa.Bottom) / scale));
     }
 
     private void OnShellPropertyChanged(object? sender, PropertyChangedEventArgs e)

@@ -79,7 +79,7 @@
     <ItemsControl ItemsSource="{Binding Rules}">
       <ItemsControl.Template>
         <ControlTemplate>
-          <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,18,0">
+          <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,18,0">
             <!-- ItemsPanel MUST be template-bound: without it the presenter quietly uses a
                  plain StackPanel, every row gets built, and the VirtualizingStackPanel below
                  is never used (it wasn't — 153 dropdowns, +42 MB, 0.75 s first open). -->
