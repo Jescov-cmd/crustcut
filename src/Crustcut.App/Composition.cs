@@ -330,6 +330,10 @@ public sealed class Composition
         // Auto mode follows real system load, so a light 2D game stays quiet and a heavy
         // workload ramps — whether or not it is a "game" at all.
         sampler.Sampled += (_, sample) => FanService?.ReportLoad(sample.CpuPercent, sample.GpuPercent);
+        // Game mode carries its own heat guard: with automatic Game mode on, Cool-down
+        // assist runs while a game does (ThermalGovernor.ShouldRun explains why).
+        watcher.GameStarted += (_, _) => { if (FanService is { } f) f.GameRunning = true; };
+        watcher.GameStopped += (_, _) => { if (FanService is { } f) f.GameRunning = false; };
 
         Home = new HomeViewModel(Overview, Fans, Memory, ui);
         Boost = new BoostViewModel(Optimize!, Fans, GameBoost, settingsStore);

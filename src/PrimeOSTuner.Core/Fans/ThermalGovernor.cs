@@ -37,6 +37,23 @@ public sealed class ThermalGovernor
 
     public bool Reduced { get; private set; }
 
+    /// <summary>
+    /// Whether the governor watches right now: the user's Cool-down assist switch, OR
+    /// automatic Game mode with a game running.
+    ///
+    /// Why Game mode switches it on rather than Cool-down assist defaulting to on: Game mode
+    /// is the one feature that deliberately pushes the CPU harder (Ultimate Performance
+    /// plan, the game at AboveNormal, a fresh full-boost scheme each launch), so it should
+    /// carry its own heat guard for exactly as long as it runs. Defaulting the setting to on
+    /// would change nothing for existing installs (their settings file already stores
+    /// false), would trim boost during long renders and compiles the user never asked us to
+    /// police, and flips a choice the app has always left to the user. Scoped to the game,
+    /// it costs nothing unless the CPU really holds ≥85°C for 20 s, holds no state across a
+    /// crash (it's not persisted), and goes away when the game closes.
+    /// </summary>
+    public static bool ShouldRun(bool coolDownAssistOn, bool gameModeAuto, bool gameRunning)
+        => coolDownAssistOn || (gameModeAuto && gameRunning);
+
     private DateTime? _hotSinceUtc;
     private DateTime? _coolSinceUtc;
 

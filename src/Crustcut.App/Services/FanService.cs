@@ -48,9 +48,38 @@ public sealed class FanService : IFanControlService, IDisposable
         _settings = settings;
         _tuning = tuning;
         _power = power;
+        if (power is not null) _trim = new BoostTrim(power, PersistTrim);
 
         _timer.Elapsed += (_, _) => Tick();
     }
+
+    private readonly BoostTrim? _trim;
+
+    // The trim ledger lives in the governor marker: present = boost is trimmed somewhere
+    // and the file says, per power scheme, what to give back.
+    private static void PersistTrim(string? ledger)
+    {
+        try
+        {
+            if (ledger is null) { File.Delete(GovernorMarkerPath()); return; }
+            Directory.CreateDirectory(Path.GetDirectoryName(GovernorMarkerPath())!);
+            File.WriteAllText(GovernorMarkerPath(), ledger);
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// Set from the game watcher. With automatic Game mode on, a running game switches
+    /// Cool-down assist on for its duration (see <see cref="ThermalGovernor.ShouldRun"/>).
+    /// In memory only: a crash forgets it, and the next start sees no game. Picked up on
+    /// the next 2-s tick — no Tick() here, so the watcher's thread never waits on powercfg.
+    /// </summary>
+    public bool GameRunning
+    {
+        get => _gameRunning;
+        set => _gameRunning = value;
+    }
+    private volatile bool _gameRunning;
 
     private bool _started;
 
@@ -82,9 +111,10 @@ public sealed class FanService : IFanControlService, IDisposable
         // machine permanently slower. The marker holds the boost value to give back.
         try
         {
-            if (_power is not null && File.Exists(GovernorMarkerPath()))
+            if (_trim is not null && File.Exists(GovernorMarkerPath()))
             {
-                RestoreBoost("previous run ended while boost was trimmed");
+                _trim.RecoverFromMarker(File.ReadAllText(GovernorMarkerPath()));
+                EngineLog.Log("governor: turbo boost restored (previous run ended while boost was trimmed)");
             }
         }
         catch { }
@@ -288,30 +318,25 @@ public sealed class FanService : IFanControlService, IDisposable
             if (!s.FanControlEnabled)
             {
                 if (_engaged) Disengage("turned off");
-                // The governor lives under fan control: no fan loop, no temp readings,
-                // so a trimmed boost must be handed back rather than held blind.
-                if (_governor.Reduced) RestoreBoost("fan control turned off");
+                // Heat protection does NOT depend on fan control. With Smart fans off the
+                // BIOS drives the fans and we only READ the CPU temperature (the same
+                // sensor read the fan loop uses — no writes, so nothing to fight), and the
+                // governor keeps trimming boost when the CPU holds hot.
+                double? watched = null;
+                if (GovernorWanted(s) && SampleTemp() is { } reading) watched = reading.Smoothed;
+                RunThermalGovernor(s, watched);
                 return;
             }
 
-            var temp = _fans.ReadCpuTempC();
-            if (temp is not double rawTemp)
+            if (SampleTemp() is not { } sample)
             {
-                _lastTemp = null;
-                _smoothedTemp = null;   // don't seed the average from before the outage
-                // Blind = dangerous. Give the fans back and try again next tick.
+                // Blind = dangerous. Give the fans back and try again next tick. A boost
+                // trim is held, not released: holding it is the cooler side of blind.
                 if (_engaged) Disengage("temperature unreadable — failing safe");
                 return;
             }
-            // Ryzen reports its hottest spot the instant a core boosts, so the raw reading
-            // leaps 77 -> 83 -> 77 °C within seconds. That's real, but useless to show or to
-            // drive fans with (they'd chase every spike). Curve and display use a ~6 s
-            // average; the 90 °C failsafe below still reacts to the raw value at once.
-            _smoothedTemp = _smoothedTemp is double prev
-                ? prev + TempSmoothing * (rawTemp - prev)
-                : rawTemp;
-            var t = _smoothedTemp.Value;
-            _lastTemp = Math.Round(t);
+            var rawTemp = sample.Raw;
+            var t = sample.Smoothed;
 
             // First run on this machine: measure the fans instead of assuming. Kept to a
             // cool, idle moment so the sweep can't compound an existing thermal problem,
@@ -375,43 +400,78 @@ public sealed class FanService : IFanControlService, IDisposable
     /// kernel driver writing undocumented registers, and its failure mode is crashes and
     /// corrupted data, not noise.
     /// </summary>
-    private void RunThermalGovernor(AppSettings s, double tempC)
+    private bool GovernorWanted(AppSettings s) =>
+        ThermalGovernor.ShouldRun(s.ThermalGovernorEnabled, s.GameModeAuto, _gameRunning);
+
+    /// <summary>
+    /// One temperature reading: raw for the failsafe, smoothed for everything else. Null
+    /// when the sensor can't be read (the average is reset so it never seeds from before
+    /// the outage).
+    /// </summary>
+    private (double Raw, double Smoothed)? SampleTemp()
     {
-        if (_power is null) return;
-        if (!s.ThermalGovernorEnabled)
+        if (_fans.ReadCpuTempC() is not double raw)
         {
-            // Switched off while boost was trimmed → give the power back now.
-            if (_governor.Reduced) RestoreBoost("governor switched off");
+            _lastTemp = null;
+            _smoothedTemp = null;
+            return null;
+        }
+        // Ryzen reports its hottest spot the instant a core boosts, so the raw reading
+        // leaps 77 -> 83 -> 77 °C within seconds. That's real, but useless to show or to
+        // drive fans with (they'd chase every spike). Curve, display and governor use a
+        // ~6 s average; the 90 °C failsafe still reacts to the raw value at once.
+        _smoothedTemp = _smoothedTemp is double prev ? prev + TempSmoothing * (raw - prev) : raw;
+        _lastTemp = Math.Round(_smoothedTemp.Value);
+        return (raw, _smoothedTemp.Value);
+    }
+
+    /// <param name="tempC">Smoothed CPU temperature, or null when it couldn't be read —
+    /// then the governor holds whatever state it's in.</param>
+    private void RunThermalGovernor(AppSettings s, double? tempC)
+    {
+        if (_trim is null) return;
+        if (!GovernorWanted(s))
+        {
+            // Switched off (or the game ended) while boost was trimmed → give it back now.
+            if (_governor.Reduced || _trim.Active) RestoreBoost("Cool-down assist off");
             return;
         }
+        if (tempC is not double t) return;
 
-        switch (_governor.Update(tempC, DateTime.UtcNow))
+        switch (_governor.Update(t, DateTime.UtcNow))
         {
             case GovernorAction.ReduceBoost:
                 try
                 {
-                    var current = _power.GetActiveSchemeSettingIndexFromRegistry(
-                        ThermalGovernor.SubProcessorGuid, ThermalGovernor.PerfBoostModeGuid);
-                    if (current == ThermalGovernor.BoostDisabled)
+                    if (!_trim.Engage())
                     {
-                        // Quiet CPU (or the user) already has boost off — nothing to trim,
-                        // and nothing we'd be entitled to give back later.
+                        // Every plan already has boost off (Quiet CPU, or the user) —
+                        // nothing to trim, and nothing we'd be entitled to give back later.
                         _governor.NotifyRestored();
                         return;
                     }
-                    var restoreTo = current ?? ThermalGovernor.BoostWindowsDefault;
-                    File.WriteAllText(GovernorMarkerPath(), restoreTo.ToString());
-                    _power.SetValueIndexOnAllSchemes(
-                        ThermalGovernor.SubProcessorGuid, ThermalGovernor.PerfBoostModeGuid,
-                        ThermalGovernor.BoostDisabled);
                     BoostTrimmed = true;
-                    EngineLog.Log($"governor: CPU held ≥{ThermalGovernor.ReduceAtC:F0}°C — turbo boost trimmed until it cools ({tempC:F0}°C now)");
+                    EngineLog.Log($"governor: CPU held ≥{ThermalGovernor.ReduceAtC:F0}°C — turbo boost trimmed until it cools ({t:F0}°C now)");
                 }
                 catch (Exception ex) { EngineLog.Log($"governor: trim failed: {ex.Message}"); }
                 break;
 
             case GovernorAction.RestoreBoost:
-                RestoreBoost($"cool for {ThermalGovernor.RestoreAfterSeconds:F0}s ({tempC:F0}°C)");
+                RestoreBoost($"cool for {ThermalGovernor.RestoreAfterSeconds:F0}s ({t:F0}°C)");
+                break;
+
+            default:
+                // While trimmed, the trim follows the ACTIVE plan: Game mode or a preset may
+                // have switched to (or freshly created) a plan with boost on.
+                if (_governor.Reduced)
+                {
+                    try
+                    {
+                        if (_trim.FollowActivePlan())
+                            EngineLog.Log("governor: active power plan changed while trimmed — boost trimmed on it too");
+                    }
+                    catch (Exception ex) { EngineLog.Log($"governor: follow failed: {ex.Message}"); }
+                }
                 break;
         }
     }
@@ -421,20 +481,10 @@ public sealed class FanService : IFanControlService, IDisposable
 
     private void RestoreBoost(string reason)
     {
-        if (_power is null) return;
+        if (_trim is null) return;
         try
         {
-            var restoreTo = ThermalGovernor.BoostWindowsDefault;
-            try
-            {
-                if (File.Exists(GovernorMarkerPath()) &&
-                    int.TryParse(File.ReadAllText(GovernorMarkerPath()).Trim(), out var saved))
-                    restoreTo = saved;
-            }
-            catch { }
-            _power.SetValueIndexOnAllSchemes(
-                ThermalGovernor.SubProcessorGuid, ThermalGovernor.PerfBoostModeGuid, restoreTo);
-            try { File.Delete(GovernorMarkerPath()); } catch { }
+            _trim.Restore();
             _governor.NotifyRestored();
             BoostTrimmed = false;
             EngineLog.Log($"governor: turbo boost restored ({reason})");
@@ -510,7 +560,7 @@ public sealed class FanService : IFanControlService, IDisposable
         _timer.Stop();
         _timer.Dispose();
         if (_engaged) Disengage("app closing");
-        if (_governor.Reduced) RestoreBoost("app closing");
+        if (_governor.Reduced || _trim?.Active == true) RestoreBoost("app closing");
         _fans.Dispose();
     }
 }

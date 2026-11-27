@@ -69,8 +69,19 @@ public static class BuiltInProfiles
     // Automatic "Game mode": applied to every detected game without a per-game profile and
     // reverted when it closes. Temporary, safe tweaks only. Deliberately NOT in All — All
     // feeds the Game boost preset list and the opt-in safety test, and that list stays fixed.
-    // ("core.power-throttling-disable" and "game.system-responsiveness" were wanted here but
-    // have no ITweak implementation yet, so they're left out rather than failing every launch.)
+    //
+    // Both candidates once thought missing DO exist, as registry-catalog tweaks (tweaks.json):
+    // - game.system-responsiveness: LEFT OUT, though safe (a scheduling share, no clock or
+    //   thermal change). MMCSS is generally understood to read SystemResponsiveness when it
+    //   starts, and nothing here shows a flip at game launch takes effect that session — so
+    //   until that's measured, adding it per game would risk being a placebo. It belongs to the permanent presets (Performance has it).
+    // - core.power-throttling-disable: LEFT OUT. It never throttles the foreground game in
+    //   the first place; it only lets BACKGROUND processes run at full power (its own risk
+    //   note: "runs hotter"). Heat with no frame-rate benefit.
+    // - game.cpu-core-parking: LEFT OUT. The Ultimate Performance plan switched to above
+    //   already keeps cores unparked, so it adds nothing but its own "runs hotter" risk and a
+    //   reboot flag. Heat protection while a game runs comes from Cool-down assist
+    //   (ThermalGovernor.ShouldRun), never from raising limits.
     public static readonly ModeProfile GameSession = new(
         Id: "game-session",
         DisplayName: "Game mode",
